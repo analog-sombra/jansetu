@@ -43,6 +43,6 @@ export async function POST(request: Request) {
   });
 
   const response = NextResponse.json({ ok: true });
-  setSessionCookie(response, nextToken);
+  setSessionCookie(response, nextToken, request);
   return response;
 }

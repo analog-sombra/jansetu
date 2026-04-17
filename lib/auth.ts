@@ -59,21 +59,55 @@ export async function requireReport() {
   return session;
 }
 
-export function setSessionCookie(response: NextResponse, token: string) {
+function parseBooleanEnv(value: string | undefined) {
+  if (value === undefined) return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "true" || normalized === "1" || normalized === "yes") {
+    return true;
+  }
+  if (normalized === "false" || normalized === "0" || normalized === "no") {
+    return false;
+  }
+  return undefined;
+}
+
+export function resolveCookieSecure(request?: Request) {
+  // const override = parseBooleanEnv(process.env.AUTH_COOKIE_SECURE);
+  // if (override !== undefined) {
+  //   return override;
+  // }
+
+  // if (process.env.NODE_ENV !== "production") {
+  //   return false;
+  // }
+
+  // const forwardedProto = request?.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  // if (forwardedProto) {
+  //   return forwardedProto === "https";
+  // }
+
+  // if (request) {
+  //   return new URL(request.url).protocol === "https:";
+  // }
+
+  return false;
+}
+
+export function setSessionCookie(response: NextResponse, token: string, request?: Request) {
   response.cookies.set(AUTH_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: resolveCookieSecure(request),
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
 }
 
-export function clearSessionCookie(response: NextResponse) {
+export function clearSessionCookie(response: NextResponse, request?: Request) {
   response.cookies.set(AUTH_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: resolveCookieSecure(request),
     path: "/",
     maxAge: 0,
   });

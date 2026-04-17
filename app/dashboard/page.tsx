@@ -236,7 +236,7 @@ export default function CitizenDashboardPage() {
                 </Text>
               }
               value={totalComplaints}
-              valueStyle={{ color: "#1a3c6e", fontWeight: 800 }}
+              styles={{ content: { color: "#1a3c6e", fontWeight: 800 } }}
             />
           </Card>
         </Col>
@@ -249,7 +249,7 @@ export default function CitizenDashboardPage() {
                 </Text>
               }
               value={resolvedComplaints}
-              valueStyle={{ color: "#2e7d32", fontWeight: 800 }}
+              styles={{ content: { color: "#2e7d32", fontWeight: 800 } }}
             />
           </Card>
         </Col>
@@ -262,7 +262,7 @@ export default function CitizenDashboardPage() {
                 </Text>
               }
               value={pendingComplaints}
-              valueStyle={{ color: "#e07b00", fontWeight: 800 }}
+              styles={{ content: { color: "#e07b00", fontWeight: 800 } }}
             />
           </Card>
         </Col>

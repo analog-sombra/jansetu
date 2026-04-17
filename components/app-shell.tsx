@@ -234,7 +234,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Space
               separator={
                 <Divider
-                  type="vertical"
+                  orientation="vertical"
                   style={{ borderColor: "rgba(255,255,255,0.2)" }}
                 />
               }

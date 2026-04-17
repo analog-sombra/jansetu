@@ -60,8 +60,12 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [areaFilter, setAreaFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -191,7 +195,11 @@ export default function AdminDashboardPage() {
       width: 80,
       render: (_, record) => (
         <Link href={`/admin/complaint/${record.id}`}>
-          <Button type="link" size="small" style={{ color: "#1a3c6e", padding: 0 }}>
+          <Button
+            type="link"
+            size="small"
+            style={{ color: "#1a3c6e", padding: 0 }}
+          >
             {t("admin.table.view")}
           </Button>
         </Link>
@@ -203,8 +211,22 @@ export default function AdminDashboardPage() {
     <div>
       {/* Page Title */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <div style={{ width: 4, height: 22, background: "#FF9933", borderRadius: 2 }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 4,
+          }}
+        >
+          <div
+            style={{
+              width: 4,
+              height: 22,
+              background: "#FF9933",
+              borderRadius: 2,
+            }}
+          />
           <Title level={3} style={{ margin: 0, color: "#1a3c6e" }}>
             {t("admin.title")}
           </Title>
@@ -215,61 +237,106 @@ export default function AdminDashboardPage() {
       </div>
 
       {error && (
-        <Alert type="error" message={error} showIcon style={{ marginBottom: 20 }} />
+        <Alert
+          type="error"
+          message={error}
+          showIcon
+          style={{ marginBottom: 20 }}
+        />
       )}
 
       {/* Statistics */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={12} sm={6}>
-          <Card size="small" style={{ borderLeft: "4px solid #1a3c6e", borderRadius: 6 }}>
+          <Card
+            size="small"
+            style={{ borderLeft: "4px solid #1a3c6e", borderRadius: 6 }}
+          >
             <Statistic
               title={
-                <Text style={{ fontSize: 11, fontWeight: 700, color: "#888", letterSpacing: "0.04em" }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#888",
+                    letterSpacing: "0.04em",
+                  }}
+                >
                   {t("admin.stats.total")}
                 </Text>
               }
               value={complaints.length}
-              valueStyle={{ color: "#1a3c6e", fontWeight: 800 }}
+              styles={{ content: { color: "#1a3c6e", fontWeight: 800 } }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card size="small" style={{ borderLeft: "4px solid #2e7d32", borderRadius: 6 }}>
+          <Card
+            size="small"
+            style={{ borderLeft: "4px solid #2e7d32", borderRadius: 6 }}
+          >
             <Statistic
               title={
-                <Text style={{ fontSize: 11, fontWeight: 700, color: "#888", letterSpacing: "0.04em" }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#888",
+                    letterSpacing: "0.04em",
+                  }}
+                >
                   {t("admin.stats.resolved")}
                 </Text>
               }
               value={analytics.resolved}
-              valueStyle={{ color: "#2e7d32", fontWeight: 800 }}
+              styles={{ content: { color: "#2e7d32", fontWeight: 800 } }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card size="small" style={{ borderLeft: "4px solid #e07b00", borderRadius: 6 }}>
+          <Card
+            size="small"
+            style={{ borderLeft: "4px solid #e07b00", borderRadius: 6 }}
+          >
             <Statistic
               title={
-                <Text style={{ fontSize: 11, fontWeight: 700, color: "#888", letterSpacing: "0.04em" }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#888",
+                    letterSpacing: "0.04em",
+                  }}
+                >
                   {t("admin.stats.rate")}
                 </Text>
               }
               value={analytics.resolutionRate.toFixed(1)}
               suffix="%"
-              valueStyle={{ color: "#e07b00", fontWeight: 800 }}
+              styles={{ content: { color: "#e07b00", fontWeight: 800 } }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card size="small" style={{ borderLeft: "4px solid #0277bd", borderRadius: 6 }}>
+          <Card
+            size="small"
+            style={{ borderLeft: "4px solid #0277bd", borderRadius: 6 }}
+          >
             <Statistic
               title={
-                <Text style={{ fontSize: 11, fontWeight: 700, color: "#888", letterSpacing: "0.04em" }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#888",
+                    letterSpacing: "0.04em",
+                  }}
+                >
                   {t("admin.stats.departments")}
                 </Text>
               }
               value={Object.keys(analytics.byDepartment).length}
-              valueStyle={{ color: "#0277bd", fontWeight: 800 }}
+              styles={{ content: { color: "#0277bd", fontWeight: 800 } }}
             />
           </Card>
         </Col>
@@ -306,7 +373,10 @@ export default function AdminDashboardPage() {
               style={{ width: "100%" }}
               value={categoryFilter}
               onChange={(val) => setCategoryFilter(val)}
-              options={COMPLAINT_CATEGORIES.map((c) => ({ value: c, label: c }))}
+              options={COMPLAINT_CATEGORIES.map((c) => ({
+                value: c,
+                label: c,
+              }))}
             />
           </Col>
           <Col xs={24} sm={6}>
@@ -368,9 +438,7 @@ export default function AdminDashboardPage() {
           locale={{
             emptyText: (
               <div style={{ padding: "32px 0", textAlign: "center" }}>
-                <Text type="secondary">
-                  {t("admin.queue.empty")}
-                </Text>
+                <Text type="secondary">{t("admin.queue.empty")}</Text>
               </div>
             ),
           }}
@@ -379,4 +447,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-

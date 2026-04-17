@@ -41,6 +41,6 @@ export async function POST(request: Request) {
     firstLoginComplete: user.firstLoginComplete,
   });
 
-  setSessionCookie(response, token);
+  setSessionCookie(response, token, request);
   return response;
 }
