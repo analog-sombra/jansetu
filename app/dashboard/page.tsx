@@ -17,6 +17,7 @@ import {
 } from "antd";
 import type { TableColumnsType } from "antd";
 import { useLanguage } from "@/components/language-provider";
+import { getLocalizedCategory } from "@/lib/complaint-i18n";
 
 const { Title, Text } = Typography;
 
@@ -112,9 +113,9 @@ export default function CitizenDashboardPage() {
       title: t("dashboard.table.category"),
       dataIndex: "category",
       key: "category",
-      render: (cat: string) => <Text strong>{cat}</Text>,
+      render: (cat: string) => <Text strong>{getLocalizedCategory(cat, t)}</Text>,
       filters: [...new Set(complaints.map((c) => c.category))].map((c) => ({
-        text: c,
+        text: getLocalizedCategory(c, t),
         value: c,
       })),
       onFilter: (value, record) => record.category === value,

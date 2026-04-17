@@ -16,8 +16,9 @@ import {
 } from "antd";
 
 import type { UploadFile } from "antd/es/upload";
-import { COMPLAINT_CATEGORIES, SUBCATEGORIES } from "@/lib/constants";
+import { COMPLAINT_CATEGORIES, SUBCATEGORIES, RAJOURI_GARDEN_AREAS } from "@/lib/constants";
 import { useLanguage } from "@/components/language-provider";
+import { getLocalizedCategory, getLocalizedSubcategory, getLocalizedArea } from "@/lib/complaint-i18n";
 
 const { Title, Text } = Typography;
 
@@ -173,7 +174,10 @@ export default function NewComplaintPage() {
                 <Select
                   size="large"
                   onChange={handleCategoryChange}
-                  options={COMPLAINT_CATEGORIES.map((cat) => ({ value: cat, label: cat }))}
+                  options={COMPLAINT_CATEGORIES.map((cat) => ({
+                    value: cat,
+                    label: getLocalizedCategory(cat, t),
+                  }))}
                 />
               </Form.Item>
             </Col>
@@ -187,7 +191,7 @@ export default function NewComplaintPage() {
                   size="large"
                   options={(SUBCATEGORIES[selectedCategory] ?? []).map((sub) => ({
                     value: sub,
-                    label: sub,
+                    label: getLocalizedSubcategory(sub, t),
                   }))}
                 />
               </Form.Item>
@@ -214,9 +218,16 @@ export default function NewComplaintPage() {
 
           {/* Area */}
           <Form.Item name="area" label={t("newComplaint.area")}>
-            <Input
-              placeholder={t("newComplaint.areaPlaceholder")}
+            <Select
               size="large"
+              showSearch
+              allowClear
+              placeholder={t("newComplaint.areaPlaceholder")}
+              optionFilterProp="label"
+              options={RAJOURI_GARDEN_AREAS.map((a) => ({
+                value: a,
+                label: getLocalizedArea(a, t),
+              }))}
             />
           </Form.Item>
 

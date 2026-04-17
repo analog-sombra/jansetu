@@ -20,6 +20,7 @@ import {
 
 import type { UploadFile } from "antd/es/upload";
 import { useLanguage } from "@/components/language-provider";
+import { getLocalizedCategory } from "@/lib/complaint-i18n";
 
 const { Title, Text } = Typography;
 
@@ -190,7 +191,7 @@ export default function OfficerTokenPage() {
             #{assignment.complaintId}
           </Descriptions.Item>
           <Descriptions.Item label={t("officer.category")}>
-            {assignment.complaint.category}
+            {getLocalizedCategory(assignment.complaint.category, t)}
           </Descriptions.Item>
           <Descriptions.Item label={t("officer.description")} span={2}>
             <Text style={{ lineHeight: 1.7 }}>{assignment.complaint.description}</Text>

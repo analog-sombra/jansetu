@@ -20,6 +20,7 @@ import {
 import { COMPLAINT_CATEGORIES } from "@/lib/constants";
 import type { TableColumnsType } from "antd";
 import { useLanguage } from "@/components/language-provider";
+import { getLocalizedCategory } from "@/lib/complaint-i18n";
 
 const { Title, Text } = Typography;
 
@@ -140,7 +141,7 @@ export default function AdminDashboardPage() {
       title: t("admin.table.category"),
       dataIndex: "category",
       key: "category",
-      render: (cat: string) => <Text strong>{cat}</Text>,
+      render: (cat: string) => <Text strong>{getLocalizedCategory(cat, t)}</Text>,
     },
     {
       title: t("admin.table.area"),
@@ -375,7 +376,7 @@ export default function AdminDashboardPage() {
               onChange={(val) => setCategoryFilter(val)}
               options={COMPLAINT_CATEGORIES.map((c) => ({
                 value: c,
-                label: c,
+                label: getLocalizedCategory(c, t),
               }))}
             />
           </Col>

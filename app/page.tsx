@@ -68,7 +68,8 @@ export default function HomePage() {
       {/* Hero Section */}
       <div
         style={{
-          background: "linear-gradient(135deg, #12294a 0%, #1a3c6e 60%, #1f4d8a 100%)",
+          background:
+            "linear-gradient(135deg, #12294a 0%, #1a3c6e 60%, #1f4d8a 100%)",
           borderRadius: 8,
           padding: "40px 36px",
           marginBottom: 28,
@@ -89,18 +90,6 @@ export default function HomePage() {
           }}
         />
         <div style={{ maxWidth: 680 }}>
-          <Tag
-            color="orange"
-            style={{
-              marginBottom: 14,
-              letterSpacing: "0.12em",
-              fontWeight: 700,
-              fontSize: 11,
-              border: "none",
-            }}
-          >
-            {t("home.badge")}
-          </Tag>
           <Title
             level={1}
             style={{
@@ -125,7 +114,7 @@ export default function HomePage() {
           >
             {t("home.subtitle")}
           </Title>
-   
+
           <Paragraph
             style={{
               color: "rgba(255,255,255,0.78)",
@@ -170,10 +159,19 @@ export default function HomePage() {
                 height: "100%",
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <div
+                style={{ display: "flex", alignItems: "flex-start", gap: 12 }}
+              >
                 <span style={{ fontSize: 22 }}>{item.icon}</span>
                 <div>
-                  <Text strong style={{ color: item.color, display: "block", marginBottom: 4 }}>
+                  <Text
+                    strong
+                    style={{
+                      color: item.color,
+                      display: "block",
+                      marginBottom: 4,
+                    }}
+                  >
                     {item.label}
                   </Text>
                   <Text type="secondary" style={{ fontSize: 13 }}>
@@ -188,9 +186,26 @@ export default function HomePage() {
 
       {/* Services Section */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <div style={{ width: 4, height: 24, background: "#FF9933", borderRadius: 2 }} />
-          <Title level={4} style={{ margin: 0, color: "#1a3c6e", letterSpacing: "0.02em" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <div
+            style={{
+              width: 4,
+              height: 24,
+              background: "#FF9933",
+              borderRadius: 2,
+            }}
+          />
+          <Title
+            level={4}
+            style={{ margin: 0, color: "#1a3c6e", letterSpacing: "0.02em" }}
+          >
             {t("home.grievanceCategories")}
           </Title>
         </div>
@@ -203,14 +218,24 @@ export default function HomePage() {
                 hoverable
                 size="small"
                 style={{ borderRadius: 6, height: "100%" }}
-                styles={{ body: { display: "flex", gap: 14, alignItems: "flex-start" } }}
+                styles={{
+                  body: { display: "flex", gap: 14, alignItems: "flex-start" },
+                }}
               >
-                <span style={{ fontSize: 26, flexShrink: 0 }}>{service.icon}</span>
+                <span style={{ fontSize: 26, flexShrink: 0 }}>
+                  {service.icon}
+                </span>
                 <div>
-                  <Text strong style={{ display: "block", marginBottom: 4, fontSize: 14 }}>
+                  <Text
+                    strong
+                    style={{ display: "block", marginBottom: 4, fontSize: 14 }}
+                  >
                     {service.title}
                   </Text>
-                  <Text type="secondary" style={{ fontSize: 12, lineHeight: 1.5 }}>
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: 12, lineHeight: 1.5 }}
+                  >
                     {service.desc}
                   </Text>
                 </div>
@@ -247,4 +272,3 @@ export default function HomePage() {
     </div>
   );
 }
-

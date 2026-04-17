@@ -19,6 +19,7 @@ import {
   Skeleton,
 } from "antd";
 import { useLanguage } from "@/components/language-provider";
+import { getLocalizedCategory, getLocalizedSubcategory } from "@/lib/complaint-i18n";
 
 const { Title, Text } = Typography;
 
@@ -151,7 +152,7 @@ export default function AdminComplaintDetailPage() {
         <Text type="secondary" style={{ fontSize: 12 }}>
           {t("adminDetail.breadcrumb")} &rsaquo;{" "}
           <Text strong style={{ color: "#1a3c6e" }}>
-            #{complaint.id} — {complaint.category}
+            #{complaint.id} — {getLocalizedCategory(complaint.category, t)}
           </Text>
         </Text>
       </div>
@@ -182,7 +183,7 @@ export default function AdminComplaintDetailPage() {
                 }}
               >
                 <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
-                  Complaint #{complaint.id} — {complaint.category}
+                  Complaint #{complaint.id} — {getLocalizedCategory(complaint.category, t)}
                 </span>
                 <Tag
                   color={STATUS_COLORS[complaint.status] ?? "default"}
@@ -206,9 +207,13 @@ export default function AdminComplaintDetailPage() {
               bordered
               styles={{ label: { fontWeight: 600, background: "#f7f9fc", width: 140 } }}
             >
-              <Descriptions.Item label={t("adminDetail.category")}>{complaint.category}</Descriptions.Item>
+              <Descriptions.Item label={t("adminDetail.category")}>
+                {getLocalizedCategory(complaint.category, t)}
+              </Descriptions.Item>
               <Descriptions.Item label={t("adminDetail.subCategory")}>
-                {complaint.subcategory ?? "N/A"}
+                {complaint.subcategory
+                  ? getLocalizedSubcategory(complaint.subcategory, t)
+                  : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label={t("adminDetail.area")} span={2}>
                 {complaint.area ?? "Not specified"}
