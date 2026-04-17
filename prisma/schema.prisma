@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CITIZEN
+  ADMIN
+  REPORT
+}
+
+enum ComplaintStatus {
+  PENDING
+  IN_PROGRESS
+  QUERY_RAISED
+  RESOLVED
+  REJECTED
+  ESCALATED
+  AUTO_CLOSED
+}
+
+enum AssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  QUERY
+  REJECTED
+  ESCALATED
+}
+
+enum ResponseType {
+  RESOLVED
+  QUERY
+  REJECTED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+  SYSTEM
+}
+
+enum NotificationStatus {
+  SENT
+  FAILED
+}
+
+model User {
+  id                 String         @id @default(cuid())
+  name               String?
+  mobile             String         @unique
+  role               UserRole       @default(CITIZEN)
+  address            String?
+  aadhaar            String?
+  voterId            String?
+  firstLoginComplete Boolean        @default(false)
+  complaints         Complaint[]
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+}
+
+model OtpCode {
+  id        Int      @id @default(autoincrement())
+  mobile    String
+  otpHash   String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([mobile, createdAt])
+}
+
+model Complaint {
+  id            Int             @id @default(autoincrement())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      String
+  subcategory   String?
+  description   String
+  status        ComplaintStatus @default(PENDING)
+  lat           Float
+  lng           Float
+  area          String?
+  media         ComplaintMedia[]
+  assignments   Assignment[]
+  auditLogs     AuditLog[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([category, subcategory, createdAt])
+  @@index([lat, lng])
+}
+
+model ComplaintMedia {
+  id          Int       @id @default(autoincrement())
+  complaintId Int
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  fileUrl     String
+  type        MediaType
+  createdAt   DateTime  @default(now())
+
+  @@index([complaintId])
+}
+
+model Department {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  officers   Officer[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Officer {
+  id           Int          @id @default(autoincrement())
+  name         String
+  designation  String
+  email        String       @unique
+  phone        String
+  departmentId Int
+  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  assignments  Assignment[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([departmentId])
+}
+
+model Assignment {
+  id            Int              @id @default(autoincrement())
+  complaintId   Int
+  complaint     Complaint        @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  officerId     Int
+  officer       Officer          @relation(fields: [officerId], references: [id], onDelete: Restrict)
+  status        AssignmentStatus @default(ASSIGNED)
+  dueDate       DateTime
+  token         String           @unique
+  responses     Response[]
+  notifications Notification[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([complaintId, officerId])
+  @@index([status, dueDate])
+}
+
+model Response {
+  id           Int          @id @default(autoincrement())
+  assignmentId Int
+  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  type         ResponseType
+  message      String
+  proofUrl     String?
+  createdAt    DateTime     @default(now())
+
+  @@index([assignmentId, createdAt])
+}
+
+model AuditLog {
+  id          Int        @id @default(autoincrement())
+  actorUserId String?
+  actorUser   User?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  complaintId Int?
+  complaint   Complaint? @relation(fields: [complaintId], references: [id], onDelete: SetNull)
+  action      String
+  meta        Json?
+  createdAt   DateTime   @default(now())
+
+  @@index([complaintId, createdAt])
+}
+
+model Notification {
+  id          Int                @id @default(autoincrement())
+  userId      String?
+  user        User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  assignmentId Int?
+  assignment  Assignment?        @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  channel     NotificationChannel
+  recipient   String
+  message     String
+  status      NotificationStatus @default(SENT)
+  error       String?
+  createdAt   DateTime           @default(now())
+
+  @@index([userId, createdAt])
+  @@index([assignmentId, createdAt])
+}

@@ -1,0 +1,359 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import {
+  Card,
+  Form,
+  Select,
+  Input,
+  Button,
+  Typography,
+  Tag,
+  Alert,
+  Row,
+  Col,
+  Descriptions,
+  Space,
+  Divider,
+  Skeleton,
+} from "antd";
+import { useLanguage } from "@/components/language-provider";
+
+const { Title, Text } = Typography;
+
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "orange",
+  IN_PROGRESS: "blue",
+  QUERY_RAISED: "volcano",
+  RESOLVED: "green",
+  REJECTED: "red",
+  ESCALATED: "purple",
+  AUTO_CLOSED: "default",
+};
+
+type Officer = {
+  id: number;
+  name: string;
+  department: { name: string };
+};
+
+type Complaint = {
+  id: number;
+  category: string;
+  subcategory: string | null;
+  description: string;
+  status: string;
+  lat: number;
+  lng: number;
+  area: string | null;
+  media: Array<{ id: number; fileUrl: string; type: string }>;
+};
+
+export default function AdminComplaintDetailPage() {
+  const params = useParams<{ id: string }>();
+  const { t } = useLanguage();
+  const [complaint, setComplaint] = useState<Complaint | null>(null);
+  const [officers, setOfficers] = useState<Officer[]>([]);
+  const [officerId, setOfficerId] = useState<string>("");
+  const [queryMessage, setQueryMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState<{
+    type: "error" | "success" | "warning" | "info";
+    text: string;
+  } | null>(null);
+  const [assigning, setAssigning] = useState(false);
+  const [querying, setQuerying] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      const complaintResponse = await fetch(`/api/complaints/${params.id}`);
+      const complaintResult = await complaintResponse.json();
+      if (!complaintResponse.ok) {
+        setAlert({ type: "error", text: complaintResult.error ?? t("adminDetail.error.load") });
+        setLoading(false);
+        return;
+      }
+      setComplaint(complaintResult.complaint);
+
+      const officerQuery = new URLSearchParams({ category: complaintResult.complaint.category });
+      const officersResponse = await fetch(`/api/admin/officers?${officerQuery.toString()}`);
+      const officersResult = await officersResponse.json();
+      if (officersResponse.ok) setOfficers(officersResult.officers);
+      setLoading(false);
+    }
+    void loadData();
+  }, [params.id]);
+
+  async function assignOfficer() {
+    if (!officerId) return;
+    setAssigning(true);
+    const response = await fetch("/api/assign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        complaintId: Number(params.id),
+        officerId: Number(officerId),
+      }),
+    });
+    const result = await response.json();
+    setAssigning(false);
+    if (response.ok) {
+      setAlert({
+        type: "success",
+        text: `Officer assigned successfully. Secure access link: ${result.tokenLink}`,
+      });
+    } else {
+      setAlert({ type: "error", text: result.error ?? t("adminDetail.error.assign") });
+    }
+  }
+
+  async function raiseQuery() {
+    if (!queryMessage.trim()) return;
+    setQuerying(true);
+    const response = await fetch(`/api/complaints/${params.id}/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: queryMessage }),
+    });
+    const result = await response.json();
+    setQuerying(false);
+    if (response.ok) {
+      setAlert({ type: "success", text: t("adminDetail.success.query") });
+      setQueryMessage("");
+    } else {
+      setAlert({ type: "error", text: result.error ?? t("adminDetail.error.query") });
+    }
+  }
+
+  if (loading) {
+    return (
+      <div>
+        <Skeleton active paragraph={{ rows: 6 }} />
+      </div>
+    );
+  }
+
+  if (!complaint) {
+    return (
+      <Alert
+        type="error"
+        message={alert?.text ?? "Complaint not found"}
+        showIcon
+      />
+    );
+  }
+
+  return (
+    <div>
+      {/* Breadcrumb */}
+      <div style={{ marginBottom: 16 }}>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          {t("adminDetail.breadcrumb")} &rsaquo;{" "}
+          <Text strong style={{ color: "#1a3c6e" }}>
+            #{complaint.id} — {complaint.category}
+          </Text>
+        </Text>
+      </div>
+
+      {alert && (
+        <Alert
+          type={alert.type}
+          message={alert.text}
+          showIcon
+          closable
+          onClose={() => setAlert(null)}
+          style={{ marginBottom: 20 }}
+        />
+      )}
+
+      <Row gutter={[20, 20]}>
+        {/* Left: Complaint Details */}
+        <Col xs={24} lg={16}>
+          <Card
+            style={{ borderRadius: 6 }}
+            title={
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
+                  Complaint #{complaint.id} — {complaint.category}
+                </span>
+                <Tag
+                  color={STATUS_COLORS[complaint.status] ?? "default"}
+                  style={{ fontWeight: 600 }}
+                >
+                  {complaint.status.replaceAll("_", " ")}
+                </Tag>
+              </div>
+            }
+            extra={
+              <a href={`/api/admin/pdf/${complaint.id}`} target="_blank" rel="noreferrer">
+                <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                  {t("adminDetail.downloadPdf")}
+                </Button>
+              </a>
+            }
+          >
+            <Descriptions
+              column={{ xs: 1, sm: 2 }}
+              size="small"
+              bordered
+              styles={{ label: { fontWeight: 600, background: "#f7f9fc", width: 140 } }}
+            >
+              <Descriptions.Item label={t("adminDetail.category")}>{complaint.category}</Descriptions.Item>
+              <Descriptions.Item label={t("adminDetail.subCategory")}>
+                {complaint.subcategory ?? "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label={t("adminDetail.area")} span={2}>
+                {complaint.area ?? "Not specified"}
+              </Descriptions.Item>
+              <Descriptions.Item label={t("adminDetail.latitude")}>{complaint.lat}</Descriptions.Item>
+              <Descriptions.Item label={t("adminDetail.longitude")}>{complaint.lng}</Descriptions.Item>
+              <Descriptions.Item label={t("adminDetail.description")} span={2}>
+                <Text style={{ lineHeight: 1.7 }}>{complaint.description}</Text>
+              </Descriptions.Item>
+            </Descriptions>
+
+            {complaint.media.length > 0 && (
+              <>
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+                >
+                  {t("adminDetail.evidence")}
+                </Divider>
+                <Row gutter={[8, 8]}>
+                  {complaint.media.map((item) => (
+                    <Col key={item.id} xs={24} sm={12}>
+                      <a href={item.fileUrl} target="_blank" rel="noreferrer">
+                        <Card
+                          size="small"
+                          hoverable
+                          style={{
+                            borderRadius: 4,
+                            borderLeft: "3px solid #1a3c6e",
+                          }}
+                          styles={{ body: { display: "flex", alignItems: "center", gap: 8 } }}
+                        >
+                          <Tag style={{ fontSize: 10 }}>{item.type}</Tag>
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            {item.fileUrl.split("/").pop()}
+                          </Text>
+                        </Card>
+                      </a>
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
+          </Card>
+        </Col>
+
+        {/* Right: Actions */}
+        <Col xs={24} lg={8}>
+          <Space direction="vertical" style={{ width: "100%" }} size="middle">
+            {/* Assign Officer Card */}
+            <Card
+              title={
+                <Text strong style={{ color: "#1a3c6e" }}>
+                  {t("adminDetail.assignOfficer")}
+                </Text>
+              }
+              style={{ borderRadius: 6, borderTop: "3px solid #1a3c6e" }}
+              size="small"
+            >
+              <Form layout="vertical" requiredMark={false}>
+                <Form.Item label={t("adminDetail.selectOfficer")} style={{ marginBottom: 12 }}>
+                  <Select
+                    placeholder={t("adminDetail.selectOfficerPlaceholder")}
+                    value={officerId || undefined}
+                    onChange={(val) => setOfficerId(val)}
+                    size="large"
+                    style={{ width: "100%" }}
+                    options={officers.map((o) => ({
+                      value: String(o.id),
+                      label: `${o.name} — ${o.department.name}`,
+                    }))}
+                    notFoundContent={
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        No officers mapped to this category
+                        {t("adminDetail.noOfficers")}
+                      </Text>
+                    }
+                  />
+                </Form.Item>
+                {officers.length === 0 && (
+                  <Alert
+                    type="warning"
+                    message={t("adminDetail.noOfficersWarning")}
+                    showIcon
+                    style={{ marginBottom: 12 }}
+                  />
+                )}
+                <Button
+                  type="primary"
+                  block
+                  disabled={!officerId}
+                  loading={assigning}
+                  onClick={assignOfficer}
+                  style={{
+                    background: "#1a3c6e",
+                    borderColor: "#1a3c6e",
+                    fontWeight: 700,
+                  }}
+                >
+                  {t("adminDetail.assignOfficer")}
+                </Button>
+              </Form>
+            </Card>
+
+            {/* Raise Query Card */}
+            <Card
+              title={
+                <Text strong style={{ color: "#e07b00" }}>
+                  {t("adminDetail.raiseQuery")}
+                </Text>
+              }
+              style={{ borderRadius: 6, borderTop: "3px solid #e07b00" }}
+              size="small"
+            >
+              <Form layout="vertical" requiredMark={false}>
+                <Form.Item label={t("adminDetail.queryMessage")} style={{ marginBottom: 12 }}>
+                  <Input.TextArea
+                    rows={3}
+                    value={queryMessage}
+                    onChange={(e) => setQueryMessage(e.target.value)}
+                    placeholder={t("adminDetail.queryPlaceholder")}
+                    showCount
+                    maxLength={500}
+                  />
+                </Form.Item>
+                <Button
+                  block
+                  loading={querying}
+                  disabled={!queryMessage.trim()}
+                  onClick={raiseQuery}
+                  style={{
+                    background: "#e07b00",
+                    borderColor: "#e07b00",
+                    color: "#fff",
+                    fontWeight: 700,
+                  }}
+                >
+                  {t("adminDetail.sendQuery")}
+                </Button>
+              </Form>
+            </Card>
+          </Space>
+        </Col>
+      </Row>
+    </div>
+  );
+}
+

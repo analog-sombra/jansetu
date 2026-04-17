@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --gov-blue: #1a3c6e;
+  --gov-saffron: #FF9933;
+  --gov-green: #138808;
+  --gov-bg: #f0f2f5;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--gov-bg);
+  color: #212121;
+  font-family: var(--font-sora), 'Noto Sans Devanagari', -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Ant Design overrides for government style */
+.ant-layout {
+  background: transparent !important;
+}
+
+.ant-card {
+  border: 1px solid #e8e8e8;
+}
+
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: #f5f7fa;
+  color: #1a3c6e;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid #1a3c6e;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: #f0f4f8 !important;
 }
