@@ -36,10 +36,30 @@ const STATUS_COLORS: Record<string, string> = {
   AUTO_CLOSED: "default",
 };
 
+const RESPONSE_COLORS: Record<string, string> = {
+  RESOLVED: "green",
+  QUERY: "volcano",
+  REJECTED: "red",
+};
+
 type Officer = {
   id: number;
   name: string;
   department: { name: string };
+};
+
+type OfficerResponse = {
+  id: number;
+  type: string;
+  message: string;
+  proofUrl: string | null;
+  createdAt: string;
+};
+
+type Assignment = {
+  id: number;
+  officer: Officer;
+  responses: OfficerResponse[];
 };
 
 type Complaint = {
@@ -52,6 +72,7 @@ type Complaint = {
   lng: number;
   area: string | null;
   media: Array<{ id: number; fileUrl: string; type: string }>;
+  assignments: Assignment[];
 };
 
 export default function AdminComplaintDetailPage() {
@@ -160,6 +181,18 @@ export default function AdminComplaintDetailPage() {
       />
     );
   }
+
+  const officerResponses = complaint.assignments
+    .flatMap((assignment) =>
+      assignment.responses.map((response) => ({
+        ...response,
+        officer: assignment.officer,
+      })),
+    )
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
 
   return (
     <div>
@@ -290,6 +323,68 @@ export default function AdminComplaintDetailPage() {
                 {complaint.description}
               </p>
             </div>
+
+            {officerResponses.length > 0 && (
+              <>
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+                >
+                  {t("adminDetail.officerResponse")}
+                </Divider>
+                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+                  {officerResponses.map((response) => (
+                    <Card
+                      key={response.id}
+                      size="small"
+                      style={{ borderRadius: 6, borderLeft: "3px solid #1a3c6e" }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 12,
+                          flexWrap: "wrap",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <div>
+                          <Text strong style={{ color: "#1a3c6e" }}>
+                            {response.officer.name}
+                          </Text>
+                          <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
+                            {response.officer.department.name}
+                          </Text>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <Tag color={RESPONSE_COLORS[response.type] ?? "default"}>
+                            {response.type.replaceAll("_", " ")}
+                          </Tag>
+                          <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
+                            {new Date(response.createdAt).toLocaleString()}
+                          </Text>
+                        </div>
+                      </div>
+                      <Text style={{ display: "block", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                        {response.message}
+                      </Text>
+                      {response.proofUrl && (
+                        <div style={{ marginTop: 12 }}>
+                          <a href={response.proofUrl} target="_blank" rel="noreferrer">
+                            <Button
+                              size="small"
+                              style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                            >
+                              {t("adminDetail.viewProof")}
+                            </Button>
+                          </a>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </Space>
+              </>
+            )}
 
             {/* <Descriptions
               column={{ xs: 1, sm: 1 }}

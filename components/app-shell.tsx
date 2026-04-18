@@ -9,13 +9,16 @@ import { useLanguage } from "@/components/language-provider";
 const { Header, Content, Footer } = Layout;
 const { Text, Title } = Typography;
 
-const DEFAULT_NAV_LINKS = [
+const CITIZEN_NAV_LINKS = [
   { href: "/dashboard", labelKey: "nav.myComplaints" },
   { href: "/complaint/new", labelKey: "nav.fileComplaint" },
 ];
 
+const ADMIN_NAV_LINKS = [
+  { href: "/admin", labelKey: "nav.adminDashboard" },
+];
+
 const REPORT_NAV_LINKS = [
-  { href: "/", labelKey: "nav.home" },
   { href: "/report", labelKey: "nav.mlaReport" },
 ];
 
@@ -30,7 +33,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/officer");
   const isHomePage = pathname === "/";
   const showPrivateNav = !isAuthPage && !isHomePage;
-  const navLinks = pathname.startsWith("/report") ? REPORT_NAV_LINKS : DEFAULT_NAV_LINKS;
+
+  function getNavLinks() {
+    if (pathname.startsWith("/admin")) {
+      return ADMIN_NAV_LINKS;
+    }
+
+    if (pathname.startsWith("/report")) {
+      return REPORT_NAV_LINKS;
+    }
+
+    return CITIZEN_NAV_LINKS;
+  }
+
+  const navLinks = getNavLinks();
 
   async function logout() {
     await fetch("/api/logout", { method: "POST" });
@@ -161,7 +177,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex" }}
           >
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
               return (
                 <Link key={link.href} href={link.href}>
                   <div

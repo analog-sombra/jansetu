@@ -12,10 +12,10 @@ import {
   Alert,
   Row,
   Col,
-  Descriptions,
   Upload,
   Divider,
   Skeleton,
+  Tag,
 } from "antd";
 
 import type { UploadFile } from "antd/es/upload";
@@ -141,87 +141,169 @@ export default function OfficerTokenPage() {
 
   if (!assignment) return null;
 
+  const problemEvidence = assignment.complaint.media[0] ?? null;
+
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto" }}>
-      {/* Officer Header */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #12294a 0%, #1a3c6e 100%)",
-          borderRadius: "6px 6px 0 0",
-          padding: "24px 28px",
-          marginBottom: 0,
-        }}
-      >
-        <Text
-          style={{
-            color: "#FF9933",
-            fontSize: 10,
-            letterSpacing: "0.12em",
-            fontWeight: 700,
-            display: "block",
-            marginBottom: 6,
-          }}
-        >
-          {t("officer.banner")}
-        </Text>
-        <Title level={4} style={{ color: "#fff", margin: 0 }}>
-          {assignment.officer.name}
-        </Title>
-        <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>
-          {t("officer.department")}: {assignment.officer.department.name}
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          {t("officer.banner")} &rsaquo;{" "}
+          <Text strong style={{ color: "#1a3c6e" }}>
+            {assignment.officer.name}
+          </Text>
         </Text>
       </div>
 
-      {/* Complaint Info */}
-      <Card
-        style={{ borderRadius: "0 0 0 0", borderTop: 0, marginBottom: 2 }}
-        title={
-          <Text strong style={{ color: "#1a3c6e" }}>
-            {t("officer.assignedComplaint")} #{assignment.complaintId}
-          </Text>
-        }
-      >
-        <Descriptions
-          column={{ xs: 1, sm: 2 }}
-          bordered
-          size="small"
-          styles={{ label: { fontWeight: 600, background: "#f7f9fc", width: 130 } }}
-        >
-          <Descriptions.Item label={t("officer.complaintId")}>
-            #{assignment.complaintId}
-          </Descriptions.Item>
-          <Descriptions.Item label={t("officer.category")}>
-            {getLocalizedCategory(assignment.complaint.category, t)}
-          </Descriptions.Item>
-          <Descriptions.Item label={t("officer.description")} span={2}>
-            <Text style={{ lineHeight: 1.7 }}>{assignment.complaint.description}</Text>
-          </Descriptions.Item>
-          <Descriptions.Item label={t("officer.coordinates")}>
-            {assignment.complaint.lat}, {assignment.complaint.lng}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
+      {alert && (
+        <Alert
+          type={alert.type}
+          message={alert.text}
+          showIcon
+          closable
+          onClose={() => setAlert(null)}
+          style={{ marginBottom: 20 }}
+        />
+      )}
 
-      {/* Response Form */}
-      <Card
-        style={{ borderRadius: "0 0 6px 6px", boxShadow: "0 8px 32px rgba(0,0,0,0.10)" }}
-        title={
-          <Text strong style={{ color: "#1a3c6e" }}>
-            {t("officer.submitResponse")}
-          </Text>
-        }
-      >
-        {alert && (
-          <Alert
-            type={alert.type}
-            message={alert.text}
-            showIcon
-            closable
-            onClose={() => setAlert(null)}
-            style={{ marginBottom: 20 }}
-          />
-        )}
+      <Row gutter={[20, 20]}>
+        <Col xs={24} lg={16}>
+          <Card
+            style={{ borderRadius: 6 }}
+            title={
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
+                  {t("officer.assignedComplaint")} #{assignment.complaintId} —{" "}
+                  {getLocalizedCategory(assignment.complaint.category, t)}
+                </span>
+                <Tag color="blue" style={{ fontWeight: 600 }}>
+                  {assignment.officer.department.name}
+                </Tag>
+              </div>
+            }
+            extra={
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                <a
+                  href={`https://www.google.com/maps?layer=c&cbll=${assignment.complaint.lat},${assignment.complaint.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                    {t("officer.openMap")}
+                  </Button>
+                </a>
+                {problemEvidence && (
+                  <a href={problemEvidence.fileUrl} target="_blank" rel="noreferrer">
+                    <Button size="small" style={{ borderColor: "#e07b00", color: "#e07b00" }}>
+                      {t("officer.viewProblem")}
+                    </Button>
+                  </a>
+                )}
+              </div>
+            }
+          >
+            <div className="flex flex-col gap-4 md:flex-row">
+              <div className="rounded-md bg-gray-100 p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.complaintId")}</h1>
+                <p className="text-xs font-semibold text-gray-500">#{assignment.complaintId}</p>
+              </div>
+              <div className="rounded-md bg-gray-100 p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.category")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {getLocalizedCategory(assignment.complaint.category, t)}
+                </p>
+              </div>
+            </div>
 
+            <div className="h-4" />
+
+            <div className="flex flex-col gap-4 md:flex-row">
+              <div className="rounded-md bg-gray-100 p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.department")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.officer.department.name}
+                </p>
+              </div>
+              <div className="rounded-md bg-gray-100 p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.coordinates")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.lat}, {assignment.complaint.lng}
+                </p>
+                <a
+                  href={`https://www.google.com/maps?layer=c&cbll=${assignment.complaint.lat},${assignment.complaint.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: "inline-block", marginTop: 8 }}
+                >
+                  <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e", fontSize: 11 }}>
+                    {t("officer.openMap")}
+                  </Button>
+                </a>
+              </div>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="rounded-md bg-gray-100 p-3 flex-1">
+              <h1 className="text-sm font-normal">{t("officer.description")}</h1>
+              <p className="text-xs font-semibold text-gray-500 whitespace-pre-wrap break-words">
+                {assignment.complaint.description}
+              </p>
+            </div>
+
+            {assignment.complaint.media.length > 0 && (
+              <>
+                <Divider plain style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}>
+                  {t("officer.problemEvidence")}
+                </Divider>
+                <Row gutter={[8, 8]}>
+                  {assignment.complaint.media.map((item) => (
+                    <Col key={item.id} xs={24} sm={12}>
+                      <a href={item.fileUrl} target="_blank" rel="noreferrer">
+                        <Card
+                          size="small"
+                          hoverable
+                          style={{
+                            borderRadius: 4,
+                            borderLeft: "3px solid #1a3c6e",
+                          }}
+                          styles={{
+                            body: {
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            },
+                          }}
+                        >
+                          <Tag style={{ fontSize: 10 }}>{item.type}</Tag>
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            {item.fileUrl.split("/").pop()}
+                          </Text>
+                        </Card>
+                      </a>
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          <Card
+            style={{ borderRadius: 6, boxShadow: "0 8px 32px rgba(0,0,0,0.10)" }}
+            title={
+              <Text strong style={{ color: "#1a3c6e" }}>
+                {t("officer.submitResponse")}
+              </Text>
+            }
+          >
         <Form
           form={form}
           layout="vertical"
@@ -278,7 +360,7 @@ export default function OfficerTokenPage() {
           </Divider>
 
           <Row gutter={16} align="top">
-            <Col xs={24} sm={16}>
+            <Col xs={24}>
               <Form.Item label={t("officer.uploadLabel")}>
                 <Upload
                   listType="text"
@@ -305,7 +387,7 @@ export default function OfficerTokenPage() {
                 </Text>
               </Form.Item>
             </Col>
-            <Col xs={24} sm={8}>
+            <Col xs={24}>
               {proofUrl && (
                 <div
                   style={{
@@ -350,7 +432,9 @@ export default function OfficerTokenPage() {
             </Button>
           </Form.Item>
         </Form>
-      </Card>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 }
