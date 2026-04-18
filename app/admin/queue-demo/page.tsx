@@ -1,26 +1,27 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
 import {
-  Card,
-  Table,
-  Select,
-  Input,
-  Button,
-  Row,
-  Col,
-  Statistic,
-  Typography,
-  Tag,
   Alert,
+  Button,
+  Card,
+  Col,
+  Input,
+  Row,
+  Select,
+  Statistic,
+  Table,
+  Tag,
+  Typography,
 } from "antd";
-
-import { COMPLAINT_CATEGORIES } from "@/lib/constants";
 import type { TableColumnsType } from "antd";
+
 import { useLanguage } from "@/components/language-provider";
+import { COMPLAINT_CATEGORIES } from "@/lib/constants";
 import { getLocalizedCategory } from "@/lib/complaint-i18n";
+import { buildPriorityClusters, DEMO_COMPLAINTS, getClusterKey } from "./demo-data";
 
 const { Title, Text } = Typography;
 
@@ -47,7 +48,10 @@ const STATUS_COLORS: Record<string, string> = {
 type Complaint = {
   id: number;
   category: string;
-  area: string | null;
+  subcategory: string;
+  description: string;
+  createdAt: string;
+  area: string;
   status: string;
   lat: number;
   lng: number;
@@ -57,56 +61,50 @@ type Complaint = {
   }>;
 };
 
-export default function AdminDashboardPage() {
+export default function AdminQueueDemoPage() {
   const router = useRouter();
   const { t } = useLanguage();
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(
-    undefined,
-  );
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(
-    undefined,
-  );
-  const [areaFilter, setAreaFilter] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  async function loadData(overrides?: {
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  const [areaFilter, setAreaFilter] = useState("");
+  const [appliedFilter, setAppliedFilter] = useState<{
     status?: string;
     category?: string;
     area?: string;
-  }) {
-    setLoading(true);
-    const query = new URLSearchParams();
-    const s = overrides?.status ?? statusFilter;
-    const c = overrides?.category ?? categoryFilter;
-    const a = overrides?.area ?? areaFilter;
-    if (s) query.set("status", s);
-    if (c) query.set("category", c);
-    if (a?.trim()) query.set("area", a.trim());
+  }>({});
 
-    const response = await fetch(`/api/complaints?${query.toString()}`);
-    const result = await response.json();
-    setLoading(false);
-
-    if (response.status === 401) {
-      router.push("/login");
-      return;
-    }
-    if (!response.ok) {
-      setError(result.error ?? t("admin.error.fetch"));
-      return;
-    }
-    setComplaints(result.complaints);
-    setError("");
+  function applyFilters() {
+    setAppliedFilter({
+      status: statusFilter,
+      category: categoryFilter,
+      area: areaFilter.trim() || undefined,
+    });
   }
 
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      void loadData();
+  const complaints = useMemo(() => {
+    return DEMO_COMPLAINTS.filter((complaint) => {
+      if (appliedFilter.status && complaint.status !== appliedFilter.status) {
+        return false;
+      }
+      if (appliedFilter.category && complaint.category !== appliedFilter.category) {
+        return false;
+      }
+      if (
+        appliedFilter.area &&
+        !(complaint.area ?? "").toLowerCase().includes(appliedFilter.area.toLowerCase())
+      ) {
+        return false;
+      }
+      return true;
     });
-    return () => cancelAnimationFrame(frame);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [appliedFilter]);
+
+  const priorityClusters = useMemo(() => buildPriorityClusters(DEMO_COMPLAINTS), []);
+  const priorityByKey = useMemo(
+    () => new Map(priorityClusters.map((cluster) => [cluster.key, cluster])),
+    [priorityClusters],
+  );
 
   const analytics = useMemo(() => {
     const byDepartment: Record<string, number> = {};
@@ -144,11 +142,26 @@ export default function AdminDashboardPage() {
       render: (cat: string) => <Text strong>{getLocalizedCategory(cat, t)}</Text>,
     },
     {
+      title: "Priority",
+      key: "priority",
+      width: 140,
+      render: (_, record) => {
+        const cluster = priorityByKey.get(getClusterKey(record));
+        return cluster ? (
+          <Tag color="red" style={{ fontWeight: 700 }}>
+            Cluster {cluster.complaintIds.length}
+          </Tag>
+        ) : (
+          <Text type="secondary">Normal</Text>
+        );
+      },
+    },
+    {
       title: t("admin.table.area"),
       dataIndex: "area",
       key: "area",
       render: (area: string | null) =>
-        area ? <Text>{area}</Text> : <Text type="secondary">—</Text>,
+        area ? <Text>{area}</Text> : <Text type="secondary">-</Text>,
     },
     {
       title: t("admin.table.status"),
@@ -186,22 +199,18 @@ export default function AdminDashboardPage() {
           </Text>
         ) : (
           <Text type="secondary" style={{ fontSize: 12 }}>
-            —
+            -
           </Text>
         ),
     },
     {
       title: t("admin.table.action"),
       key: "action",
-      width: 80,
+      width: 100,
       render: (_, record) => (
-        <Link href={`/admin/complaint/${record.id}`}>
-          <Button
-            type="link"
-            size="small"
-            style={{ color: "#1a3c6e", padding: 0 }}
-          >
-            {t("admin.table.view")}
+        <Link href={`/admin/queue-demo/${record.id}`}>
+          <Button type="link" size="small" style={{ padding: 0 }}>
+          {t("admin.table.view")}
           </Button>
         </Link>
       ),
@@ -210,7 +219,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      {/* Page Title */}
       <div style={{ marginBottom: 24 }}>
         <div
           style={{
@@ -237,16 +245,14 @@ export default function AdminDashboardPage() {
         </Text>
       </div>
 
-      {error && (
-        <Alert
-          type="error"
-          title={error}
-          showIcon
-          style={{ marginBottom: 20 }}
-        />
-      )}
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 20 }}
+        title={t("admin.demoBanner")}
+        description={`${t("admin.demoBannerDesc")} Total cases: ${DEMO_COMPLAINTS.length}.`}
+      />
 
-      {/* Statistics */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={12} sm={6}>
           <Card
@@ -343,7 +349,6 @@ export default function AdminDashboardPage() {
         </Col>
       </Row>
 
-      {/* Filters */}
       <Card
         size="small"
         style={{ marginBottom: 20, borderRadius: 6 }}
@@ -385,16 +390,16 @@ export default function AdminDashboardPage() {
               placeholder={t("admin.filter.area")}
               value={areaFilter}
               onChange={(e) => setAreaFilter(e.target.value)}
-              prefix={<span style={{ color: "#bbb" }}>🔍</span>}
+              prefix={<span style={{ color: "#bbb" }}>#</span>}
               allowClear
-              onPressEnter={() => void loadData()}
+              onPressEnter={applyFilters}
             />
           </Col>
           <Col xs={24} sm={5}>
             <Button
               type="primary"
               block
-              onClick={() => void loadData()}
+              onClick={applyFilters}
               style={{
                 background: "#1a3c6e",
                 borderColor: "#1a3c6e",
@@ -407,7 +412,6 @@ export default function AdminDashboardPage() {
         </Row>
       </Card>
 
-      {/* Complaints Table */}
       <Card
         title={
           <span style={{ color: "#1a3c6e", fontWeight: 700, fontSize: 14 }}>
@@ -425,17 +429,12 @@ export default function AdminDashboardPage() {
           columns={columns}
           dataSource={complaints}
           rowKey="id"
-          loading={loading}
           size="middle"
           pagination={{
             pageSize: 15,
             showSizeChanger: true,
             showTotal: (total) => `${total} ${t("admin.queue.complaints")}`,
           }}
-          onRow={(record) => ({
-            style: { cursor: "pointer" },
-            onClick: () => router.push(`/admin/complaint/${record.id}`),
-          })}
           locale={{
             emptyText: (
               <div style={{ padding: "32px 0", textAlign: "center" }}>
@@ -443,6 +442,12 @@ export default function AdminDashboardPage() {
               </div>
             ),
           }}
+          onRow={(record) => ({
+            style: { cursor: "pointer" },
+            onClick: () => {
+              router.push(`/admin/queue-demo/${record.id}`);
+            },
+          })}
         />
       </Card>
     </div>

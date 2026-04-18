@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Form, Input, Button, Typography, Steps, Alert, Divider } from "antd";
+import { Card, Form, Input, Button, Typography, Steps, Alert, Divider, Space } from "antd";
 import { useLanguage } from "@/components/language-provider";
 
 const { Title, Text } = Typography;
@@ -145,7 +145,7 @@ export default function LoginPage() {
           {alert && (
             <Alert
               type={alert.type}
-              message={alert.text}
+              title={alert.text}
               showIcon
               closable
               style={{ marginBottom: 16 }}
@@ -156,7 +156,7 @@ export default function LoginPage() {
           {sentOtp && (
             <Alert
               type="info"
-              message={
+              title={
                 <span>
                   {t("login.devOtp")}:{" "}
                   <strong
@@ -176,23 +176,39 @@ export default function LoginPage() {
           )}
 
           <Form form={form} layout="vertical" requiredMark>
-            <Form.Item
-              name="mobile"
-              label={t("login.mobileLabel")}
-              rules={[
-                { required: true, message: t("login.validation.mobileRequired") },
-                { pattern: /^\d{10}$/, message: t("login.validation.mobileInvalid") },
-              ]}
-            >
-              <Input
-                addonBefore={
+            <Form.Item label={t("login.mobileLabel")}>
+              <Space.Compact style={{ width: "100%" }} block>
+                <div
+                  style={{
+                    minWidth: 60,
+                    border: "1px solid #d9d9d9",
+                    borderRight: 0,
+                    borderRadius: "8px 0 0 8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#fafafa",
+                    padding: "0 12px",
+                  }}
+                >
                   <Text style={{ fontSize: 13, color: "#555", fontWeight: 600 }}>+91</Text>
-                }
-                placeholder={t("login.mobilePlaceholder")}
-                maxLength={10}
-                size="large"
-                disabled={otpSent}
-              />
+                </div>
+                <Form.Item
+                  name="mobile"
+                  noStyle
+                  rules={[
+                    { required: true, message: t("login.validation.mobileRequired") },
+                    { pattern: /^\d{10}$/, message: t("login.validation.mobileInvalid") },
+                  ]}
+                >
+                  <Input
+                    placeholder={t("login.mobilePlaceholder")}
+                    maxLength={10}
+                    size="large"
+                    disabled={otpSent}
+                  />
+                </Form.Item>
+              </Space.Compact>
             </Form.Item>
 
             {otpSent && (

@@ -223,7 +223,7 @@ export default function CitizenDashboardPage() {
       </div>
 
       {error && (
-        <Alert type="error" message={error} showIcon style={{ marginBottom: 20 }} />
+        <Alert type="error" title={error} showIcon style={{ marginBottom: 20 }} />
       )}
 
       {/* Statistics */}

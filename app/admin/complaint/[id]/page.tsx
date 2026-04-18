@@ -64,6 +64,11 @@ type Assignment = {
 
 type Complaint = {
   id: number;
+  user: {
+    name: string | null;
+    address: string | null;
+    mobile: string;
+  };
   category: string;
   subcategory: string | null;
   description: string;
@@ -176,7 +181,7 @@ export default function AdminComplaintDetailPage() {
     return (
       <Alert
         type="error"
-        message={alert?.text ?? "Complaint not found"}
+        title={alert?.text ?? "Complaint not found"}
         showIcon
       />
     );
@@ -209,7 +214,7 @@ export default function AdminComplaintDetailPage() {
       {alert && (
         <Alert
           type={alert.type}
-          message={alert.text}
+          title={alert.text}
           showIcon
           closable
           onClose={() => setAlert(null)}
@@ -258,6 +263,30 @@ export default function AdminComplaintDetailPage() {
               </a>
             }
           >
+            <div className="flex gap-4">
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">Complainant Name</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {complaint.user.name?.trim() || "Not provided"}
+                </p>
+              </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">Mobile</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {complaint.user.mobile}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-4"></div>
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">Address</h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {complaint.user.address?.trim() || "Not provided"}
+              </p>
+            </div>
+
+            <div className="h-4"></div>
             <div className="flex gap-4">
               <div className="bg-gray-100 rounded-md p-3 flex-1">
                 <h1 className="text-sm font-normal">
@@ -490,7 +519,7 @@ export default function AdminComplaintDetailPage() {
                 {officers.length === 0 && (
                   <Alert
                     type="warning"
-                    message={t("adminDetail.noOfficersWarning")}
+                    title={t("adminDetail.noOfficersWarning")}
                     showIcon
                     style={{ marginBottom: 12 }}
                   />

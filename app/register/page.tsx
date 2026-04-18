@@ -69,7 +69,7 @@ export default function RegisterPage() {
         {alert && (
           <Alert
             type={alert.type}
-            message={alert.text}
+            title={alert.text}
             showIcon
             closable
             style={{ marginBottom: 20 }}

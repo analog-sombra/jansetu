@@ -16,10 +16,14 @@ const CITIZEN_NAV_LINKS = [
 
 const ADMIN_NAV_LINKS = [
   { href: "/admin", labelKey: "nav.adminDashboard" },
+  { href: "/admin/queue-demo", labelKey: "nav.adminQueueDemo" },
+  { href: "/admin/escalation-demo", labelKey: "nav.adminEscalationDemo" },
+  { href: "/admin/priority-cases-demo", labelKey: "nav.adminPriorityCasesDemo" },
 ];
 
 const REPORT_NAV_LINKS = [
   { href: "/report", labelKey: "nav.mlaReport" },
+  { href: "/report/demo", labelKey: "nav.reportDemo" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -47,6 +51,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const navLinks = getNavLinks();
+  const activeNavHref = [...navLinks]
+    .sort((left, right) => right.href.length - left.href.length)
+    .find((link) => pathname === link.href || pathname.startsWith(`${link.href}/`))?.href;
 
   async function logout() {
     await fetch("/api/logout", { method: "POST" });
@@ -177,7 +184,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex" }}
           >
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+              const isActive = activeNavHref === link.href;
               return (
                 <Link key={link.href} href={link.href}>
                   <div

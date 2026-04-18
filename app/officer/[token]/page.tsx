@@ -132,7 +132,7 @@ export default function OfficerTokenPage() {
           {loadStatus === t("officer.loading") ? (
             <Skeleton active paragraph={{ rows: 4 }} />
           ) : (
-            <Alert type="error" message={loadStatus} showIcon />
+            <Alert type="error" title={loadStatus} showIcon />
           )}
         </Card>
       </div>
@@ -157,7 +157,7 @@ export default function OfficerTokenPage() {
       {alert && (
         <Alert
           type={alert.type}
-          message={alert.text}
+          title={alert.text}
           showIcon
           closable
           onClose={() => setAlert(null)}

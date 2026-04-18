@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   Button,
   Card,
   Col,
   Divider,
+  Image as AntImage,
+  Input,
   List,
+  Modal,
   Progress,
   Row,
   Select,
@@ -37,6 +39,8 @@ import { useLanguage } from "@/components/language-provider";
 const { Title, Text, Paragraph } = Typography;
 
 type PeriodKey = "7d" | "30d" | "90d";
+type ReportWindow = "weekly" | "monthly";
+type GroupByKey = "ward" | "category";
 
 type WardStatus = "GREEN" | "AMBER" | "RED";
 
@@ -119,6 +123,20 @@ type DemoOverview = {
   }>;
 };
 
+type DemoCaseEntry = {
+  id: number;
+  ward: string;
+  area: string;
+  category: string;
+  statusType: "SOLVED" | "UNSOLVED";
+  priority: boolean;
+  assignedTo: string;
+  beforeImageUrl: string;
+  afterImageUrl: string;
+  createdAt: string;
+  resolvedAt: string | null;
+};
+
 const WARD_COLOR: Record<WardStatus, string> = {
   GREEN: "#2e7d32",
   AMBER: "#e07b00",
@@ -190,9 +208,9 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { complaintId: 9216, category: "Sanitation", area: "Ward 8 Market", resolvedAt: "2026-04-13", beforeLabel: "Garbage overflow", afterLabel: "Daily pickup restored", beforeTone: "#92400e", afterTone: "#15803d" },
     ],
     systemicCrises: [
-      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 12, icon: "≡ƒÆº", severity: "High priority" },
-      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 9, icon: "≡ƒ¢ú∩╕Å", severity: "Escalation watch" },
-      { key: "night-power", area: "Ward 8", category: "Power", activeCases: 7, icon: "ΓÜí", severity: "Monitoring" },
+      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 12, icon: "💧", severity: "High priority" },
+      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 9, icon: "🛣️", severity: "Escalation watch" },
+      { key: "night-power", area: "Ward 8", category: "Power", activeCases: 7, icon: "⚡", severity: "Monitoring" },
     ],
   },
   "30d": {
@@ -254,9 +272,9 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { complaintId: 9390, category: "Health", area: "Civil Dispensary", resolvedAt: "2026-04-08", beforeLabel: "Medicine shortage", afterLabel: "Stock replenished", beforeTone: "#7f1d1d", afterTone: "#15803d" },
     ],
     systemicCrises: [
-      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 28, icon: "≡ƒÆº", severity: "High priority" },
-      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 21, icon: "≡ƒ¢ú∩╕Å", severity: "Escalation watch" },
-      { key: "clinic-shortage", area: "Ward 6", category: "Health", activeCases: 11, icon: "≡ƒÅÑ", severity: "Monitoring" },
+      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 28, icon: "💧", severity: "High priority" },
+      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 21, icon: "🛣️", severity: "Escalation watch" },
+      { key: "clinic-shortage", area: "Ward 6", category: "Health", activeCases: 11, icon: "🏥", severity: "Monitoring" },
     ],
   },
   "90d": {
@@ -319,28 +337,107 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { complaintId: 9604, category: "Sanitation", area: "Old Market", resolvedAt: "2026-04-02", beforeLabel: "Overflowing bins", afterLabel: "Route optimization applied", beforeTone: "#92400e", afterTone: "#15803d" },
     ],
     systemicCrises: [
-      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 54, icon: "≡ƒÆº", severity: "High priority" },
-      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 33, icon: "≡ƒ¢ú∩╕Å", severity: "Escalation watch" },
-      { key: "night-power", area: "Ward 8", category: "Power", activeCases: 19, icon: "ΓÜí", severity: "Monitoring" },
+      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 54, icon: "💧", severity: "High priority" },
+      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 33, icon: "🛣️", severity: "Escalation watch" },
+      { key: "night-power", area: "Ward 8", category: "Power", activeCases: 19, icon: "⚡", severity: "Monitoring" },
     ],
   },
 };
 
-const PROOF_PANEL_STYLE = {
-  borderRadius: 8,
-  minHeight: 140,
-  padding: 14,
-  color: "#fff",
-  display: "flex",
-  flexDirection: "column" as const,
-  justifyContent: "space-between",
-};
+const DEMO_WARDS = ["Ward 11", "Ward 8", "Ward 3", "Ward 14", "Ward 6"];
+const DEMO_AREAS = [
+  "Rajouri Garden Main Market",
+  "Raghubir Nagar",
+  "Tagore Garden Extension",
+  "Subhash Nagar Border",
+  "Vishal Enclave",
+  "Shivaji Enclave",
+  "Mansarovar Garden",
+  "Mayapuri Link",
+];
+const DEMO_CATEGORIES = ["Roads", "Water", "Power", "Sanitation", "Health"];
+
+const UNSPLASH_BEFORE = [
+  "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1517022812141-23620dba5c23?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1457530378978-8bac673b8062?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1532960400857-e8d9d275d858?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1579508542697-bb18e7d9aeaa?auto=format&fit=crop&w=840&q=80",
+];
+
+const UNSPLASH_AFTER = [
+  "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1508450859948-4e04fabaa4ea?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1431576901776-e539bd916ba2?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=840&q=80",
+  "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=840&q=80",
+];
+
+const DEMO_CASES: DemoCaseEntry[] = Array.from({ length: 50 }, (_, index) => {
+  const id = 12001 + index;
+  const ward = DEMO_WARDS[index % DEMO_WARDS.length];
+  const area = DEMO_AREAS[index % DEMO_AREAS.length];
+  const category = DEMO_CATEGORIES[index % DEMO_CATEGORIES.length];
+  const statusType = index % 4 === 0 || index % 7 === 0 ? "UNSOLVED" : "SOLVED";
+  const priority = index % 5 === 0 || index % 9 === 0;
+
+  return {
+    id,
+    ward,
+    area,
+    category,
+    statusType,
+    priority,
+    assignedTo: `Officer ${(index % 12) + 1}`,
+    beforeImageUrl: UNSPLASH_BEFORE[index % UNSPLASH_BEFORE.length],
+    afterImageUrl: UNSPLASH_AFTER[index % UNSPLASH_AFTER.length],
+    createdAt: new Date(Date.UTC(2026, 2, (index % 28) + 1, 9, 10)).toISOString(),
+    resolvedAt:
+      statusType === "SOLVED"
+        ? new Date(Date.UTC(2026, 3, (index % 26) + 1, 11, 30)).toISOString()
+        : null,
+  };
+});
+
+function buildLetterDraft(entry: DemoCaseEntry) {
+  return [
+    "OFFICE OF MLA - JAN SETU",
+    "Subject: Show Cause Notice for Delayed Grievance Resolution",
+    "",
+    `Complaint Ref: #${entry.id}`,
+    `Ward: ${entry.ward}`,
+    `Area: ${entry.area}`,
+    `Category: ${entry.category}`,
+    `Assigned Officer: ${entry.assignedTo}`,
+    `Priority Flag: ${entry.priority ? "Yes" : "No"}`,
+    "",
+    "You are hereby directed to submit a written explanation for delay and provide an immediate action plan within 24 hours.",
+    "Failure to comply may invite disciplinary review as per office protocol.",
+    "",
+    "Issued by:",
+    "MLA Constituency Office",
+  ].join("\n");
+}
 
 export default function ReportDashboardPage() {
   const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
-  const [period, setPeriod] = useState<PeriodKey>("30d");
+  const [windowMode, setWindowMode] = useState<ReportWindow>("monthly");
   const [wardFilter, setWardFilter] = useState<string>("ALL");
+  const [groupBy, setGroupBy] = useState<GroupByKey>("ward");
+  const [draftOpen, setDraftOpen] = useState(false);
+  const [draftCase, setDraftCase] = useState<DemoCaseEntry | null>(null);
+  const [exporting, setExporting] = useState<ReportWindow | null>(null);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -352,7 +449,209 @@ export default function ReportDashboardPage() {
     };
   }, []);
 
-  const overview = DEMO_DATA[period];
+  const overviewPeriod: PeriodKey = windowMode === "weekly" ? "7d" : "30d";
+  const overview = DEMO_DATA[overviewPeriod];
+
+  function getFilteredCasesForWindow(mode: ReportWindow) {
+    const latestCreatedAt = Math.max(
+      ...DEMO_CASES.map((item) => new Date(item.createdAt).getTime()),
+    );
+    const lookbackDays = mode === "weekly" ? 7 : 30;
+    const cutoff = latestCreatedAt - lookbackDays * 24 * 60 * 60 * 1000;
+
+    return DEMO_CASES.filter((item) => {
+      const withinWindow = new Date(item.createdAt).getTime() >= cutoff;
+      const matchesWard = wardFilter === "ALL" || item.ward === wardFilter;
+      return withinWindow && matchesWard;
+    });
+  }
+
+  function getNoticeRows(cases: DemoCaseEntry[]) {
+    return cases
+      .filter((item) => item.statusType === "UNSOLVED" || item.priority)
+      .slice(0, 8)
+      .map((item, index) => ({
+        assignmentId: 900 + index,
+        ticketId: item.id,
+        officerName: item.assignedTo,
+        department: item.category,
+        reminderCount: item.priority ? 3 : 2,
+        daysOverdue: item.priority ? 7 : 4,
+        area: item.area,
+      }));
+  }
+
+  async function downloadReportExcel(mode: ReportWindow) {
+    setExporting(mode);
+    try {
+      const { utils, writeFile } = await import("xlsx");
+      const period: PeriodKey = mode === "weekly" ? "7d" : "30d";
+      const report = DEMO_DATA[period];
+      const cases = getFilteredCasesForWindow(mode);
+      const solved = cases.filter((item) => item.statusType === "SOLVED");
+      const unsolved = cases.filter((item) => item.statusType === "UNSOLVED");
+      const priority = cases.filter((item) => item.priority);
+
+      const groupedMap = new Map<
+        string,
+        { group: string; total: number; solved: number; unsolved: number; priority: number }
+      >();
+      for (const item of cases) {
+        const key = groupBy === "ward" ? item.ward : item.category;
+        const existing = groupedMap.get(key);
+        if (!existing) {
+          groupedMap.set(key, {
+            group: key,
+            total: 1,
+            solved: item.statusType === "SOLVED" ? 1 : 0,
+            unsolved: item.statusType === "UNSOLVED" ? 1 : 0,
+            priority: item.priority ? 1 : 0,
+          });
+        } else {
+          existing.total += 1;
+          if (item.statusType === "SOLVED") existing.solved += 1;
+          if (item.statusType === "UNSOLVED") existing.unsolved += 1;
+          if (item.priority) existing.priority += 1;
+        }
+      }
+
+      const areaMap = new Map<
+        string,
+        { area: string; total: number; solved: number; unsolved: number; priority: number }
+      >();
+      for (const item of cases) {
+        const existing = areaMap.get(item.area);
+        if (!existing) {
+          areaMap.set(item.area, {
+            area: item.area,
+            total: 1,
+            solved: item.statusType === "SOLVED" ? 1 : 0,
+            unsolved: item.statusType === "UNSOLVED" ? 1 : 0,
+            priority: item.priority ? 1 : 0,
+          });
+        } else {
+          existing.total += 1;
+          if (item.statusType === "SOLVED") existing.solved += 1;
+          if (item.statusType === "UNSOLVED") existing.unsolved += 1;
+          if (item.priority) existing.priority += 1;
+        }
+      }
+
+      const areaSummary = [...areaMap.values()].sort((a, b) => b.total - a.total);
+
+      function appendFormattedSheet(sheetName: string, rows: Array<Record<string, unknown>>) {
+        const worksheet = utils.json_to_sheet(rows);
+        if (rows.length > 0) {
+          const headers = Object.keys(rows[0]);
+          worksheet["!cols"] = headers.map((key) => {
+            const maxLen = Math.max(
+              key.length,
+              ...rows.map((row) => String(row[key] ?? "").length),
+            );
+            return { wch: Math.min(Math.max(maxLen + 2, 12), 42) };
+          });
+
+          const endCol = utils.encode_col(headers.length - 1);
+          const endRow = rows.length + 1;
+          worksheet["!autofilter"] = { ref: `A1:${endCol}${endRow}` };
+          worksheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+        }
+
+        utils.book_append_sheet(workbook, worksheet, sheetName);
+      }
+
+      const workbook = utils.book_new();
+
+      appendFormattedSheet("Summary", [
+        {
+          "Report Window": mode,
+          "Ward Filter": wardFilter,
+          "Group By": groupBy,
+          "Total Entries": cases.length,
+          "Solved Cases": solved.length,
+          "Unsolved Cases": unsolved.length,
+          "Priority Cases": priority.length,
+          "Total Voters Assisted": report.summary.totalVotersAssisted,
+          "Resolved This Period": report.summary.resolvedThisPeriod,
+          "Pending Follow Ups": report.summary.pendingFollowUps,
+          "Satisfaction Score": report.summary.satisfactionScore,
+          "Areas Covered": areaSummary.map((item) => item.area).join(", "),
+        },
+      ]);
+
+      appendFormattedSheet(
+        "Case Register",
+        cases.map((item) => ({
+          "Complaint ID": item.id,
+          Ward: item.ward,
+          Area: item.area,
+          Category: item.category,
+          Status: item.statusType,
+          Priority: item.priority ? "YES" : "NO",
+          "Assigned To": item.assignedTo,
+          "Created At": item.createdAt,
+          "Resolved At": item.resolvedAt ?? "",
+          "Before Image URL": item.beforeImageUrl,
+          "After Image URL": item.afterImageUrl,
+        })),
+      );
+
+      appendFormattedSheet(
+        "Grouped",
+        [...groupedMap.values()].map((row) => ({
+          Group: row.group,
+          "Total Cases": row.total,
+          Solved: row.solved,
+          Unsolved: row.unsolved,
+          Priority: row.priority,
+        })),
+      );
+
+      appendFormattedSheet("Area Summary", areaSummary);
+
+      appendFormattedSheet("Trend", report.trend);
+
+      appendFormattedSheet("Area Heatmap", report.areaHeatmap);
+
+      appendFormattedSheet("Wards", report.wards);
+
+      appendFormattedSheet("Departments", report.departmentReportCard);
+
+      appendFormattedSheet("Notice Triggers", getNoticeRows(cases));
+
+      appendFormattedSheet(
+        "Proof Gallery",
+        solved.slice(0, 10).map((item) => ({
+          "Complaint ID": item.id,
+          Area: item.area,
+          Category: item.category,
+          "Resolved At": item.resolvedAt ?? "",
+          "Before Image URL": item.beforeImageUrl,
+          "After Image URL": item.afterImageUrl,
+        })),
+      );
+
+      appendFormattedSheet("Systemic Crises", report.systemicCrises);
+
+      writeFile(workbook, `report-demo-${mode}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  const filteredCases = useMemo(() => {
+    const latestCreatedAt = Math.max(
+      ...DEMO_CASES.map((item) => new Date(item.createdAt).getTime()),
+    );
+    const lookbackDays = windowMode === "weekly" ? 7 : 30;
+    const cutoff = latestCreatedAt - lookbackDays * 24 * 60 * 60 * 1000;
+
+    return DEMO_CASES.filter((item) => {
+      const withinWindow = new Date(item.createdAt).getTime() >= cutoff;
+      const matchesWard = wardFilter === "ALL" || item.ward === wardFilter;
+      return withinWindow && matchesWard;
+    });
+  }, [windowMode, wardFilter]);
 
   const wardOptions = useMemo(
     () => [
@@ -366,12 +665,43 @@ export default function ReportDashboardPage() {
   );
 
   const filteredWards = useMemo(() => {
-    if (wardFilter === "ALL") {
-      return overview.wards;
+    const summary = new Map<
+      string,
+      { ward: string; total: number; resolved: number; avgResolutionDays: number; color: WardStatus }
+    >();
+
+    for (const item of filteredCases) {
+      const existing = summary.get(item.ward);
+      if (!existing) {
+        summary.set(item.ward, {
+          ward: item.ward,
+          total: 1,
+          resolved: item.statusType === "SOLVED" ? 1 : 0,
+          avgResolutionDays: item.statusType === "SOLVED" ? 3.2 : 5.4,
+          color: "AMBER",
+        });
+      } else {
+        existing.total += 1;
+        if (item.statusType === "SOLVED") existing.resolved += 1;
+      }
     }
 
-    return overview.wards.filter((item) => item.ward === wardFilter);
-  }, [overview.wards, wardFilter]);
+    return [...summary.values()].map((row) => {
+      const resolutionRate = row.total > 0 ? Math.round((row.resolved / row.total) * 100) : 0;
+      let color: WardStatus = "RED";
+      if (resolutionRate >= 80) color = "GREEN";
+      else if (resolutionRate >= 65) color = "AMBER";
+
+      return {
+        ward: row.ward,
+        total: row.total,
+        resolved: row.resolved,
+        resolutionRate,
+        avgResolutionDays: row.avgResolutionDays,
+        color,
+      };
+    });
+  }, [filteredCases]);
 
   const topAffectedAreas = useMemo(
     () => [...overview.areaHeatmap].sort((left, right) => right.complaints - left.complaints),
@@ -413,6 +743,122 @@ export default function ReportDashboardPage() {
     },
   ];
 
+  const solvedCases = filteredCases.filter((item) => item.statusType === "SOLVED");
+  const unsolvedCases = filteredCases.filter((item) => item.statusType === "UNSOLVED");
+  const priorityCases = filteredCases.filter((item) => item.priority);
+  const proofPhotoCases = solvedCases.slice(0, 10);
+
+  const noticeTriggerRows = useMemo(() => {
+    return filteredCases
+      .filter((item) => item.statusType === "UNSOLVED" || item.priority)
+      .slice(0, 8)
+      .map((item, index) => ({
+        assignmentId: 900 + index,
+        ticketId: item.id,
+        officerName: item.assignedTo,
+        department: item.category,
+        reminderCount: item.priority ? 3 : 2,
+        daysOverdue: item.priority ? 7 : 4,
+        area: item.area,
+      }));
+  }, [filteredCases]);
+
+  const groupedRows = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        key: string;
+        groupName: string;
+        total: number;
+        solved: number;
+        unsolved: number;
+        priority: number;
+      }
+    >();
+
+    for (const item of filteredCases) {
+      const key = groupBy === "ward" ? item.ward : item.category;
+      const existing = groups.get(key);
+
+      if (!existing) {
+        groups.set(key, {
+          key,
+          groupName: key,
+          total: 1,
+          solved: item.statusType === "SOLVED" ? 1 : 0,
+          unsolved: item.statusType === "UNSOLVED" ? 1 : 0,
+          priority: item.priority ? 1 : 0,
+        });
+      } else {
+        existing.total += 1;
+        if (item.statusType === "SOLVED") existing.solved += 1;
+        if (item.statusType === "UNSOLVED") existing.unsolved += 1;
+        if (item.priority) existing.priority += 1;
+      }
+    }
+
+    return [...groups.values()].sort((a, b) => b.total - a.total);
+  }, [groupBy, filteredCases]);
+
+  const groupedColumns = [
+    {
+      title: groupBy === "ward" ? "Ward" : "Category",
+      dataIndex: "groupName",
+      key: "groupName",
+      render: (value: string) => <Text strong>{value}</Text>,
+    },
+    { title: "Total", dataIndex: "total", key: "total" },
+    { title: "Solved", dataIndex: "solved", key: "solved" },
+    { title: "Unsolved", dataIndex: "unsolved", key: "unsolved" },
+    {
+      title: "Priority",
+      dataIndex: "priority",
+      key: "priority",
+      render: (value: number) => <Tag color="red">{value}</Tag>,
+    },
+  ];
+
+  const caseColumns = [
+    {
+      title: "Ref",
+      dataIndex: "id",
+      key: "id",
+      width: 90,
+      render: (value: number) => <Text strong>#{value}</Text>,
+    },
+    { title: "Ward", dataIndex: "ward", key: "ward" },
+    { title: "Area", dataIndex: "area", key: "area" },
+    { title: "Category", dataIndex: "category", key: "category" },
+    {
+      title: "Status",
+      dataIndex: "statusType",
+      key: "statusType",
+      render: (value: "SOLVED" | "UNSOLVED") => (
+        <Tag color={value === "SOLVED" ? "green" : "orange"}>{value}</Tag>
+      ),
+    },
+    {
+      title: "Priority",
+      dataIndex: "priority",
+      key: "priority",
+      render: (value: boolean) =>
+        value ? <Tag color="red">PRIORITY</Tag> : <Text type="secondary">Normal</Text>,
+    },
+    { title: "Assigned", dataIndex: "assignedTo", key: "assignedTo" },
+  ];
+
+  function openDraftFromNotice(area: string) {
+    const matched =
+      filteredCases.find(
+        (item) =>
+          item.area.toLowerCase().includes(area.toLowerCase()) &&
+          item.statusType === "UNSOLVED",
+      ) ?? priorityCases[0] ?? filteredCases[0] ?? DEMO_CASES[0];
+
+    setDraftCase(matched);
+    setDraftOpen(true);
+  }
+
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
@@ -453,16 +899,30 @@ export default function ReportDashboardPage() {
         <Space wrap style={{ width: "100%" }}>
           <div>
             <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
-              {t("report.filter.period")}
+              Report Window
             </Text>
             <Select
-              value={period}
-              onChange={(value) => setPeriod(value as PeriodKey)}
+              value={windowMode}
+              onChange={(value) => setWindowMode(value as ReportWindow)}
               style={{ minWidth: 170 }}
               options={[
-                { value: "7d", label: t("report.filter.last7") },
-                { value: "30d", label: t("report.filter.last30") },
-                { value: "90d", label: t("report.filter.last90") },
+                { value: "weekly", label: "Weekly" },
+                { value: "monthly", label: "Monthly" },
+              ]}
+            />
+          </div>
+
+          <div>
+            <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
+              Group By
+            </Text>
+            <Select
+              value={groupBy}
+              onChange={(value) => setGroupBy(value as GroupByKey)}
+              style={{ minWidth: 170 }}
+              options={[
+                { value: "ward", label: "Ward" },
+                { value: "category", label: "Category" },
               ]}
             />
           </div>
@@ -482,7 +942,20 @@ export default function ReportDashboardPage() {
           <div style={{ marginLeft: "auto" }}>
             <Space>
               <Tag color="blue">{t("report.demoTag")}</Tag>
-              <Button disabled>{t("report.exportSummary")}</Button>
+              <Button
+                onClick={() => void downloadReportExcel("weekly")}
+                loading={exporting === "weekly"}
+              >
+                Download Weekly Report
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => void downloadReportExcel("monthly")}
+                loading={exporting === "monthly"}
+                style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}
+              >
+                Download Monthly Report
+              </Button>
             </Space>
           </div>
         </Space>
@@ -492,8 +965,8 @@ export default function ReportDashboardPage() {
         <Col xs={24} md={12} xl={6}>
           <Card size="small" style={{ borderTop: "3px solid #1a3c6e" }}>
             <Statistic
-              title={t("report.totalVotersAssisted")}
-              value={overview.summary.totalVotersAssisted}
+              title="Total Entries"
+              value={filteredCases.length}
               styles={{ content: { color: "#1a3c6e", fontWeight: 800 } }}
             />
           </Card>
@@ -501,8 +974,8 @@ export default function ReportDashboardPage() {
         <Col xs={24} md={12} xl={6}>
           <Card size="small" style={{ borderTop: "3px solid #2e7d32" }}>
             <Statistic
-              title={t("report.resolvedThisPeriod")}
-              value={overview.summary.resolvedThisPeriod}
+              title="Solved"
+              value={solvedCases.length}
               styles={{ content: { color: "#2e7d32", fontWeight: 800 } }}
             />
           </Card>
@@ -510,23 +983,58 @@ export default function ReportDashboardPage() {
         <Col xs={24} md={12} xl={6}>
           <Card size="small" style={{ borderTop: "3px solid #e07b00" }}>
             <Statistic
-              title={t("report.pendingFollowUps")}
-              value={overview.summary.pendingFollowUps}
+              title="Unsolved"
+              value={unsolvedCases.length}
               styles={{ content: { color: "#e07b00", fontWeight: 800 } }}
             />
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
-          <Card size="small" style={{ borderTop: "3px solid #722ed1" }}>
+          <Card size="small" style={{ borderTop: "3px solid #c62828" }}>
             <Statistic
-              title={t("report.netScore")}
-              value={overview.summary.satisfactionScore}
-              suffix="%"
-              styles={{ content: { color: "#722ed1", fontWeight: 800 } }}
+              title="Priority"
+              value={priorityCases.length}
+              styles={{ content: { color: "#c62828", fontWeight: 800 } }}
             />
           </Card>
         </Col>
       </Row>
+
+      <Card
+        style={{ borderRadius: 6, marginBottom: 20 }}
+        title={
+          <Text strong style={{ color: "#1a3c6e" }}>
+            Case Register (50 Entries)
+          </Text>
+        }
+      >
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={10}>
+            <Card size="small" title={`Grouped by ${groupBy === "ward" ? "Ward" : "Category"}`}>
+              <Table
+                rowKey="key"
+                columns={groupedColumns}
+                dataSource={groupedRows}
+                size="small"
+                pagination={false}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} lg={14}>
+            <Table
+              rowKey="id"
+              columns={caseColumns}
+              dataSource={filteredCases}
+              size="small"
+              pagination={{
+                pageSize: 10,
+                showTotal: (total) => `${total} entries`,
+              }}
+              scroll={{ x: 900 }}
+            />
+          </Col>
+        </Row>
+      </Card>
 
       <Card
         style={{ borderRadius: 6, marginBottom: 20 }}
@@ -841,12 +1349,18 @@ export default function ReportDashboardPage() {
         <Divider />
         <Title level={5}>{t("report.noticeTriggers")}</Title>
         <List
-          dataSource={overview.noticeTriggerList}
+          dataSource={noticeTriggerRows}
           renderItem={(item) => (
             <List.Item
               actions={[
-                <Button key={item.assignmentId} size="small" disabled>
-                  {t("report.demoPreviewAction")}
+                <Button
+                  key={item.assignmentId}
+                  size="small"
+                  type="primary"
+                  onClick={() => openDraftFromNotice(item.area)}
+                  style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}
+                >
+                  Create Letter Draft
                 </Button>,
               ]}
             >
@@ -872,42 +1386,42 @@ export default function ReportDashboardPage() {
         style={{ borderRadius: 6, marginBottom: 20 }}
         title={
           <Text strong style={{ color: "#1a3c6e" }}>
-            {t("report.section.proof")}
+            {t("report.section.proof")} (10 Cases)
           </Text>
         }
       >
         <Row gutter={[12, 12]}>
-          {overview.proofGallery.map((item) => (
-            <Col xs={24} md={12} lg={8} key={item.complaintId}>
-              <Card size="small" title={`#${item.complaintId} - ${item.category}`}>
+          {proofPhotoCases.map((item) => (
+            <Col xs={24} md={12} lg={8} key={item.id}>
+              <Card size="small" title={`#${item.id} - ${item.category}`}>
                 <Row gutter={10}>
                   <Col span={12}>
                     <Text strong style={{ display: "block", marginBottom: 6 }}>
                       {t("report.before")}
                     </Text>
-                    <div
-                      style={{
-                        ...PROOF_PANEL_STYLE,
-                        background: `linear-gradient(140deg, ${item.beforeTone}, #111827)`,
-                      }}
-                    >
-                      <Text style={{ color: "#fff", fontWeight: 700 }}>{item.beforeLabel}</Text>
-                      <Text style={{ color: "rgba(255,255,255,0.8)" }}>{item.area}</Text>
-                    </div>
+                    <AntImage
+                      src={item.beforeImageUrl}
+                      alt={`Before case ${item.id}`}
+                      preview={false}
+                      style={{ width: "100%", height: 128, borderRadius: 8, objectFit: "cover" }}
+                    />
+                    <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 6 }}>
+                      {item.area}
+                    </Text>
                   </Col>
                   <Col span={12}>
                     <Text strong style={{ display: "block", marginBottom: 6 }}>
                       {t("report.after")}
                     </Text>
-                    <div
-                      style={{
-                        ...PROOF_PANEL_STYLE,
-                        background: `linear-gradient(140deg, ${item.afterTone}, #0f172a)`,
-                      }}
-                    >
-                      <Text style={{ color: "#fff", fontWeight: 700 }}>{item.afterLabel}</Text>
-                      <Text style={{ color: "rgba(255,255,255,0.8)" }}>{t("report.resolvedOn")} {new Date(item.resolvedAt).toLocaleDateString("en-IN")}</Text>
-                    </div>
+                    <AntImage
+                      src={item.afterImageUrl}
+                      alt={`After case ${item.id}`}
+                      preview={false}
+                      style={{ width: "100%", height: 128, borderRadius: 8, objectFit: "cover" }}
+                    />
+                    <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 6 }}>
+                      {t("report.resolvedOn")} {item.resolvedAt ? new Date(item.resolvedAt).toLocaleDateString("en-IN") : "-"}
+                    </Text>
                   </Col>
                 </Row>
               </Card>
@@ -944,11 +1458,50 @@ export default function ReportDashboardPage() {
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   {t("report.avgResolution")}: {item.avgResolutionDays} {t("report.days")} | {t("report.cases")}: {item.total}
                 </Text>
+                <div style={{ marginTop: 12 }}>
+                  <Button
+                    type="primary"
+                    size="small"
+                    onClick={() => openDraftFromNotice(item.ward)}
+                    style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}
+                  >
+                    Create Letter Draft
+                  </Button>
+                </div>
               </Card>
             </Col>
           ))}
         </Row>
       </Card>
+
+      <Modal
+        title={draftCase ? `Letter Draft for #${draftCase.id}` : "Letter Draft"}
+        open={draftOpen}
+        onCancel={() => setDraftOpen(false)}
+        width={760}
+        footer={[
+          <Button key="close" onClick={() => setDraftOpen(false)}>
+            Close
+          </Button>,
+          <Button
+            key="copy"
+            type="primary"
+            disabled={!draftCase}
+            onClick={() => {
+              if (!draftCase) return;
+              void navigator.clipboard.writeText(buildLetterDraft(draftCase));
+            }}
+          >
+            Copy Draft
+          </Button>,
+        ]}
+      >
+        <Input.TextArea
+          rows={16}
+          readOnly
+          value={draftCase ? buildLetterDraft(draftCase) : "Select a case to create a draft"}
+        />
+      </Modal>
     </div>
   );
 }
