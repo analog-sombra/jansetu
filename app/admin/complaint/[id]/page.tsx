@@ -19,7 +19,10 @@ import {
   Skeleton,
 } from "antd";
 import { useLanguage } from "@/components/language-provider";
-import { getLocalizedCategory, getLocalizedSubcategory } from "@/lib/complaint-i18n";
+import {
+  getLocalizedCategory,
+  getLocalizedSubcategory,
+} from "@/lib/complaint-i18n";
 
 const { Title, Text } = Typography;
 
@@ -71,14 +74,21 @@ export default function AdminComplaintDetailPage() {
       const complaintResponse = await fetch(`/api/complaints/${params.id}`);
       const complaintResult = await complaintResponse.json();
       if (!complaintResponse.ok) {
-        setAlert({ type: "error", text: complaintResult.error ?? t("adminDetail.error.load") });
+        setAlert({
+          type: "error",
+          text: complaintResult.error ?? t("adminDetail.error.load"),
+        });
         setLoading(false);
         return;
       }
       setComplaint(complaintResult.complaint);
 
-      const officerQuery = new URLSearchParams({ category: complaintResult.complaint.category });
-      const officersResponse = await fetch(`/api/admin/officers?${officerQuery.toString()}`);
+      const officerQuery = new URLSearchParams({
+        category: complaintResult.complaint.category,
+      });
+      const officersResponse = await fetch(
+        `/api/admin/officers?${officerQuery.toString()}`,
+      );
       const officersResult = await officersResponse.json();
       if (officersResponse.ok) setOfficers(officersResult.officers);
       setLoading(false);
@@ -105,7 +115,10 @@ export default function AdminComplaintDetailPage() {
         text: `Officer assigned successfully. Secure access link: ${result.tokenLink}`,
       });
     } else {
-      setAlert({ type: "error", text: result.error ?? t("adminDetail.error.assign") });
+      setAlert({
+        type: "error",
+        text: result.error ?? t("adminDetail.error.assign"),
+      });
     }
   }
 
@@ -123,7 +136,10 @@ export default function AdminComplaintDetailPage() {
       setAlert({ type: "success", text: t("adminDetail.success.query") });
       setQueryMessage("");
     } else {
-      setAlert({ type: "error", text: result.error ?? t("adminDetail.error.query") });
+      setAlert({
+        type: "error",
+        text: result.error ?? t("adminDetail.error.query"),
+      });
     }
   }
 
@@ -183,7 +199,8 @@ export default function AdminComplaintDetailPage() {
                 }}
               >
                 <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
-                  Complaint #{complaint.id} — {getLocalizedCategory(complaint.category, t)}
+                  Complaint #{complaint.id} —{" "}
+                  {getLocalizedCategory(complaint.category, t)}
                 </span>
                 <Tag
                   color={STATUS_COLORS[complaint.status] ?? "default"}
@@ -194,15 +211,88 @@ export default function AdminComplaintDetailPage() {
               </div>
             }
             extra={
-              <a href={`/api/admin/pdf/${complaint.id}`} target="_blank" rel="noreferrer">
-                <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+              <a
+                href={`/api/admin/pdf/${complaint.id}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button
+                  size="small"
+                  style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                >
                   {t("adminDetail.downloadPdf")}
                 </Button>
               </a>
             }
           >
-            <Descriptions
-              column={{ xs: 1, sm: 2 }}
+            <div className="flex gap-4">
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">
+                  {t("adminDetail.category")}
+                </h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {getLocalizedCategory(complaint.category, t)}
+                </p>
+              </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">
+                  {t("adminDetail.subCategory")}
+                </h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {complaint.subcategory
+                    ? getLocalizedSubcategory(complaint.subcategory, t)
+                    : "N/A"}
+                </p>
+              </div>
+            </div>
+            <div className="h-4"></div>
+
+            <div className="flex gap-4">
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("adminDetail.area")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {complaint.area ?? "Not specified"}
+                </p>
+              </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">
+                  {t("adminDetail.latitude")} & {t("adminDetail.longitude")}
+                </h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {complaint.lat}, {complaint.lng}
+                </p>
+                <a
+                  href={`https://www.google.com/maps?layer=c&cbll=${complaint.lat},${complaint.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: "inline-block", marginTop: 8 }}
+                >
+                  <Button
+                    size="small"
+                    style={{
+                      borderColor: "#1a3c6e",
+                      color: "#1a3c6e",
+                      fontSize: 11,
+                    }}
+                  >
+                    📍 Open in Google Maps
+                  </Button>
+                </a>
+              </div>
+            </div>
+
+            <div className="h-4"></div>
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">
+                {t("adminDetail.description")}
+              </h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {complaint.description}
+              </p>
+            </div>
+
+            {/* <Descriptions
+              column={{ xs: 1, sm: 1 }}
               size="small"
               bordered
               styles={{ label: { fontWeight: 600, background: "#f7f9fc", width: 140 } }}
@@ -223,7 +313,7 @@ export default function AdminComplaintDetailPage() {
               <Descriptions.Item label={t("adminDetail.description")} span={2}>
                 <Text style={{ lineHeight: 1.7 }}>{complaint.description}</Text>
               </Descriptions.Item>
-            </Descriptions>
+            </Descriptions> */}
 
             {complaint.media.length > 0 && (
               <>
@@ -244,7 +334,13 @@ export default function AdminComplaintDetailPage() {
                             borderRadius: 4,
                             borderLeft: "3px solid #1a3c6e",
                           }}
-                          styles={{ body: { display: "flex", alignItems: "center", gap: 8 } }}
+                          styles={{
+                            body: {
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            },
+                          }}
                         >
                           <Tag style={{ fontSize: 10 }}>{item.type}</Tag>
                           <Text type="secondary" style={{ fontSize: 11 }}>
@@ -274,7 +370,10 @@ export default function AdminComplaintDetailPage() {
               size="small"
             >
               <Form layout="vertical" requiredMark={false}>
-                <Form.Item label={t("adminDetail.selectOfficer")} style={{ marginBottom: 12 }}>
+                <Form.Item
+                  label={t("adminDetail.selectOfficer")}
+                  style={{ marginBottom: 12 }}
+                >
                   <Select
                     placeholder={t("adminDetail.selectOfficerPlaceholder")}
                     value={officerId || undefined}
@@ -329,7 +428,10 @@ export default function AdminComplaintDetailPage() {
               size="small"
             >
               <Form layout="vertical" requiredMark={false}>
-                <Form.Item label={t("adminDetail.queryMessage")} style={{ marginBottom: 12 }}>
+                <Form.Item
+                  label={t("adminDetail.queryMessage")}
+                  style={{ marginBottom: 12 }}
+                >
                   <Input.TextArea
                     rows={3}
                     value={queryMessage}
@@ -361,4 +463,3 @@ export default function AdminComplaintDetailPage() {
     </div>
   );
 }
-
