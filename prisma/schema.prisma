@@ -84,21 +84,21 @@ model OtpCode {
 }
 
 model Complaint {
-  id            Int             @id @default(autoincrement())
-  userId        String
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category      String
-  subcategory   String?
-  description   String
-  status        ComplaintStatus @default(PENDING)
-  lat           Float
-  lng           Float
-  area          String?
-  media         ComplaintMedia[]
-  assignments   Assignment[]
-  auditLogs     AuditLog[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id          Int              @id @default(autoincrement())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    String
+  subcategory String?
+  description String           @db.LongText
+  status      ComplaintStatus  @default(PENDING)
+  lat         Float
+  lng         Float
+  area        String?
+  media       ComplaintMedia[]
+  assignments Assignment[]
+  auditLogs   AuditLog[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@index([category, subcategory, createdAt])
   @@index([lat, lng])
@@ -116,11 +116,11 @@ model ComplaintMedia {
 }
 
 model Department {
-  id         Int       @id @default(autoincrement())
-  name       String    @unique
-  officers   Officer[]
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  officers  Officer[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Officer {
@@ -161,7 +161,7 @@ model Response {
   assignmentId Int
   assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   type         ResponseType
-  message      String
+  message      String       @db.LongText
   proofUrl     String?
   createdAt    DateTime     @default(now())
 
@@ -182,17 +182,17 @@ model AuditLog {
 }
 
 model Notification {
-  id          Int                @id @default(autoincrement())
-  userId      String?
-  user        User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id           Int                 @id @default(autoincrement())
+  userId       String?
+  user         User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
   assignmentId Int?
-  assignment  Assignment?        @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
-  channel     NotificationChannel
-  recipient   String
-  message     String
-  status      NotificationStatus @default(SENT)
-  error       String?
-  createdAt   DateTime           @default(now())
+  assignment   Assignment?         @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  channel      NotificationChannel
+  recipient    String
+  message      String
+  status       NotificationStatus  @default(SENT)
+  error        String?
+  createdAt    DateTime            @default(now())
 
   @@index([userId, createdAt])
   @@index([assignmentId, createdAt])
