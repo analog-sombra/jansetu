@@ -167,18 +167,106 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { name: "Sun", complaints: 18, resolved: 16 },
     ],
     areaHeatmap: [
-      { area: "Raghubir Nagar", complaints: 36, resolved: 22, severityScore: 88, avgResolutionDays: 5.6, topIssue: "Drain overflow", escalation: "Critical", trend: "Rising", color: "RED" },
-      { area: "Rajouri Garden Main Market", complaints: 28, resolved: 19, severityScore: 76, avgResolutionDays: 4.2, topIssue: "Parking and sanitation", escalation: "High", trend: "Rising", color: "RED" },
-      { area: "Tagore Garden Extension", complaints: 22, resolved: 16, severityScore: 62, avgResolutionDays: 3.8, topIssue: "Water leakage", escalation: "Watch", trend: "Stable", color: "AMBER" },
-      { area: "Vishal Enclave", complaints: 18, resolved: 14, severityScore: 48, avgResolutionDays: 3.1, topIssue: "Streetlights", escalation: "Moderate", trend: "Stable", color: "AMBER" },
-      { area: "Shivaji Enclave", complaints: 14, resolved: 12, severityScore: 34, avgResolutionDays: 2.7, topIssue: "Road patchwork", escalation: "Controlled", trend: "Falling", color: "GREEN" },
-      { area: "Mansarovar Garden", complaints: 11, resolved: 9, severityScore: 29, avgResolutionDays: 2.4, topIssue: "Garbage pickup", escalation: "Controlled", trend: "Falling", color: "GREEN" },
+      {
+        area: "Raghubir Nagar",
+        complaints: 36,
+        resolved: 22,
+        severityScore: 88,
+        avgResolutionDays: 5.6,
+        topIssue: "Drain overflow",
+        escalation: "Critical",
+        trend: "Rising",
+        color: "RED",
+      },
+      {
+        area: "Rajouri Garden Main Market",
+        complaints: 28,
+        resolved: 19,
+        severityScore: 76,
+        avgResolutionDays: 4.2,
+        topIssue: "Parking and sanitation",
+        escalation: "High",
+        trend: "Rising",
+        color: "RED",
+      },
+      {
+        area: "Tagore Garden Extension",
+        complaints: 22,
+        resolved: 16,
+        severityScore: 62,
+        avgResolutionDays: 3.8,
+        topIssue: "Water leakage",
+        escalation: "Watch",
+        trend: "Stable",
+        color: "AMBER",
+      },
+      {
+        area: "Vishal Enclave",
+        complaints: 18,
+        resolved: 14,
+        severityScore: 48,
+        avgResolutionDays: 3.1,
+        topIssue: "Streetlights",
+        escalation: "Moderate",
+        trend: "Stable",
+        color: "AMBER",
+      },
+      {
+        area: "Shivaji Enclave",
+        complaints: 14,
+        resolved: 12,
+        severityScore: 34,
+        avgResolutionDays: 2.7,
+        topIssue: "Road patchwork",
+        escalation: "Controlled",
+        trend: "Falling",
+        color: "GREEN",
+      },
+      {
+        area: "Mansarovar Garden",
+        complaints: 11,
+        resolved: 9,
+        severityScore: 29,
+        avgResolutionDays: 2.4,
+        topIssue: "Garbage pickup",
+        escalation: "Controlled",
+        trend: "Falling",
+        color: "GREEN",
+      },
     ],
     wards: [
-      { ward: "Ward 11", total: 41, resolved: 34, resolutionRate: 83, avgResolutionDays: 2.8, color: "GREEN" },
-      { ward: "Ward 8", total: 37, resolved: 28, resolutionRate: 76, avgResolutionDays: 3.2, color: "AMBER" },
-      { ward: "Ward 3", total: 29, resolved: 20, resolutionRate: 69, avgResolutionDays: 4.4, color: "AMBER" },
-      { ward: "Ward 14", total: 33, resolved: 21, resolutionRate: 64, avgResolutionDays: 4.9, color: "RED" },
+      {
+        ward: "Ward 11",
+        total: 41,
+        resolved: 34,
+        resolutionRate: 83,
+        avgResolutionDays: 2.8,
+        color: "GREEN",
+      },
+      {
+        ward: "Ward 8",
+        total: 37,
+        resolved: 28,
+        resolutionRate: 76,
+        avgResolutionDays: 3.2,
+        color: "AMBER",
+      },
+      {
+        ward: "Ward 3",
+        total: 29,
+        resolved: 20,
+        resolutionRate: 69,
+        avgResolutionDays: 4.4,
+        color: "AMBER",
+      },
+      {
+        ward: "Ward 14",
+        total: 33,
+        resolved: 21,
+        resolutionRate: 64,
+        avgResolutionDays: 4.9,
+        color: "RED",
+      },
     ],
     serviceRecord: [
       { category: "Roads", fixed: 42, backlog: 8 },
@@ -193,24 +281,112 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { name: "Negative", value: 15, color: "#c62828" },
     ],
     departmentReportCard: [
-      { department: "Public Works", issuesLogged: 57, avgResolutionDays: 3.1, slaBreachPercent: 8, workDonePhotosUploaded: 45 },
-      { department: "Water Supply", issuesLogged: 49, avgResolutionDays: 3.8, slaBreachPercent: 11, workDonePhotosUploaded: 36 },
-      { department: "Electricity", issuesLogged: 44, avgResolutionDays: 2.6, slaBreachPercent: 6, workDonePhotosUploaded: 31 },
-      { department: "Sanitation", issuesLogged: 51, avgResolutionDays: 2.4, slaBreachPercent: 5, workDonePhotosUploaded: 40 },
+      {
+        department: "Public Works",
+        issuesLogged: 57,
+        avgResolutionDays: 3.1,
+        slaBreachPercent: 8,
+        workDonePhotosUploaded: 45,
+      },
+      {
+        department: "Water Supply",
+        issuesLogged: 49,
+        avgResolutionDays: 3.8,
+        slaBreachPercent: 11,
+        workDonePhotosUploaded: 36,
+      },
+      {
+        department: "Electricity",
+        issuesLogged: 44,
+        avgResolutionDays: 2.6,
+        slaBreachPercent: 6,
+        workDonePhotosUploaded: 31,
+      },
+      {
+        department: "Sanitation",
+        issuesLogged: 51,
+        avgResolutionDays: 2.4,
+        slaBreachPercent: 5,
+        workDonePhotosUploaded: 40,
+      },
     ],
     noticeTriggerList: [
-      { assignmentId: 701, ticketId: 1422, officerName: "A. Verma", department: "Water Supply", reminderCount: 2, daysOverdue: 5, area: "Shivaji Nagar" },
-      { assignmentId: 702, ticketId: 1431, officerName: "P. Singh", department: "Public Works", reminderCount: 3, daysOverdue: 7, area: "Lakshmi Colony" },
+      {
+        assignmentId: 701,
+        ticketId: 1422,
+        officerName: "A. Verma",
+        department: "Water Supply",
+        reminderCount: 2,
+        daysOverdue: 5,
+        area: "Shivaji Nagar",
+      },
+      {
+        assignmentId: 702,
+        ticketId: 1431,
+        officerName: "P. Singh",
+        department: "Public Works",
+        reminderCount: 3,
+        daysOverdue: 7,
+        area: "Lakshmi Colony",
+      },
     ],
     proofGallery: [
-      { complaintId: 9201, category: "Roads", area: "Ward 11 Main Road", resolvedAt: "2026-04-11", beforeLabel: "Potholes reported", afterLabel: "Patchwork completed", beforeTone: "#6b7280", afterTone: "#2e7d32" },
-      { complaintId: 9208, category: "Water", area: "Shanti Vihar", resolvedAt: "2026-04-12", beforeLabel: "Pipeline leakage", afterLabel: "Valve repaired", beforeTone: "#1d4ed8", afterTone: "#0f766e" },
-      { complaintId: 9216, category: "Sanitation", area: "Ward 8 Market", resolvedAt: "2026-04-13", beforeLabel: "Garbage overflow", afterLabel: "Daily pickup restored", beforeTone: "#92400e", afterTone: "#15803d" },
+      {
+        complaintId: 9201,
+        category: "Roads",
+        area: "Ward 11 Main Road",
+        resolvedAt: "2026-04-11",
+        beforeLabel: "Potholes reported",
+        afterLabel: "Patchwork completed",
+        beforeTone: "#6b7280",
+        afterTone: "#2e7d32",
+      },
+      {
+        complaintId: 9208,
+        category: "Water",
+        area: "Shanti Vihar",
+        resolvedAt: "2026-04-12",
+        beforeLabel: "Pipeline leakage",
+        afterLabel: "Valve repaired",
+        beforeTone: "#1d4ed8",
+        afterTone: "#0f766e",
+      },
+      {
+        complaintId: 9216,
+        category: "Sanitation",
+        area: "Ward 8 Market",
+        resolvedAt: "2026-04-13",
+        beforeLabel: "Garbage overflow",
+        afterLabel: "Daily pickup restored",
+        beforeTone: "#92400e",
+        afterTone: "#15803d",
+      },
     ],
     systemicCrises: [
-      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 12, icon: "💧", severity: "High priority" },
-      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 9, icon: "🛣️", severity: "Escalation watch" },
-      { key: "night-power", area: "Ward 8", category: "Power", activeCases: 7, icon: "⚡", severity: "Monitoring" },
+      {
+        key: "water-grid",
+        area: "Ward 14",
+        category: "Water",
+        activeCases: 12,
+        icon: "💧",
+        severity: "High priority",
+      },
+      {
+        key: "road-belt",
+        area: "Ward 3",
+        category: "Roads",
+        activeCases: 9,
+        icon: "🛣️",
+        severity: "Escalation watch",
+      },
+      {
+        key: "night-power",
+        area: "Ward 8",
+        category: "Power",
+        activeCases: 7,
+        icon: "⚡",
+        severity: "Monitoring",
+      },
     ],
   },
   "30d": {
@@ -227,21 +403,136 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { name: "Week 4", complaints: 118, resolved: 109 },
     ],
     areaHeatmap: [
-      { area: "Raghubir Nagar", complaints: 122, resolved: 76, severityScore: 91, avgResolutionDays: 5.9, topIssue: "Drain overflow", escalation: "Critical", trend: "Rising", color: "RED" },
-      { area: "Rajouri Garden Main Market", complaints: 97, resolved: 69, severityScore: 84, avgResolutionDays: 4.7, topIssue: "Parking and sanitation", escalation: "High", trend: "Rising", color: "RED" },
-      { area: "Tagore Garden", complaints: 81, resolved: 58, severityScore: 72, avgResolutionDays: 4.1, topIssue: "Water pressure", escalation: "High", trend: "Stable", color: "AMBER" },
-      { area: "Vishal Enclave", complaints: 65, resolved: 48, severityScore: 58, avgResolutionDays: 3.6, topIssue: "Streetlights", escalation: "Watch", trend: "Stable", color: "AMBER" },
-      { area: "Subhash Nagar Border", complaints: 54, resolved: 42, severityScore: 49, avgResolutionDays: 3.3, topIssue: "Road cuts", escalation: "Moderate", trend: "Falling", color: "AMBER" },
-      { area: "Shivaji Enclave", complaints: 39, resolved: 31, severityScore: 36, avgResolutionDays: 2.9, topIssue: "Road patchwork", escalation: "Controlled", trend: "Falling", color: "GREEN" },
-      { area: "Mansarovar Garden", complaints: 31, resolved: 25, severityScore: 28, avgResolutionDays: 2.6, topIssue: "Garbage pickup", escalation: "Controlled", trend: "Falling", color: "GREEN" },
-      { area: "Mayapuri Link", complaints: 27, resolved: 22, severityScore: 24, avgResolutionDays: 2.5, topIssue: "Industrial waste", escalation: "Controlled", trend: "Stable", color: "GREEN" },
+      {
+        area: "Raghubir Nagar",
+        complaints: 122,
+        resolved: 76,
+        severityScore: 91,
+        avgResolutionDays: 5.9,
+        topIssue: "Drain overflow",
+        escalation: "Critical",
+        trend: "Rising",
+        color: "RED",
+      },
+      {
+        area: "Rajouri Garden Main Market",
+        complaints: 97,
+        resolved: 69,
+        severityScore: 84,
+        avgResolutionDays: 4.7,
+        topIssue: "Parking and sanitation",
+        escalation: "High",
+        trend: "Rising",
+        color: "RED",
+      },
+      {
+        area: "Tagore Garden",
+        complaints: 81,
+        resolved: 58,
+        severityScore: 72,
+        avgResolutionDays: 4.1,
+        topIssue: "Water pressure",
+        escalation: "High",
+        trend: "Stable",
+        color: "AMBER",
+      },
+      {
+        area: "Vishal Enclave",
+        complaints: 65,
+        resolved: 48,
+        severityScore: 58,
+        avgResolutionDays: 3.6,
+        topIssue: "Streetlights",
+        escalation: "Watch",
+        trend: "Stable",
+        color: "AMBER",
+      },
+      {
+        area: "Subhash Nagar Border",
+        complaints: 54,
+        resolved: 42,
+        severityScore: 49,
+        avgResolutionDays: 3.3,
+        topIssue: "Road cuts",
+        escalation: "Moderate",
+        trend: "Falling",
+        color: "AMBER",
+      },
+      {
+        area: "Shivaji Enclave",
+        complaints: 39,
+        resolved: 31,
+        severityScore: 36,
+        avgResolutionDays: 2.9,
+        topIssue: "Road patchwork",
+        escalation: "Controlled",
+        trend: "Falling",
+        color: "GREEN",
+      },
+      {
+        area: "Mansarovar Garden",
+        complaints: 31,
+        resolved: 25,
+        severityScore: 28,
+        avgResolutionDays: 2.6,
+        topIssue: "Garbage pickup",
+        escalation: "Controlled",
+        trend: "Falling",
+        color: "GREEN",
+      },
+      {
+        area: "Mayapuri Link",
+        complaints: 27,
+        resolved: 22,
+        severityScore: 24,
+        avgResolutionDays: 2.5,
+        topIssue: "Industrial waste",
+        escalation: "Controlled",
+        trend: "Stable",
+        color: "GREEN",
+      },
     ],
     wards: [
-      { ward: "Ward 11", total: 163, resolved: 141, resolutionRate: 87, avgResolutionDays: 3.0, color: "GREEN" },
-      { ward: "Ward 8", total: 149, resolved: 119, resolutionRate: 80, avgResolutionDays: 3.4, color: "GREEN" },
-      { ward: "Ward 3", total: 121, resolved: 88, resolutionRate: 73, avgResolutionDays: 4.6, color: "AMBER" },
-      { ward: "Ward 14", total: 134, resolved: 91, resolutionRate: 68, avgResolutionDays: 5.1, color: "RED" },
-      { ward: "Ward 6", total: 97, resolved: 74, resolutionRate: 76, avgResolutionDays: 3.8, color: "AMBER" },
+      {
+        ward: "Ward 11",
+        total: 163,
+        resolved: 141,
+        resolutionRate: 87,
+        avgResolutionDays: 3.0,
+        color: "GREEN",
+      },
+      {
+        ward: "Ward 8",
+        total: 149,
+        resolved: 119,
+        resolutionRate: 80,
+        avgResolutionDays: 3.4,
+        color: "GREEN",
+      },
+      {
+        ward: "Ward 3",
+        total: 121,
+        resolved: 88,
+        resolutionRate: 73,
+        avgResolutionDays: 4.6,
+        color: "AMBER",
+      },
+      {
+        ward: "Ward 14",
+        total: 134,
+        resolved: 91,
+        resolutionRate: 68,
+        avgResolutionDays: 5.1,
+        color: "RED",
+      },
+      {
+        ward: "Ward 6",
+        total: 97,
+        resolved: 74,
+        resolutionRate: 76,
+        avgResolutionDays: 3.8,
+        color: "AMBER",
+      },
     ],
     serviceRecord: [
       { category: "Roads", fixed: 164, backlog: 28 },
@@ -256,25 +547,121 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { name: "Negative", value: 15, color: "#c62828" },
     ],
     departmentReportCard: [
-      { department: "Public Works", issuesLogged: 198, avgResolutionDays: 3.3, slaBreachPercent: 9, workDonePhotosUploaded: 147 },
-      { department: "Water Supply", issuesLogged: 182, avgResolutionDays: 4.2, slaBreachPercent: 13, workDonePhotosUploaded: 131 },
-      { department: "Electricity", issuesLogged: 156, avgResolutionDays: 2.9, slaBreachPercent: 7, workDonePhotosUploaded: 108 },
-      { department: "Sanitation", issuesLogged: 203, avgResolutionDays: 2.5, slaBreachPercent: 6, workDonePhotosUploaded: 164 },
+      {
+        department: "Public Works",
+        issuesLogged: 198,
+        avgResolutionDays: 3.3,
+        slaBreachPercent: 9,
+        workDonePhotosUploaded: 147,
+      },
+      {
+        department: "Water Supply",
+        issuesLogged: 182,
+        avgResolutionDays: 4.2,
+        slaBreachPercent: 13,
+        workDonePhotosUploaded: 131,
+      },
+      {
+        department: "Electricity",
+        issuesLogged: 156,
+        avgResolutionDays: 2.9,
+        slaBreachPercent: 7,
+        workDonePhotosUploaded: 108,
+      },
+      {
+        department: "Sanitation",
+        issuesLogged: 203,
+        avgResolutionDays: 2.5,
+        slaBreachPercent: 6,
+        workDonePhotosUploaded: 164,
+      },
     ],
     noticeTriggerList: [
-      { assignmentId: 715, ticketId: 1468, officerName: "R. Khan", department: "Water Supply", reminderCount: 3, daysOverdue: 9, area: "Azad Chowk" },
-      { assignmentId: 718, ticketId: 1489, officerName: "S. Patel", department: "Public Works", reminderCount: 2, daysOverdue: 6, area: "Ward 14 Ring Road" },
-      { assignmentId: 721, ticketId: 1497, officerName: "M. Yadav", department: "Electricity", reminderCount: 2, daysOverdue: 4, area: "Model Town" },
+      {
+        assignmentId: 715,
+        ticketId: 1468,
+        officerName: "R. Khan",
+        department: "Water Supply",
+        reminderCount: 3,
+        daysOverdue: 9,
+        area: "Azad Chowk",
+      },
+      {
+        assignmentId: 718,
+        ticketId: 1489,
+        officerName: "S. Patel",
+        department: "Public Works",
+        reminderCount: 2,
+        daysOverdue: 6,
+        area: "Ward 14 Ring Road",
+      },
+      {
+        assignmentId: 721,
+        ticketId: 1497,
+        officerName: "M. Yadav",
+        department: "Electricity",
+        reminderCount: 2,
+        daysOverdue: 4,
+        area: "Model Town",
+      },
     ],
     proofGallery: [
-      { complaintId: 9324, category: "Roads", area: "Ward 11 Main Road", resolvedAt: "2026-04-04", beforeLabel: "Broken surface", afterLabel: "Resurfaced corridor", beforeTone: "#4b5563", afterTone: "#166534" },
-      { complaintId: 9351, category: "Power", area: "Model Town", resolvedAt: "2026-04-06", beforeLabel: "Transformer outage", afterLabel: "Backup line restored", beforeTone: "#7c2d12", afterTone: "#b45309" },
-      { complaintId: 9390, category: "Health", area: "Civil Dispensary", resolvedAt: "2026-04-08", beforeLabel: "Medicine shortage", afterLabel: "Stock replenished", beforeTone: "#7f1d1d", afterTone: "#15803d" },
+      {
+        complaintId: 9324,
+        category: "Roads",
+        area: "Ward 11 Main Road",
+        resolvedAt: "2026-04-04",
+        beforeLabel: "Broken surface",
+        afterLabel: "Resurfaced corridor",
+        beforeTone: "#4b5563",
+        afterTone: "#166534",
+      },
+      {
+        complaintId: 9351,
+        category: "Power",
+        area: "Model Town",
+        resolvedAt: "2026-04-06",
+        beforeLabel: "Transformer outage",
+        afterLabel: "Backup line restored",
+        beforeTone: "#7c2d12",
+        afterTone: "#b45309",
+      },
+      {
+        complaintId: 9390,
+        category: "Health",
+        area: "Civil Dispensary",
+        resolvedAt: "2026-04-08",
+        beforeLabel: "Medicine shortage",
+        afterLabel: "Stock replenished",
+        beforeTone: "#7f1d1d",
+        afterTone: "#15803d",
+      },
     ],
     systemicCrises: [
-      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 28, icon: "💧", severity: "High priority" },
-      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 21, icon: "🛣️", severity: "Escalation watch" },
-      { key: "clinic-shortage", area: "Ward 6", category: "Health", activeCases: 11, icon: "🏥", severity: "Monitoring" },
+      {
+        key: "water-grid",
+        area: "Ward 14",
+        category: "Water",
+        activeCases: 28,
+        icon: "💧",
+        severity: "High priority",
+      },
+      {
+        key: "road-belt",
+        area: "Ward 3",
+        category: "Roads",
+        activeCases: 21,
+        icon: "🛣️",
+        severity: "Escalation watch",
+      },
+      {
+        key: "clinic-shortage",
+        area: "Ward 6",
+        category: "Health",
+        activeCases: 11,
+        icon: "🏥",
+        severity: "Monitoring",
+      },
     ],
   },
   "90d": {
@@ -291,22 +678,144 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { name: "Apr", complaints: 391, resolved: 344 },
     ],
     areaHeatmap: [
-      { area: "Raghubir Nagar", complaints: 344, resolved: 227, severityScore: 93, avgResolutionDays: 6.2, topIssue: "Drain overflow", escalation: "Critical", trend: "Rising", color: "RED" },
-      { area: "Rajouri Garden Main Market", complaints: 281, resolved: 204, severityScore: 86, avgResolutionDays: 5.0, topIssue: "Parking and sanitation", escalation: "Critical", trend: "Rising", color: "RED" },
-      { area: "Tagore Garden", complaints: 239, resolved: 176, severityScore: 74, avgResolutionDays: 4.4, topIssue: "Water pressure", escalation: "High", trend: "Stable", color: "AMBER" },
-      { area: "Vishal Enclave", complaints: 204, resolved: 158, severityScore: 61, avgResolutionDays: 3.8, topIssue: "Streetlights", escalation: "Watch", trend: "Stable", color: "AMBER" },
-      { area: "Subhash Nagar Border", complaints: 178, resolved: 139, severityScore: 53, avgResolutionDays: 3.6, topIssue: "Road cuts", escalation: "Watch", trend: "Stable", color: "AMBER" },
-      { area: "Shivaji Enclave", complaints: 141, resolved: 117, severityScore: 38, avgResolutionDays: 3.1, topIssue: "Road patchwork", escalation: "Controlled", trend: "Falling", color: "GREEN" },
-      { area: "Mansarovar Garden", complaints: 127, resolved: 108, severityScore: 32, avgResolutionDays: 2.9, topIssue: "Garbage pickup", escalation: "Controlled", trend: "Falling", color: "GREEN" },
-      { area: "Mayapuri Link", complaints: 118, resolved: 101, severityScore: 27, avgResolutionDays: 2.8, topIssue: "Industrial waste", escalation: "Controlled", trend: "Stable", color: "GREEN" },
+      {
+        area: "Raghubir Nagar",
+        complaints: 344,
+        resolved: 227,
+        severityScore: 93,
+        avgResolutionDays: 6.2,
+        topIssue: "Drain overflow",
+        escalation: "Critical",
+        trend: "Rising",
+        color: "RED",
+      },
+      {
+        area: "Rajouri Garden Main Market",
+        complaints: 281,
+        resolved: 204,
+        severityScore: 86,
+        avgResolutionDays: 5.0,
+        topIssue: "Parking and sanitation",
+        escalation: "Critical",
+        trend: "Rising",
+        color: "RED",
+      },
+      {
+        area: "Tagore Garden",
+        complaints: 239,
+        resolved: 176,
+        severityScore: 74,
+        avgResolutionDays: 4.4,
+        topIssue: "Water pressure",
+        escalation: "High",
+        trend: "Stable",
+        color: "AMBER",
+      },
+      {
+        area: "Vishal Enclave",
+        complaints: 204,
+        resolved: 158,
+        severityScore: 61,
+        avgResolutionDays: 3.8,
+        topIssue: "Streetlights",
+        escalation: "Watch",
+        trend: "Stable",
+        color: "AMBER",
+      },
+      {
+        area: "Subhash Nagar Border",
+        complaints: 178,
+        resolved: 139,
+        severityScore: 53,
+        avgResolutionDays: 3.6,
+        topIssue: "Road cuts",
+        escalation: "Watch",
+        trend: "Stable",
+        color: "AMBER",
+      },
+      {
+        area: "Shivaji Enclave",
+        complaints: 141,
+        resolved: 117,
+        severityScore: 38,
+        avgResolutionDays: 3.1,
+        topIssue: "Road patchwork",
+        escalation: "Controlled",
+        trend: "Falling",
+        color: "GREEN",
+      },
+      {
+        area: "Mansarovar Garden",
+        complaints: 127,
+        resolved: 108,
+        severityScore: 32,
+        avgResolutionDays: 2.9,
+        topIssue: "Garbage pickup",
+        escalation: "Controlled",
+        trend: "Falling",
+        color: "GREEN",
+      },
+      {
+        area: "Mayapuri Link",
+        complaints: 118,
+        resolved: 101,
+        severityScore: 27,
+        avgResolutionDays: 2.8,
+        topIssue: "Industrial waste",
+        escalation: "Controlled",
+        trend: "Stable",
+        color: "GREEN",
+      },
     ],
     wards: [
-      { ward: "Ward 11", total: 449, resolved: 382, resolutionRate: 85, avgResolutionDays: 3.4, color: "GREEN" },
-      { ward: "Ward 8", total: 401, resolved: 321, resolutionRate: 80, avgResolutionDays: 3.9, color: "GREEN" },
-      { ward: "Ward 3", total: 366, resolved: 256, resolutionRate: 70, avgResolutionDays: 5.0, color: "AMBER" },
-      { ward: "Ward 14", total: 394, resolved: 257, resolutionRate: 65, avgResolutionDays: 5.6, color: "RED" },
-      { ward: "Ward 6", total: 288, resolved: 216, resolutionRate: 75, avgResolutionDays: 4.1, color: "AMBER" },
-      { ward: "Ward 2", total: 247, resolved: 195, resolutionRate: 79, avgResolutionDays: 3.7, color: "GREEN" },
+      {
+        ward: "Ward 11",
+        total: 449,
+        resolved: 382,
+        resolutionRate: 85,
+        avgResolutionDays: 3.4,
+        color: "GREEN",
+      },
+      {
+        ward: "Ward 8",
+        total: 401,
+        resolved: 321,
+        resolutionRate: 80,
+        avgResolutionDays: 3.9,
+        color: "GREEN",
+      },
+      {
+        ward: "Ward 3",
+        total: 366,
+        resolved: 256,
+        resolutionRate: 70,
+        avgResolutionDays: 5.0,
+        color: "AMBER",
+      },
+      {
+        ward: "Ward 14",
+        total: 394,
+        resolved: 257,
+        resolutionRate: 65,
+        avgResolutionDays: 5.6,
+        color: "RED",
+      },
+      {
+        ward: "Ward 6",
+        total: 288,
+        resolved: 216,
+        resolutionRate: 75,
+        avgResolutionDays: 4.1,
+        color: "AMBER",
+      },
+      {
+        ward: "Ward 2",
+        total: 247,
+        resolved: 195,
+        resolutionRate: 79,
+        avgResolutionDays: 3.7,
+        color: "GREEN",
+      },
     ],
     serviceRecord: [
       { category: "Roads", fixed: 472, backlog: 82 },
@@ -321,25 +830,121 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { name: "Negative", value: 16, color: "#c62828" },
     ],
     departmentReportCard: [
-      { department: "Public Works", issuesLogged: 602, avgResolutionDays: 3.7, slaBreachPercent: 11, workDonePhotosUploaded: 438 },
-      { department: "Water Supply", issuesLogged: 571, avgResolutionDays: 4.5, slaBreachPercent: 15, workDonePhotosUploaded: 403 },
-      { department: "Electricity", issuesLogged: 490, avgResolutionDays: 3.1, slaBreachPercent: 8, workDonePhotosUploaded: 355 },
-      { department: "Sanitation", issuesLogged: 633, avgResolutionDays: 2.8, slaBreachPercent: 7, workDonePhotosUploaded: 491 },
+      {
+        department: "Public Works",
+        issuesLogged: 602,
+        avgResolutionDays: 3.7,
+        slaBreachPercent: 11,
+        workDonePhotosUploaded: 438,
+      },
+      {
+        department: "Water Supply",
+        issuesLogged: 571,
+        avgResolutionDays: 4.5,
+        slaBreachPercent: 15,
+        workDonePhotosUploaded: 403,
+      },
+      {
+        department: "Electricity",
+        issuesLogged: 490,
+        avgResolutionDays: 3.1,
+        slaBreachPercent: 8,
+        workDonePhotosUploaded: 355,
+      },
+      {
+        department: "Sanitation",
+        issuesLogged: 633,
+        avgResolutionDays: 2.8,
+        slaBreachPercent: 7,
+        workDonePhotosUploaded: 491,
+      },
     ],
     noticeTriggerList: [
-      { assignmentId: 801, ticketId: 1608, officerName: "K. Sharma", department: "Water Supply", reminderCount: 4, daysOverdue: 12, area: "Ward 14 Low Zone" },
-      { assignmentId: 806, ticketId: 1621, officerName: "D. Mishra", department: "Public Works", reminderCount: 3, daysOverdue: 10, area: "Bypass Corridor" },
-      { assignmentId: 814, ticketId: 1654, officerName: "N. Ali", department: "Sanitation", reminderCount: 3, daysOverdue: 8, area: "Old Market" },
+      {
+        assignmentId: 801,
+        ticketId: 1608,
+        officerName: "K. Sharma",
+        department: "Water Supply",
+        reminderCount: 4,
+        daysOverdue: 12,
+        area: "Ward 14 Low Zone",
+      },
+      {
+        assignmentId: 806,
+        ticketId: 1621,
+        officerName: "D. Mishra",
+        department: "Public Works",
+        reminderCount: 3,
+        daysOverdue: 10,
+        area: "Bypass Corridor",
+      },
+      {
+        assignmentId: 814,
+        ticketId: 1654,
+        officerName: "N. Ali",
+        department: "Sanitation",
+        reminderCount: 3,
+        daysOverdue: 8,
+        area: "Old Market",
+      },
     ],
     proofGallery: [
-      { complaintId: 9511, category: "Roads", area: "Bypass Corridor", resolvedAt: "2026-03-15", beforeLabel: "Unsafe shoulder", afterLabel: "Drain and shoulder rebuilt", beforeTone: "#374151", afterTone: "#166534" },
-      { complaintId: 9562, category: "Water", area: "Ward 14 Low Zone", resolvedAt: "2026-03-28", beforeLabel: "Low pressure blocks", afterLabel: "Booster line commissioned", beforeTone: "#1e3a8a", afterTone: "#0f766e" },
-      { complaintId: 9604, category: "Sanitation", area: "Old Market", resolvedAt: "2026-04-02", beforeLabel: "Overflowing bins", afterLabel: "Route optimization applied", beforeTone: "#92400e", afterTone: "#15803d" },
+      {
+        complaintId: 9511,
+        category: "Roads",
+        area: "Bypass Corridor",
+        resolvedAt: "2026-03-15",
+        beforeLabel: "Unsafe shoulder",
+        afterLabel: "Drain and shoulder rebuilt",
+        beforeTone: "#374151",
+        afterTone: "#166534",
+      },
+      {
+        complaintId: 9562,
+        category: "Water",
+        area: "Ward 14 Low Zone",
+        resolvedAt: "2026-03-28",
+        beforeLabel: "Low pressure blocks",
+        afterLabel: "Booster line commissioned",
+        beforeTone: "#1e3a8a",
+        afterTone: "#0f766e",
+      },
+      {
+        complaintId: 9604,
+        category: "Sanitation",
+        area: "Old Market",
+        resolvedAt: "2026-04-02",
+        beforeLabel: "Overflowing bins",
+        afterLabel: "Route optimization applied",
+        beforeTone: "#92400e",
+        afterTone: "#15803d",
+      },
     ],
     systemicCrises: [
-      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 54, icon: "💧", severity: "High priority" },
-      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 33, icon: "🛣️", severity: "Escalation watch" },
-      { key: "night-power", area: "Ward 8", category: "Power", activeCases: 19, icon: "⚡", severity: "Monitoring" },
+      {
+        key: "water-grid",
+        area: "Ward 14",
+        category: "Water",
+        activeCases: 54,
+        icon: "💧",
+        severity: "High priority",
+      },
+      {
+        key: "road-belt",
+        area: "Ward 3",
+        category: "Roads",
+        activeCases: 33,
+        icon: "🛣️",
+        severity: "Escalation watch",
+      },
+      {
+        key: "night-power",
+        area: "Ward 8",
+        category: "Power",
+        activeCases: 19,
+        icon: "⚡",
+        severity: "Monitoring",
+      },
     ],
   },
 };
@@ -383,21 +988,33 @@ const UNSPLASH_AFTER = [
   "/image/water log 1 af.jpg",
 ];
 
+const CategoryNames = [
+  "Drain Cleanup",
+  "Streetlight Repair",
+  "Pothole Repair",
+  "Pothole Repair",
+  "Pothole Repair",
+  "Pothole Repair",
+  "Pothole Repair",
+  "Water Leakage",
+  "Water Leakage",
+  "Water Cloging",
+];
+
 const DEMO_CASES: DemoCaseEntry[] = Array.from({ length: 50 }, (_, index) => {
   const id = 12001 + index;
   const combinationIndex = index % (DEMO_WARDS.length * DEMO_CATEGORIES.length);
   const ward = DEMO_WARDS[combinationIndex % DEMO_WARDS.length];
-  const category =
-    DEMO_CATEGORIES[
-      Math.floor(combinationIndex / DEMO_WARDS.length) % DEMO_CATEGORIES.length
-    ];
+  const category = CategoryNames[index % CategoryNames.length];
   const area = DEMO_AREAS[(combinationIndex + index) % DEMO_AREAS.length];
   const statusType =
-    index < DEMO_WARDS.length * DEMO_CATEGORIES.length || combinationIndex % 2 === 0
+    index < DEMO_WARDS.length * DEMO_CATEGORIES.length ||
+    combinationIndex % 2 === 0
       ? "UNSOLVED"
       : "SOLVED";
   const priority =
-    index < DEMO_WARDS.length * DEMO_CATEGORIES.length || combinationIndex % 3 === 0;
+    index < DEMO_WARDS.length * DEMO_CATEGORIES.length ||
+    combinationIndex % 3 === 0;
 
   return {
     id,
@@ -409,7 +1026,9 @@ const DEMO_CASES: DemoCaseEntry[] = Array.from({ length: 50 }, (_, index) => {
     assignedTo: `Officer ${(index % 12) + 1}`,
     beforeImageUrl: UNSPLASH_BEFORE[index % UNSPLASH_BEFORE.length],
     afterImageUrl: UNSPLASH_AFTER[index % UNSPLASH_AFTER.length],
-    createdAt: new Date(Date.UTC(2026, 2, (index % 28) + 1, 9, 10)).toISOString(),
+    createdAt: new Date(
+      Date.UTC(2026, 2, (index % 28) + 1, 9, 10),
+    ).toISOString(),
     resolvedAt:
       statusType === "SOLVED"
         ? new Date(Date.UTC(2026, 3, (index % 26) + 1, 11, 30)).toISOString()
@@ -508,7 +1127,8 @@ export default function ReportDashboardPage() {
     return DEMO_CASES.filter((item) => {
       const withinWindow = new Date(item.createdAt).getTime() >= cutoff;
       const matchesWard = wardFilter === "ALL" || item.ward === wardFilter;
-      const matchesCategory = categoryFilter === "ALL" || item.category === categoryFilter;
+      const matchesCategory =
+        categoryFilter === "ALL" || item.category === categoryFilter;
       return withinWindow && matchesWard && matchesCategory;
     });
   }
@@ -541,7 +1161,13 @@ export default function ReportDashboardPage() {
 
       const groupedMap = new Map<
         string,
-        { group: string; total: number; solved: number; unsolved: number; priority: number }
+        {
+          group: string;
+          total: number;
+          solved: number;
+          unsolved: number;
+          priority: number;
+        }
       >();
       for (const item of cases) {
         const key = groupBy === "ward" ? item.ward : item.category;
@@ -564,7 +1190,13 @@ export default function ReportDashboardPage() {
 
       const areaMap = new Map<
         string,
-        { area: string; total: number; solved: number; unsolved: number; priority: number }
+        {
+          area: string;
+          total: number;
+          solved: number;
+          unsolved: number;
+          priority: number;
+        }
       >();
       for (const item of cases) {
         const existing = areaMap.get(item.area);
@@ -584,9 +1216,14 @@ export default function ReportDashboardPage() {
         }
       }
 
-      const areaSummary = [...areaMap.values()].sort((a, b) => b.total - a.total);
+      const areaSummary = [...areaMap.values()].sort(
+        (a, b) => b.total - a.total,
+      );
 
-      function appendFormattedSheet(sheetName: string, rows: Array<Record<string, unknown>>) {
+      function appendFormattedSheet(
+        sheetName: string,
+        rows: Array<Record<string, unknown>>,
+      ) {
         const worksheet = utils.json_to_sheet(rows);
         if (rows.length > 0) {
           const headers = Object.keys(rows[0]);
@@ -669,7 +1306,7 @@ export default function ReportDashboardPage() {
 
       appendFormattedSheet(
         "Proof Gallery",
-        solved.slice(0, 10).map((item) => ({
+        DEMO_CASES.slice(0, 10).map((item) => ({
           "Complaint ID": item.id,
           Area: item.area,
           Category: item.category,
@@ -681,7 +1318,10 @@ export default function ReportDashboardPage() {
 
       appendFormattedSheet("Systemic Crises", report.systemicCrises);
 
-      writeFile(workbook, `report-demo-${mode}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      writeFile(
+        workbook,
+        `report-demo-${mode}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
     } finally {
       setExporting(null);
     }
@@ -697,7 +1337,8 @@ export default function ReportDashboardPage() {
     return DEMO_CASES.filter((item) => {
       const withinWindow = new Date(item.createdAt).getTime() >= cutoff;
       const matchesWard = wardFilter === "ALL" || item.ward === wardFilter;
-      const matchesCategory = categoryFilter === "ALL" || item.category === categoryFilter;
+      const matchesCategory =
+        categoryFilter === "ALL" || item.category === categoryFilter;
       return withinWindow && matchesWard && matchesCategory;
     });
   }, [categoryFilter, windowMode, wardFilter]);
@@ -716,7 +1357,7 @@ export default function ReportDashboardPage() {
   const categoryOptions = useMemo(
     () => [
       { label: "All Categories", value: "ALL" },
-      ...DEMO_CATEGORIES.map((category) => ({
+      ...[...new Set(CategoryNames)].map((category) => ({
         label: category,
         value: category,
       })),
@@ -727,7 +1368,13 @@ export default function ReportDashboardPage() {
   const filteredWards = useMemo(() => {
     const summary = new Map<
       string,
-      { ward: string; total: number; resolved: number; avgResolutionDays: number; color: WardStatus }
+      {
+        ward: string;
+        total: number;
+        resolved: number;
+        avgResolutionDays: number;
+        color: WardStatus;
+      }
     >();
 
     for (const item of filteredCases) {
@@ -747,7 +1394,8 @@ export default function ReportDashboardPage() {
     }
 
     return [...summary.values()].map((row) => {
-      const resolutionRate = row.total > 0 ? Math.round((row.resolved / row.total) * 100) : 0;
+      const resolutionRate =
+        row.total > 0 ? Math.round((row.resolved / row.total) * 100) : 0;
       let color: WardStatus = "RED";
       if (resolutionRate >= 80) color = "GREEN";
       else if (resolutionRate >= 65) color = "AMBER";
@@ -764,7 +1412,10 @@ export default function ReportDashboardPage() {
   }, [filteredCases]);
 
   const topAffectedAreas = useMemo(
-    () => [...overview.areaHeatmap].sort((left, right) => right.complaints - left.complaints),
+    () =>
+      [...overview.areaHeatmap].sort(
+        (left, right) => right.complaints - left.complaints,
+      ),
     [overview.areaHeatmap],
   );
 
@@ -803,10 +1454,14 @@ export default function ReportDashboardPage() {
     },
   ];
 
-  const solvedCases = filteredCases.filter((item) => item.statusType === "SOLVED");
-  const unsolvedCases = filteredCases.filter((item) => item.statusType === "UNSOLVED");
+  const solvedCases = filteredCases.filter(
+    (item) => item.statusType === "SOLVED",
+  );
+  const unsolvedCases = filteredCases.filter(
+    (item) => item.statusType === "UNSOLVED",
+  );
   const priorityCases = filteredCases.filter((item) => item.priority);
-  const proofPhotoCases = solvedCases.slice(0, 10);
+  const proofPhotoCases = DEMO_CASES.slice(0, 10);
 
   const noticeTriggerRows = useMemo(() => {
     return filteredCases
@@ -924,7 +1579,11 @@ export default function ReportDashboardPage() {
       dataIndex: "priority",
       key: "priority",
       render: (value: boolean) =>
-        value ? <Tag color="red">PRIORITY</Tag> : <Text type="secondary">Normal</Text>,
+        value ? (
+          <Tag color="red">PRIORITY</Tag>
+        ) : (
+          <Text type="secondary">Normal</Text>
+        ),
     },
     { title: "Assigned", dataIndex: "assignedTo", key: "assignedTo" },
   ];
@@ -953,13 +1612,19 @@ export default function ReportDashboardPage() {
       dataIndex: "priority",
       key: "priority",
       render: (value: boolean) =>
-        value ? <Tag color="red">PRIORITY</Tag> : <Text type="secondary">Normal</Text>,
+        value ? (
+          <Tag color="red">PRIORITY</Tag>
+        ) : (
+          <Text type="secondary">Normal</Text>
+        ),
     },
     {
       title: "Days Overdue",
       dataIndex: "daysOverdue",
       key: "daysOverdue",
-      render: (value: number) => <Tag color={value >= 7 ? "red" : "orange"}>{value} days</Tag>,
+      render: (value: number) => (
+        <Tag color={value >= 7 ? "red" : "orange"}>{value} days</Tag>
+      ),
     },
     { title: "Reminders", dataIndex: "reminderCount", key: "reminderCount" },
   ];
@@ -970,7 +1635,10 @@ export default function ReportDashboardPage() {
         (item) =>
           item.area.toLowerCase().includes(area.toLowerCase()) &&
           item.statusType === "UNSOLVED",
-      ) ?? priorityCases[0] ?? filteredCases[0] ?? DEMO_CASES[0];
+      ) ??
+      priorityCases[0] ??
+      filteredCases[0] ??
+      DEMO_CASES[0];
 
     setDraftTitle(`Letter Draft for #${matched.id}`);
     setDraftContent(buildLetterDraft(matched));
@@ -978,12 +1646,20 @@ export default function ReportDashboardPage() {
   }
 
   function openCombinedOverdueDraft() {
-    if (wardFilter === "ALL" || categoryFilter === "ALL" || overdueReportRows.length === 0) {
+    if (
+      wardFilter === "ALL" ||
+      categoryFilter === "ALL" ||
+      overdueReportRows.length === 0
+    ) {
       return;
     }
 
-    setDraftTitle(`Combined Overdue Report - ${wardFilter} / ${categoryFilter}`);
-    setDraftContent(buildCombinedOverdueDraft(overdueReportRows, wardFilter, categoryFilter));
+    setDraftTitle(
+      `Combined Overdue Report - ${wardFilter} / ${categoryFilter}`,
+    );
+    setDraftContent(
+      buildCombinedOverdueDraft(overdueReportRows, wardFilter, categoryFilter),
+    );
     setDraftOpen(true);
   }
 
@@ -1101,7 +1777,7 @@ export default function ReportDashboardPage() {
         </Space>
       </Card>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+      {/* <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
         <Col xs={24} md={12} xl={6}>
           <Card size="small" style={{ borderTop: "3px solid #1a3c6e" }}>
             <Statistic
@@ -1138,6 +1814,46 @@ export default function ReportDashboardPage() {
             />
           </Card>
         </Col>
+      </Row> */}
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+        <Col xs={24} md={12} xl={6}>
+          <Card size="small" style={{ borderTop: "3px solid #1a3c6e" }}>
+            <Statistic
+              title={t("report.totalVotersAssisted")}
+              value={overview.summary.totalVotersAssisted}
+              styles={{ content: { color: "#1a3c6e", fontWeight: 800 } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} md={12} xl={6}>
+          <Card size="small" style={{ borderTop: "3px solid #2e7d32" }}>
+            <Statistic
+              title={t("report.resolvedThisPeriod")}
+              value={overview.summary.resolvedThisPeriod}
+              styles={{ content: { color: "#2e7d32", fontWeight: 800 } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} md={12} xl={6}>
+          <Card size="small" style={{ borderTop: "3px solid #e07b00" }}>
+            <Statistic
+              title={t("report.pendingFollowUps")}
+              value={overview.summary.pendingFollowUps}
+              styles={{ content: { color: "#e07b00", fontWeight: 800 } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} md={12} xl={6}>
+          <Card size="small" style={{ borderTop: "3px solid #722ed1" }}>
+            <Statistic
+              title={t("report.netScore")}
+              value={overview.summary.satisfactionScore}
+              suffix="%"
+              styles={{ content: { color: "#722ed1", fontWeight: 800 } }}
+            />
+          </Card>
+        </Col>
       </Row>
 
       {wardFilter !== "ALL" && categoryFilter !== "ALL" ? (
@@ -1161,7 +1877,8 @@ export default function ReportDashboardPage() {
           }
         >
           <Paragraph type="secondary" style={{ marginBottom: 16 }}>
-            This section shows overdue and priority cases for the selected ward and category, with one combined draft for the full report.
+            This section shows overdue and priority cases for the selected ward
+            and category, with one combined draft for the full report.
           </Paragraph>
 
           {overdueReportRows.length > 0 ? (
@@ -1170,7 +1887,10 @@ export default function ReportDashboardPage() {
               columns={overdueColumns}
               dataSource={overdueReportRows}
               size="small"
-              pagination={{ pageSize: 6, showTotal: (total) => `${total} overdue cases` }}
+              pagination={{
+                pageSize: 6,
+                showTotal: (total) => `${total} overdue cases`,
+              }}
               scroll={{ x: 1200 }}
             />
           ) : (
@@ -1193,7 +1913,10 @@ export default function ReportDashboardPage() {
       >
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={10}>
-            <Card size="small" title={`Grouped by ${groupBy === "ward" ? "Ward" : "Category"}`}>
+            <Card
+              size="small"
+              title={`Grouped by ${groupBy === "ward" ? "Ward" : "Category"}`}
+            >
               <Table
                 rowKey="key"
                 columns={groupedColumns}
@@ -1235,13 +1958,41 @@ export default function ReportDashboardPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={overview.trend}>
                       <defs>
-                        <linearGradient id="complaintsFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#1a3c6e" stopOpacity={0.28} />
-                          <stop offset="95%" stopColor="#1a3c6e" stopOpacity={0.04} />
+                        <linearGradient
+                          id="complaintsFill"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#1a3c6e"
+                            stopOpacity={0.28}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#1a3c6e"
+                            stopOpacity={0.04}
+                          />
                         </linearGradient>
-                        <linearGradient id="resolvedFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#2e7d32" stopOpacity={0.25} />
-                          <stop offset="95%" stopColor="#2e7d32" stopOpacity={0.04} />
+                        <linearGradient
+                          id="resolvedFill"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#2e7d32"
+                            stopOpacity={0.25}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#2e7d32"
+                            stopOpacity={0.04}
+                          />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -1268,7 +2019,14 @@ export default function ReportDashboardPage() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div style={{ height: "100%", borderRadius: 8, background: "linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%)" }} />
+                  <div
+                    style={{
+                      height: "100%",
+                      borderRadius: 8,
+                      background:
+                        "linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%)",
+                    }}
+                  />
                 )}
               </div>
             </Card>
@@ -1283,16 +2041,31 @@ export default function ReportDashboardPage() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="ward" />
                       <YAxis domain={[0, 100]} />
-                      <Tooltip formatter={(value) => [`${value ?? 0}%`, t("report.resolutionRate")]} />
+                      <Tooltip
+                        formatter={(value) => [
+                          `${value ?? 0}%`,
+                          t("report.resolutionRate"),
+                        ]}
+                      />
                       <Bar dataKey="resolutionRate" radius={[6, 6, 0, 0]}>
                         {filteredWards.map((entry) => (
-                          <Cell key={entry.ward} fill={WARD_COLOR[entry.color]} />
+                          <Cell
+                            key={entry.ward}
+                            fill={WARD_COLOR[entry.color]}
+                          />
                         ))}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div style={{ height: "100%", borderRadius: 8, background: "linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%)" }} />
+                  <div
+                    style={{
+                      height: "100%",
+                      borderRadius: 8,
+                      background:
+                        "linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%)",
+                    }}
+                  />
                 )}
               </div>
             </Card>
@@ -1315,12 +2088,15 @@ export default function ReportDashboardPage() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(180px, 1fr))",
                       gap: 12,
                     }}
                   >
                     {overview.areaHeatmap.map((item) => {
-                      const resolutionRate = Math.round((item.resolved / item.complaints) * 100);
+                      const resolutionRate = Math.round(
+                        (item.resolved / item.complaints) * 100,
+                      );
                       return (
                         <div
                           key={item.area}
@@ -1337,31 +2113,64 @@ export default function ReportDashboardPage() {
                           }}
                         >
                           <div>
-                            <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                              <Text strong style={{ color: "#1f2937", fontSize: 14 }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                gap: 8,
+                              }}
+                            >
+                              <Text
+                                strong
+                                style={{ color: "#1f2937", fontSize: 14 }}
+                              >
                                 {item.area}
                               </Text>
-                              <Tag color={item.color === "RED" ? "red" : item.color === "AMBER" ? "orange" : "green"}>
+                              <Tag
+                                color={
+                                  item.color === "RED"
+                                    ? "red"
+                                    : item.color === "AMBER"
+                                      ? "orange"
+                                      : "green"
+                                }
+                              >
                                 {item.escalation}
                               </Tag>
                             </div>
-                            <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 6 }}>
+                            <Text
+                              type="secondary"
+                              style={{
+                                fontSize: 12,
+                                display: "block",
+                                marginTop: 6,
+                              }}
+                            >
                               {t("report.dominantIssue")}: {item.topIssue}
                             </Text>
                           </div>
 
-                          <Space orientation="vertical" size={6} style={{ width: "100%" }}>
+                          <Space
+                            orientation="vertical"
+                            size={6}
+                            style={{ width: "100%" }}
+                          >
                             <Text>
-                              <strong>{item.complaints}</strong> {t("report.grievances")}
+                              <strong>{item.complaints}</strong>{" "}
+                              {t("report.grievances")}
                             </Text>
                             <Progress
                               percent={resolutionRate}
                               strokeColor={WARD_COLOR[item.color]}
                               size="small"
-                              format={() => `${resolutionRate}% ${t("report.demoResolved")}`}
+                              format={() =>
+                                `${resolutionRate}% ${t("report.demoResolved")}`
+                              }
                             />
                             <Text type="secondary" style={{ fontSize: 12 }}>
-                              {t("report.avgResolution")}: {item.avgResolutionDays} {t("report.days")} | {t("report.demoTrend")}: {item.trend}
+                              {t("report.avgResolution")}:{" "}
+                              {item.avgResolutionDays} {t("report.days")} |{" "}
+                              {t("report.demoTrend")}: {item.trend}
                             </Text>
                           </Space>
                         </div>
@@ -1371,11 +2180,17 @@ export default function ReportDashboardPage() {
                 </Col>
 
                 <Col xs={24} xl={8}>
-                  <Card size="small" title={t("report.topAffectedAreas")} style={{ height: "100%" }}>
+                  <Card
+                    size="small"
+                    title={t("report.topAffectedAreas")}
+                    style={{ height: "100%" }}
+                  >
                     <List
                       dataSource={topAffectedAreas.slice(0, 5)}
                       renderItem={(item, index) => {
-                        const resolutionRate = Math.round((item.resolved / item.complaints) * 100);
+                        const resolutionRate = Math.round(
+                          (item.resolved / item.complaints) * 100,
+                        );
                         return (
                           <List.Item>
                             <div style={{ width: "100%" }}>
@@ -1390,21 +2205,39 @@ export default function ReportDashboardPage() {
                                 <Text strong>
                                   {index + 1}. {item.area}
                                 </Text>
-                                <Tag color={item.color === "RED" ? "red" : item.color === "AMBER" ? "orange" : "green"}>
+                                <Tag
+                                  color={
+                                    item.color === "RED"
+                                      ? "red"
+                                      : item.color === "AMBER"
+                                        ? "orange"
+                                        : "green"
+                                  }
+                                >
                                   {item.severityScore}
                                 </Tag>
                               </div>
-                              <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
+                              <Text
+                                type="secondary"
+                                style={{
+                                  fontSize: 12,
+                                  display: "block",
+                                  marginBottom: 6,
+                                }}
+                              >
                                 {item.topIssue}
                               </Text>
                               <Progress
                                 percent={Math.min(item.severityScore, 100)}
                                 strokeColor={WARD_COLOR[item.color]}
                                 size="small"
-                                format={() => `${item.complaints} ${t("report.grievances")}`}
+                                format={() =>
+                                  `${item.complaints} ${t("report.grievances")}`
+                                }
                               />
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                {t("report.resolutionRate")}: {resolutionRate}% | {t("report.demoTrend")}: {item.trend}
+                                {t("report.resolutionRate")}: {resolutionRate}%
+                                | {t("report.demoTrend")}: {item.trend}
                               </Text>
                             </div>
                           </List.Item>
@@ -1429,7 +2262,11 @@ export default function ReportDashboardPage() {
                         boxShadow: "0 0 0 1px rgba(198,40,40,0.08)",
                       }}
                     >
-                      <Space orientation="vertical" size={4} style={{ width: "100%" }}>
+                      <Space
+                        orientation="vertical"
+                        size={4}
+                        style={{ width: "100%" }}
+                      >
                         <Text strong style={{ fontSize: 16 }}>
                           {item.icon} {item.category}
                         </Text>
@@ -1437,7 +2274,9 @@ export default function ReportDashboardPage() {
                           {t("report.area")}: {item.area}
                         </Text>
                         <Text>
-                          {t("report.activeCluster")}: <strong>{item.activeCases}</strong> {t("report.grievances")}
+                          {t("report.activeCluster")}:{" "}
+                          <strong>{item.activeCases}</strong>{" "}
+                          {t("report.grievances")}
                         </Text>
                         <Tag color="red">{item.severity}</Tag>
                       </Space>
@@ -1470,12 +2309,31 @@ export default function ReportDashboardPage() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="fixed" stackId="services" fill="#1a3c6e" radius={[6, 6, 0, 0]} name={t("report.demoResolved")} />
-                      <Bar dataKey="backlog" stackId="services" fill="#e07b00" radius={[6, 6, 0, 0]} name={t("report.demoBacklog")} />
+                      <Bar
+                        dataKey="fixed"
+                        stackId="services"
+                        fill="#1a3c6e"
+                        radius={[6, 6, 0, 0]}
+                        name={t("report.demoResolved")}
+                      />
+                      <Bar
+                        dataKey="backlog"
+                        stackId="services"
+                        fill="#e07b00"
+                        radius={[6, 6, 0, 0]}
+                        name={t("report.demoBacklog")}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div style={{ height: "100%", borderRadius: 8, background: "linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%)" }} />
+                  <div
+                    style={{
+                      height: "100%",
+                      borderRadius: 8,
+                      background:
+                        "linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%)",
+                    }}
+                  />
                 )}
               </div>
             </Card>
@@ -1499,12 +2357,24 @@ export default function ReportDashboardPage() {
                           <Cell key={entry.name} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => [`${value ?? 0}%`, t("report.netScore")]} />
+                      <Tooltip
+                        formatter={(value) => [
+                          `${value ?? 0}%`,
+                          t("report.netScore"),
+                        ]}
+                      />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div style={{ height: "100%", borderRadius: 8, background: "linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%)" }} />
+                  <div
+                    style={{
+                      height: "100%",
+                      borderRadius: 8,
+                      background:
+                        "linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%)",
+                    }}
+                  />
                 )}
               </div>
             </Card>
@@ -1586,9 +2456,18 @@ export default function ReportDashboardPage() {
                       src={item.beforeImageUrl}
                       alt={`Before case ${item.id}`}
                       preview={false}
-                      style={{ width: "100%", height: 128, borderRadius: 8, objectFit: "cover", objectPosition: "top left" }}
+                      style={{
+                        width: "100%",
+                        height: 128,
+                        borderRadius: 8,
+                        objectFit: "cover",
+                        objectPosition: "top left",
+                      }}
                     />
-                    <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 6 }}>
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: 12, display: "block", marginTop: 6 }}
+                    >
                       {item.area}
                     </Text>
                   </Col>
@@ -1600,10 +2479,22 @@ export default function ReportDashboardPage() {
                       src={item.afterImageUrl}
                       alt={`After case ${item.id}`}
                       preview={false}
-                      style={{ width: "100%", height: 128, borderRadius: 8, objectFit: "cover", objectPosition: "top left" }}
+                      style={{
+                        width: "100%",
+                        height: 128,
+                        borderRadius: 8,
+                        objectFit: "cover",
+                        objectPosition: "top left",
+                      }}
                     />
-                    <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 6 }}>
-                      {t("report.resolvedOn")} {item.resolvedAt ? new Date(item.resolvedAt).toLocaleDateString("en-IN") : "-"}
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: 12, display: "block", marginTop: 6 }}
+                    >
+                      {t("report.resolvedOn")}{" "}
+                      {item.resolvedAt
+                        ? new Date(item.resolvedAt).toLocaleDateString("en-IN")
+                        : "-"}
                     </Text>
                   </Col>
                 </Row>
@@ -1639,7 +2530,8 @@ export default function ReportDashboardPage() {
                   format={(value) => `${value}%`}
                 />
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                  {t("report.avgResolution")}: {item.avgResolutionDays} {t("report.days")} | {t("report.cases")}: {item.total}
+                  {t("report.avgResolution")}: {item.avgResolutionDays}{" "}
+                  {t("report.days")} | {t("report.cases")}: {item.total}
                 </Text>
                 <div style={{ marginTop: 12 }}>
                   <Button

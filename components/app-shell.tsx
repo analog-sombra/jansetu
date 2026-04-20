@@ -22,8 +22,8 @@ const ADMIN_NAV_LINKS = [
 ];
 
 const REPORT_NAV_LINKS = [
-  { href: "/report", labelKey: "nav.mlaReport" },
-  { href: "/report/demo", labelKey: "nav.reportDemo" },
+  // { href: "/report", labelKey: "nav.mlaReport" },
+  { href: "/report/demo", labelKey: "nav.mlaReport" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return ADMIN_NAV_LINKS;
     }
 
-    if (pathname.startsWith("/report")) {
+    if (pathname.startsWith("/report/demo")) {
       return REPORT_NAV_LINKS;
     }
 
