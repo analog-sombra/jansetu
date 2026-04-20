@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   Button,
   Card,
   Col,
@@ -190,9 +189,9 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
       { complaintId: 9216, category: "Sanitation", area: "Ward 8 Market", resolvedAt: "2026-04-13", beforeLabel: "Garbage overflow", afterLabel: "Daily pickup restored", beforeTone: "#92400e", afterTone: "#15803d" },
     ],
     systemicCrises: [
-      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 12, icon: "≡ƒÆº", severity: "High priority" },
-      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 9, icon: "≡ƒ¢ú∩╕Å", severity: "Escalation watch" },
-      { key: "night-power", area: "Ward 8", category: "Power", activeCases: 7, icon: "ΓÜí", severity: "Monitoring" },
+      { key: "water-grid", area: "Ward 14", category: "Water", activeCases: 12, icon: "💧", severity: "High priority" },
+      { key: "road-belt", area: "Ward 3", category: "Roads", activeCases: 9, icon:"🛣️", severity: "Escalation watch" },
+      { key: "night-power", area: "Ward 8", category: "Power", activeCases: 7, icon: "⚡", severity: "Monitoring" },
     ],
   },
   "30d": {

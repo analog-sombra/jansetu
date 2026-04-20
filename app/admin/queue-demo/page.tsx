@@ -21,7 +21,11 @@ import type { TableColumnsType } from "antd";
 import { useLanguage } from "@/components/language-provider";
 import { COMPLAINT_CATEGORIES } from "@/lib/constants";
 import { getLocalizedCategory } from "@/lib/complaint-i18n";
-import { buildPriorityClusters, DEMO_COMPLAINTS, getClusterKey } from "./demo-data";
+import {
+  buildPriorityClusters,
+  DEMO_COMPLAINTS,
+  getClusterKey,
+} from "./demo-data";
 
 const { Title, Text } = Typography;
 
@@ -65,8 +69,12 @@ export default function AdminQueueDemoPage() {
   const router = useRouter();
   const { t } = useLanguage();
 
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [areaFilter, setAreaFilter] = useState("");
   const [appliedFilter, setAppliedFilter] = useState<{
     status?: string;
@@ -87,12 +95,17 @@ export default function AdminQueueDemoPage() {
       if (appliedFilter.status && complaint.status !== appliedFilter.status) {
         return false;
       }
-      if (appliedFilter.category && complaint.category !== appliedFilter.category) {
+      if (
+        appliedFilter.category &&
+        complaint.category !== appliedFilter.category
+      ) {
         return false;
       }
       if (
         appliedFilter.area &&
-        !(complaint.area ?? "").toLowerCase().includes(appliedFilter.area.toLowerCase())
+        !(complaint.area ?? "")
+          .toLowerCase()
+          .includes(appliedFilter.area.toLowerCase())
       ) {
         return false;
       }
@@ -100,7 +113,10 @@ export default function AdminQueueDemoPage() {
     });
   }, [appliedFilter]);
 
-  const priorityClusters = useMemo(() => buildPriorityClusters(DEMO_COMPLAINTS), []);
+  const priorityClusters = useMemo(
+    () => buildPriorityClusters(DEMO_COMPLAINTS),
+    [],
+  );
   const priorityByKey = useMemo(
     () => new Map(priorityClusters.map((cluster) => [cluster.key, cluster])),
     [priorityClusters],
@@ -139,7 +155,9 @@ export default function AdminQueueDemoPage() {
       title: t("admin.table.category"),
       dataIndex: "category",
       key: "category",
-      render: (cat: string) => <Text strong>{getLocalizedCategory(cat, t)}</Text>,
+      render: (cat: string) => (
+        <Text strong>{getLocalizedCategory(cat, t)}</Text>
+      ),
     },
     {
       title: "Priority",
@@ -210,7 +228,7 @@ export default function AdminQueueDemoPage() {
       render: (_, record) => (
         <Link href={`/admin/queue-demo/${record.id}`}>
           <Button type="link" size="small" style={{ padding: 0 }}>
-          {t("admin.table.view")}
+            {t("admin.table.view")}
           </Button>
         </Link>
       ),
@@ -244,14 +262,6 @@ export default function AdminQueueDemoPage() {
           {t("admin.subtitle")}
         </Text>
       </div>
-
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 20 }}
-        title={t("admin.demoBanner")}
-        description={`${t("admin.demoBannerDesc")} Total cases: ${DEMO_COMPLAINTS.length}.`}
-      />
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={12} sm={6}>

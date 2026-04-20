@@ -358,38 +358,46 @@ const DEMO_AREAS = [
 const DEMO_CATEGORIES = ["Roads", "Water", "Power", "Sanitation", "Health"];
 
 const UNSPLASH_BEFORE = [
-  "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1517022812141-23620dba5c23?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1457530378978-8bac673b8062?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1532960400857-e8d9d275d858?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1579508542697-bb18e7d9aeaa?auto=format&fit=crop&w=840&q=80",
+  "/image/clean bf.jpg",
+  "/image/light bf.jpg",
+  "/image/pothole 2 bf.jpg",
+  "/image/pothole 3 bf.jpg",
+  "/image/pothole 4 bf.jpg",
+  "/image/road 1 bf.jpg",
+  "/image/road bf.jpg",
+  "/image/water 1 before.jpg",
+  "/image/water 2 before.jpg",
+  "/image/water log 1 before.jpg",
 ];
 
 const UNSPLASH_AFTER = [
-  "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1508450859948-4e04fabaa4ea?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1431576901776-e539bd916ba2?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=840&q=80",
-  "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=840&q=80",
+  "/image/clean af.jpg",
+  "/image/light af.jpg",
+  "/image/pothole 2 af.jpg",
+  "/image/pothole 3 af.jpg",
+  "/image/pothole 4 af.jpg",
+  "/image/road 1 af.jpg",
+  "/image/road 2 af.jpg",
+  "/image/water 1 after.jpg",
+  "/image/water 2 after.jpg",
+  "/image/water log 1 af.jpg",
 ];
 
 const DEMO_CASES: DemoCaseEntry[] = Array.from({ length: 50 }, (_, index) => {
   const id = 12001 + index;
-  const ward = DEMO_WARDS[index % DEMO_WARDS.length];
-  const area = DEMO_AREAS[index % DEMO_AREAS.length];
-  const category = DEMO_CATEGORIES[index % DEMO_CATEGORIES.length];
-  const statusType = index % 4 === 0 || index % 7 === 0 ? "UNSOLVED" : "SOLVED";
-  const priority = index % 5 === 0 || index % 9 === 0;
+  const combinationIndex = index % (DEMO_WARDS.length * DEMO_CATEGORIES.length);
+  const ward = DEMO_WARDS[combinationIndex % DEMO_WARDS.length];
+  const category =
+    DEMO_CATEGORIES[
+      Math.floor(combinationIndex / DEMO_WARDS.length) % DEMO_CATEGORIES.length
+    ];
+  const area = DEMO_AREAS[(combinationIndex + index) % DEMO_AREAS.length];
+  const statusType =
+    index < DEMO_WARDS.length * DEMO_CATEGORIES.length || combinationIndex % 2 === 0
+      ? "UNSOLVED"
+      : "SOLVED";
+  const priority =
+    index < DEMO_WARDS.length * DEMO_CATEGORIES.length || combinationIndex % 3 === 0;
 
   return {
     id,
@@ -429,14 +437,52 @@ function buildLetterDraft(entry: DemoCaseEntry) {
   ].join("\n");
 }
 
+function buildCombinedOverdueDraft(
+  entries: Array<{
+    ticketId: number;
+    ward: string;
+    category: string;
+    area: string;
+    assignedTo: string;
+    daysOverdue: number;
+    reminderCount: number;
+    priority: boolean;
+  }>,
+  ward: string,
+  category: string,
+) {
+  return [
+    "OFFICE OF MLA - JAN SETU",
+    "Subject: Consolidated Overdue Grievance Report and Action Notice",
+    "",
+    `Ward: ${ward}`,
+    `Category: ${category}`,
+    `Total Overdue Cases: ${entries.length}`,
+    "",
+    "The following overdue grievances require immediate action and written status updates:",
+    "",
+    ...entries.map(
+      (entry, index) =>
+        `${index + 1}. Complaint #${entry.ticketId} | Area: ${entry.area} | Assigned Officer: ${entry.assignedTo} | Overdue: ${entry.daysOverdue} days | Reminders: ${entry.reminderCount} | Priority: ${entry.priority ? "Yes" : "No"}`,
+    ),
+    "",
+    "All concerned officers are directed to submit an updated action-taken report within 24 hours and clear the pending grievances on priority.",
+    "",
+    "Issued by:",
+    "MLA Constituency Office",
+  ].join("\n");
+}
+
 export default function ReportDashboardPage() {
   const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const [windowMode, setWindowMode] = useState<ReportWindow>("monthly");
   const [wardFilter, setWardFilter] = useState<string>("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [groupBy, setGroupBy] = useState<GroupByKey>("ward");
   const [draftOpen, setDraftOpen] = useState(false);
-  const [draftCase, setDraftCase] = useState<DemoCaseEntry | null>(null);
+  const [draftTitle, setDraftTitle] = useState("Letter Draft");
+  const [draftContent, setDraftContent] = useState("");
   const [exporting, setExporting] = useState<ReportWindow | null>(null);
 
   useEffect(() => {
@@ -462,7 +508,8 @@ export default function ReportDashboardPage() {
     return DEMO_CASES.filter((item) => {
       const withinWindow = new Date(item.createdAt).getTime() >= cutoff;
       const matchesWard = wardFilter === "ALL" || item.ward === wardFilter;
-      return withinWindow && matchesWard;
+      const matchesCategory = categoryFilter === "ALL" || item.category === categoryFilter;
+      return withinWindow && matchesWard && matchesCategory;
     });
   }
 
@@ -566,6 +613,7 @@ export default function ReportDashboardPage() {
         {
           "Report Window": mode,
           "Ward Filter": wardFilter,
+          "Category Filter": categoryFilter,
           "Group By": groupBy,
           "Total Entries": cases.length,
           "Solved Cases": solved.length,
@@ -649,9 +697,10 @@ export default function ReportDashboardPage() {
     return DEMO_CASES.filter((item) => {
       const withinWindow = new Date(item.createdAt).getTime() >= cutoff;
       const matchesWard = wardFilter === "ALL" || item.ward === wardFilter;
-      return withinWindow && matchesWard;
+      const matchesCategory = categoryFilter === "ALL" || item.category === categoryFilter;
+      return withinWindow && matchesWard && matchesCategory;
     });
-  }, [windowMode, wardFilter]);
+  }, [categoryFilter, windowMode, wardFilter]);
 
   const wardOptions = useMemo(
     () => [
@@ -662,6 +711,17 @@ export default function ReportDashboardPage() {
       })),
     ],
     [overview.wards, t],
+  );
+
+  const categoryOptions = useMemo(
+    () => [
+      { label: "All Categories", value: "ALL" },
+      ...DEMO_CATEGORIES.map((category) => ({
+        label: category,
+        value: category,
+      })),
+    ],
+    [],
   );
 
   const filteredWards = useMemo(() => {
@@ -763,6 +823,28 @@ export default function ReportDashboardPage() {
       }));
   }, [filteredCases]);
 
+  const overdueReportRows = useMemo(() => {
+    if (wardFilter === "ALL" || categoryFilter === "ALL") {
+      return [];
+    }
+
+    return filteredCases
+      .filter((item) => item.statusType === "UNSOLVED" || item.priority)
+      .map((item, index) => ({
+        key: item.id,
+        ticketId: item.id,
+        ward: item.ward,
+        category: item.category,
+        area: item.area,
+        assignedTo: item.assignedTo,
+        statusType: item.statusType,
+        priority: item.priority,
+        daysOverdue: (item.priority ? 7 : 4) + (index % 3),
+        reminderCount: item.priority ? 3 : 2,
+      }))
+      .sort((left, right) => right.daysOverdue - left.daysOverdue);
+  }, [categoryFilter, filteredCases, wardFilter]);
+
   const groupedRows = useMemo(() => {
     const groups = new Map<
       string,
@@ -847,6 +929,41 @@ export default function ReportDashboardPage() {
     { title: "Assigned", dataIndex: "assignedTo", key: "assignedTo" },
   ];
 
+  const overdueColumns = [
+    {
+      title: "Ticket",
+      dataIndex: "ticketId",
+      key: "ticketId",
+      render: (value: number) => <Text strong>#{value}</Text>,
+    },
+    { title: "Ward", dataIndex: "ward", key: "ward" },
+    { title: "Category", dataIndex: "category", key: "category" },
+    { title: "Area", dataIndex: "area", key: "area" },
+    { title: "Assigned", dataIndex: "assignedTo", key: "assignedTo" },
+    {
+      title: "Status",
+      dataIndex: "statusType",
+      key: "statusType",
+      render: (value: "SOLVED" | "UNSOLVED") => (
+        <Tag color={value === "SOLVED" ? "green" : "orange"}>{value}</Tag>
+      ),
+    },
+    {
+      title: "Priority",
+      dataIndex: "priority",
+      key: "priority",
+      render: (value: boolean) =>
+        value ? <Tag color="red">PRIORITY</Tag> : <Text type="secondary">Normal</Text>,
+    },
+    {
+      title: "Days Overdue",
+      dataIndex: "daysOverdue",
+      key: "daysOverdue",
+      render: (value: number) => <Tag color={value >= 7 ? "red" : "orange"}>{value} days</Tag>,
+    },
+    { title: "Reminders", dataIndex: "reminderCount", key: "reminderCount" },
+  ];
+
   function openDraftFromNotice(area: string) {
     const matched =
       filteredCases.find(
@@ -855,7 +972,18 @@ export default function ReportDashboardPage() {
           item.statusType === "UNSOLVED",
       ) ?? priorityCases[0] ?? filteredCases[0] ?? DEMO_CASES[0];
 
-    setDraftCase(matched);
+    setDraftTitle(`Letter Draft for #${matched.id}`);
+    setDraftContent(buildLetterDraft(matched));
+    setDraftOpen(true);
+  }
+
+  function openCombinedOverdueDraft() {
+    if (wardFilter === "ALL" || categoryFilter === "ALL" || overdueReportRows.length === 0) {
+      return;
+    }
+
+    setDraftTitle(`Combined Overdue Report - ${wardFilter} / ${categoryFilter}`);
+    setDraftContent(buildCombinedOverdueDraft(overdueReportRows, wardFilter, categoryFilter));
     setDraftOpen(true);
   }
 
@@ -939,6 +1067,18 @@ export default function ReportDashboardPage() {
             />
           </div>
 
+          <div>
+            <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
+              Category
+            </Text>
+            <Select
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              style={{ minWidth: 220 }}
+              options={categoryOptions}
+            />
+          </div>
+
           <div style={{ marginLeft: "auto" }}>
             <Space>
               <Tag color="blue">{t("report.demoTag")}</Tag>
@@ -999,6 +1139,49 @@ export default function ReportDashboardPage() {
           </Card>
         </Col>
       </Row>
+
+      {wardFilter !== "ALL" && categoryFilter !== "ALL" ? (
+        <Card
+          style={{ borderRadius: 6, marginBottom: 20 }}
+          title={
+            <Text strong style={{ color: "#1a3c6e" }}>
+              Overdue Report: {wardFilter} | {categoryFilter}
+            </Text>
+          }
+          extra={
+            overdueReportRows.length > 0 ? (
+              <Button
+                type="primary"
+                onClick={openCombinedOverdueDraft}
+                style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}
+              >
+                Create Combined Draft
+              </Button>
+            ) : null
+          }
+        >
+          <Paragraph type="secondary" style={{ marginBottom: 16 }}>
+            This section shows overdue and priority cases for the selected ward and category, with one combined draft for the full report.
+          </Paragraph>
+
+          {overdueReportRows.length > 0 ? (
+            <Table
+              rowKey="key"
+              columns={overdueColumns}
+              dataSource={overdueReportRows}
+              size="small"
+              pagination={{ pageSize: 6, showTotal: (total) => `${total} overdue cases` }}
+              scroll={{ x: 1200 }}
+            />
+          ) : (
+            <Card size="small" styles={{ body: { padding: 16 } }}>
+              <Text type="secondary">
+                No overdue cases found for the selected ward and category.
+              </Text>
+            </Card>
+          )}
+        </Card>
+      ) : null}
 
       <Card
         style={{ borderRadius: 6, marginBottom: 20 }}
@@ -1403,7 +1586,7 @@ export default function ReportDashboardPage() {
                       src={item.beforeImageUrl}
                       alt={`Before case ${item.id}`}
                       preview={false}
-                      style={{ width: "100%", height: 128, borderRadius: 8, objectFit: "cover" }}
+                      style={{ width: "100%", height: 128, borderRadius: 8, objectFit: "cover", objectPosition: "top left" }}
                     />
                     <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 6 }}>
                       {item.area}
@@ -1417,7 +1600,7 @@ export default function ReportDashboardPage() {
                       src={item.afterImageUrl}
                       alt={`After case ${item.id}`}
                       preview={false}
-                      style={{ width: "100%", height: 128, borderRadius: 8, objectFit: "cover" }}
+                      style={{ width: "100%", height: 128, borderRadius: 8, objectFit: "cover", objectPosition: "top left" }}
                     />
                     <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 6 }}>
                       {t("report.resolvedOn")} {item.resolvedAt ? new Date(item.resolvedAt).toLocaleDateString("en-IN") : "-"}
@@ -1475,7 +1658,7 @@ export default function ReportDashboardPage() {
       </Card>
 
       <Modal
-        title={draftCase ? `Letter Draft for #${draftCase.id}` : "Letter Draft"}
+        title={draftTitle}
         open={draftOpen}
         onCancel={() => setDraftOpen(false)}
         width={760}
@@ -1486,10 +1669,10 @@ export default function ReportDashboardPage() {
           <Button
             key="copy"
             type="primary"
-            disabled={!draftCase}
+            disabled={!draftContent}
             onClick={() => {
-              if (!draftCase) return;
-              void navigator.clipboard.writeText(buildLetterDraft(draftCase));
+              if (!draftContent) return;
+              void navigator.clipboard.writeText(draftContent);
             }}
           >
             Copy Draft
@@ -1499,7 +1682,7 @@ export default function ReportDashboardPage() {
         <Input.TextArea
           rows={16}
           readOnly
-          value={draftCase ? buildLetterDraft(draftCase) : "Select a case to create a draft"}
+          value={draftContent || "Select a case to create a draft"}
         />
       </Modal>
     </div>
