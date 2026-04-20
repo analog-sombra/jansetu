@@ -5,7 +5,7 @@
   "nav.home": "Home",
   "nav.myComplaints": "My Complaints",
   "nav.fileComplaint": "File Complaint",
-  "nav.adminDashboard": "Complaint Queue",
+  "nav.adminDashboard": "Dashboard",
   "nav.adminQueueDemo": "Complaint Queue",
   "nav.adminEscalationDemo": "Escalation",
   "nav.adminPriorityCasesDemo": "Priority Cases",
