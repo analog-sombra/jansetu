@@ -27,6 +27,7 @@ const { Title, Text } = Typography;
 const STATUS_OPTIONS = [
   "PENDING",
   "IN_PROGRESS",
+  "WORK_IN_PROGESS",
   "QUERY_RAISED",
   "RESOLVED",
   "REJECTED",
@@ -37,6 +38,7 @@ const STATUS_OPTIONS = [
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "orange",
   IN_PROGRESS: "blue",
+  WORK_IN_PROGESS: "cyan",
   QUERY_RAISED: "volcano",
   RESOLVED: "green",
   REJECTED: "red",
@@ -49,6 +51,7 @@ type Complaint = {
   category: string;
   area: string | null;
   status: string;
+  plannedCompletionDate: string | null;
   lat: number;
   lng: number;
   assignments: Array<{
@@ -163,6 +166,22 @@ export default function AdminDashboardPage() {
           {status.replaceAll("_", " ")}
         </Tag>
       ),
+    },
+    {
+      title: t("admin.table.targetDate"),
+      dataIndex: "plannedCompletionDate",
+      key: "plannedCompletionDate",
+      width: 125,
+      render: (date: string | null) =>
+        date ? (
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {new Date(date).toLocaleDateString("en-IN")}
+          </Text>
+        ) : (
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            —
+          </Text>
+        ),
     },
     {
       title: t("admin.table.officer"),
@@ -339,6 +358,45 @@ export default function AdminDashboardPage() {
               value={Object.keys(analytics.byDepartment).length}
               styles={{ content: { color: "#0277bd", fontWeight: 800 } }}
             />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} md={12}>
+          <Card
+            size="small"
+            style={{ borderRadius: 8, borderTop: "3px solid #1a3c6e" }}
+            title={<Text strong style={{ color: "#1a3c6e" }}>Create Meeting</Text>}
+            extra={
+              <Link href="/admin/create-meeting">
+                <Button type="primary" size="small" style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}>
+                  Open
+                </Button>
+              </Link>
+            }
+          >
+            <Text type="secondary">
+              Create constituency, department, citizen, and personal meetings with the required fields.
+            </Text>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card
+            size="small"
+            style={{ borderRadius: 8, borderTop: "3px solid #e07b00" }}
+            title={<Text strong style={{ color: "#1a3c6e" }}>Meeting Section</Text>}
+            extra={
+              <Link href="/admin/meeting-section">
+                <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                  Open
+                </Button>
+              </Link>
+            }
+          >
+            <Text type="secondary">
+              View meeting calendar, eight summary boxes, full meeting list, and approve pending citizen meetings.
+            </Text>
           </Card>
         </Col>
       </Row>

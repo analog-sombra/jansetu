@@ -6,6 +6,7 @@ import {
   Card,
   Form,
   Select,
+  DatePicker,
   Input,
   Button,
   Typography,
@@ -22,7 +23,7 @@ import type { UploadFile } from "antd/es/upload";
 import { useLanguage } from "@/components/language-provider";
 import { getLocalizedCategory } from "@/lib/complaint-i18n";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 type Assignment = {
   id: number;
@@ -30,6 +31,7 @@ type Assignment = {
   complaint: {
     category: string;
     description: string;
+    plannedCompletionDate: string | null;
     lat: number;
     lng: number;
     media: Array<{ id: number; fileUrl: string; type: string }>;
@@ -43,8 +45,10 @@ type Assignment = {
 type FormValues = {
   type: string;
   message: string;
+  plannedCompletionDate?: {
+    startOf: (unit: string) => { toISOString: () => string };
+  };
 };
-
 export default function OfficerTokenPage() {
   const params = useParams<{ token: string }>();
   const { t } = useLanguage();
@@ -59,6 +63,7 @@ export default function OfficerTokenPage() {
     text: string;
   } | null>(null);
   const [loadStatus, setLoadStatus] = useState(t("officer.loading"));
+  const selectedResponseType = Form.useWatch("type", form);
 
   useEffect(() => {
     async function loadAssignment() {
@@ -86,7 +91,10 @@ export default function OfficerTokenPage() {
     const result = await response.json();
     setUploading(false);
     if (!response.ok) {
-      setAlert({ type: "error", text: result.error ?? t("officer.error.upload") });
+      setAlert({
+        type: "error",
+        text: result.error ?? t("officer.error.upload"),
+      });
       return false;
     }
     setProofUrl(result.fileUrl);
@@ -108,6 +116,9 @@ export default function OfficerTokenPage() {
         type: values.type,
         message: values.message,
         proofUrl,
+        plannedCompletionDate: values.plannedCompletionDate
+          ? values.plannedCompletionDate.startOf("day").toISOString()
+          : undefined,
       }),
     });
     const result = await response.json();
@@ -121,7 +132,10 @@ export default function OfficerTokenPage() {
       setFileList([]);
       setProofUrl("");
     } else {
-      setAlert({ type: "error", text: result.error ?? t("officer.error.respond") });
+      setAlert({
+        type: "error",
+        text: result.error ?? t("officer.error.respond"),
+      });
     }
   }
 
@@ -188,19 +202,36 @@ export default function OfficerTokenPage() {
               </div>
             }
             extra={
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  justifyContent: "flex-end",
+                }}
+              >
                 <a
                   href={`https://www.google.com/maps?layer=c&cbll=${assignment.complaint.lat},${assignment.complaint.lng}`}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                  <Button
+                    size="small"
+                    style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                  >
                     {t("officer.openMap")}
                   </Button>
                 </a>
                 {problemEvidence && (
-                  <a href={problemEvidence.fileUrl} target="_blank" rel="noreferrer">
-                    <Button size="small" style={{ borderColor: "#e07b00", color: "#e07b00" }}>
+                  <a
+                    href={problemEvidence.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Button
+                      size="small"
+                      style={{ borderColor: "#e07b00", color: "#e07b00" }}
+                    >
                       {t("officer.viewProblem")}
                     </Button>
                   </a>
@@ -210,8 +241,12 @@ export default function OfficerTokenPage() {
           >
             <div className="flex flex-col gap-4 md:flex-row">
               <div className="rounded-md bg-gray-100 p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("officer.complaintId")}</h1>
-                <p className="text-xs font-semibold text-gray-500">#{assignment.complaintId}</p>
+                <h1 className="text-sm font-normal">
+                  {t("officer.complaintId")}
+                </h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  #{assignment.complaintId}
+                </p>
               </div>
               <div className="rounded-md bg-gray-100 p-3 flex-1">
                 <h1 className="text-sm font-normal">{t("officer.category")}</h1>
@@ -225,13 +260,17 @@ export default function OfficerTokenPage() {
 
             <div className="flex flex-col gap-4 md:flex-row">
               <div className="rounded-md bg-gray-100 p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("officer.department")}</h1>
+                <h1 className="text-sm font-normal">
+                  {t("officer.department")}
+                </h1>
                 <p className="text-xs font-semibold text-gray-500">
                   {assignment.officer.department.name}
                 </p>
               </div>
               <div className="rounded-md bg-gray-100 p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("officer.coordinates")}</h1>
+                <h1 className="text-sm font-normal">
+                  {t("officer.coordinates")}
+                </h1>
                 <p className="text-xs font-semibold text-gray-500">
                   {assignment.complaint.lat}, {assignment.complaint.lng}
                 </p>
@@ -241,7 +280,14 @@ export default function OfficerTokenPage() {
                   rel="noreferrer"
                   style={{ display: "inline-block", marginTop: 8 }}
                 >
-                  <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e", fontSize: 11 }}>
+                  <Button
+                    size="small"
+                    style={{
+                      borderColor: "#1a3c6e",
+                      color: "#1a3c6e",
+                      fontSize: 11,
+                    }}
+                  >
                     {t("officer.openMap")}
                   </Button>
                 </a>
@@ -251,7 +297,20 @@ export default function OfficerTokenPage() {
             <div className="h-4" />
 
             <div className="rounded-md bg-gray-100 p-3 flex-1">
-              <h1 className="text-sm font-normal">{t("officer.description")}</h1>
+              <h1 className="text-sm font-normal">{t("officer.targetDate")}</h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {assignment.complaint.plannedCompletionDate
+                  ? new Date(assignment.complaint.plannedCompletionDate).toLocaleDateString("en-IN")
+                  : "—"}
+              </p>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="rounded-md bg-gray-100 p-3 flex-1">
+              <h1 className="text-sm font-normal">
+                {t("officer.description")}
+              </h1>
               <p className="text-xs font-semibold text-gray-500 whitespace-pre-wrap break-words">
                 {assignment.complaint.description}
               </p>
@@ -259,7 +318,10 @@ export default function OfficerTokenPage() {
 
             {assignment.complaint.media.length > 0 && (
               <>
-                <Divider plain style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}>
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+                >
                   {t("officer.problemEvidence")}
                 </Divider>
                 <Row gutter={[8, 8]}>
@@ -297,145 +359,186 @@ export default function OfficerTokenPage() {
 
         <Col xs={24} lg={8}>
           <Card
-            style={{ borderRadius: 6, boxShadow: "0 8px 32px rgba(0,0,0,0.10)" }}
+            style={{
+              borderRadius: 6,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
+            }}
             title={
               <Text strong style={{ color: "#1a3c6e" }}>
                 {t("officer.submitResponse")}
               </Text>
             }
           >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          requiredMark
-          initialValues={{ type: "RESOLVED" }}
-        >
-          <Form.Item
-            name="type"
-            label={t("officer.responseType")}
-            rules={[{ required: true, message: t("officer.validation.responseType") }]}
-          >
-            <Select
-              size="large"
-              options={[
-                {
-                  value: "RESOLVED",
-                  label: `✅ ${t("officer.type.resolved")}`,
-                },
-                {
-                  value: "QUERY",
-                  label: `❓ ${t("officer.type.query")}`,
-                },
-                {
-                  value: "REJECTED",
-                  label: `❌ ${t("officer.type.rejected")}`,
-                },
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="message"
-            label={t("officer.responseDetails")}
-            rules={[
-              { required: true, message: t("officer.validation.details") },
-              {
-                min: 10,
-                message: t("officer.validation.detailsMin"),
-              },
-            ]}
-          >
-            <Input.TextArea
-              rows={4}
-              placeholder={t("officer.responsePlaceholder")}
-              showCount
-              maxLength={500}
-              size="large"
-            />
-          </Form.Item>
-
-          <Divider plain style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}>
-            {t("officer.proofOptional")}
-          </Divider>
-
-          <Row gutter={16} align="top">
-            <Col xs={24}>
-              <Form.Item label={t("officer.uploadLabel")}>
-                <Upload
-                  listType="text"
-                  fileList={fileList}
-                  accept="image/*"
-                  maxCount={1}
-                  customRequest={async ({ file, onSuccess, onError }) => {
-                    const ok = await handleProofUpload(file as File);
-                    if (ok) onSuccess?.("ok");
-                    else onError?.(new Error("Upload failed"));
-                  }}
-                  onChange={({ fileList: newList }) => setFileList(newList)}
-                >
-                  <Button
-  
-                    disabled={uploading}
-                    style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
-                  >
-                    {uploading ? t("officer.uploadingShort") : t("officer.uploadButton")}
-                  </Button>
-                </Upload>
-                <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 6 }}>
-                  {t("officer.uploadHint")}
-                </Text>
-              </Form.Item>
-            </Col>
-            <Col xs={24}>
-              {proofUrl && (
-                <div
-                  style={{
-                    padding: 12,
-                    background: "#f0f7f0",
-                    borderRadius: 4,
-                    border: "1px solid #c3e6cb",
-                    marginTop: 28,
-                  }}
-                >
-                  <Text style={{ fontSize: 12, color: "#2e7d32" }}>✅ {t("officer.proofUploaded")}</Text>
-                  <br />
-                  <a
-                    href={proofUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ fontSize: 12, color: "#1a3c6e" }}
-                  >
-                    {t("officer.viewUploaded")}
-                  </a>
-                </div>
-              )}
-            </Col>
-          </Row>
-
-          <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
-            <Button
-              type="primary"
-              size="large"
-              block
-              htmlType="submit"
-              loading={submitting || uploading}
-              style={{
-                background: "#1a3c6e",
-                borderColor: "#1a3c6e",
-                height: 46,
-                fontWeight: 700,
-                fontSize: 15,
-              }}
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={onFinish}
+              requiredMark
+              initialValues={{ type: "RESOLVED" }}
             >
-              {uploading ? t("officer.uploadingButton") : t("officer.submitButton")}
-            </Button>
-          </Form.Item>
-        </Form>
+              <Form.Item
+                name="type"
+                label={t("officer.responseType")}
+                rules={[
+                  {
+                    required: true,
+                    message: t("officer.validation.responseType"),
+                  },
+                ]}
+              >
+                <Select
+                  size="large"
+                  options={[
+                    {
+                      value: "RESOLVED",
+                      label: `✅ ${t("officer.type.resolved")}`,
+                    },
+                    {
+                      value: "QUERY",
+                      label: `❓ ${t("officer.type.query")}`,
+                    },
+                    {
+                      value: "REJECTED",
+                      label: `❌ ${t("officer.type.rejected")}`,
+                    },
+                    {
+                      value: "WORK_IN_PROGESS",
+                      label: `🛠️ ${t("officer.type.workInProgess")}`,
+                    },
+                  ]}
+                />
+              </Form.Item>
+
+              {selectedResponseType === "WORK_IN_PROGESS" && (
+                <Form.Item
+                  name="plannedCompletionDate"
+                  label={t("officer.targetDate")}
+                  rules={[
+                    {
+                      required: true,
+                      message: t("officer.validation.targetDate"),
+                    },
+                  ]}
+                >
+                  <DatePicker
+                    size="large"
+                    style={{ width: "100%" }}
+                    placeholder={t("officer.targetDatePlaceholder")}
+                  />
+                </Form.Item>
+              )}
+
+              <Form.Item
+                name="message"
+                label={t("officer.responseDetails")}
+                rules={[
+                  { required: true, message: t("officer.validation.details") },
+                  {
+                    min: 10,
+                    message: t("officer.validation.detailsMin"),
+                  },
+                ]}
+              >
+                <Input.TextArea
+                  rows={4}
+                  placeholder={t("officer.responsePlaceholder")}
+                  showCount
+                  maxLength={500}
+                  size="large"
+                />
+              </Form.Item>
+
+              <Divider
+                plain
+                style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}
+              >
+                {t("officer.proofOptional")}
+              </Divider>
+
+              <Row gutter={16} align="top">
+                <Col xs={24}>
+                  <Form.Item label={t("officer.uploadLabel")}>
+                    <Upload
+                      listType="text"
+                      fileList={fileList}
+                      accept="image/*"
+                      maxCount={1}
+                      customRequest={async ({ file, onSuccess, onError }) => {
+                        const ok = await handleProofUpload(file as File);
+                        if (ok) onSuccess?.("ok");
+                        else onError?.(new Error("Upload failed"));
+                      }}
+                      onChange={({ fileList: newList }) => setFileList(newList)}
+                    >
+                      <Button
+                        disabled={uploading}
+                        style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                      >
+                        {uploading
+                          ? t("officer.uploadingShort")
+                          : t("officer.uploadButton")}
+                      </Button>
+                    </Upload>
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: 12, display: "block", marginTop: 6 }}
+                    >
+                      {t("officer.uploadHint")}
+                    </Text>
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  {proofUrl && (
+                    <div
+                      style={{
+                        padding: 12,
+                        background: "#f0f7f0",
+                        borderRadius: 4,
+                        border: "1px solid #c3e6cb",
+                        marginTop: 28,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: "#2e7d32" }}>
+                        ✅ {t("officer.proofUploaded")}
+                      </Text>
+                      <br />
+                      <a
+                        href={proofUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ fontSize: 12, color: "#1a3c6e" }}
+                      >
+                        {t("officer.viewUploaded")}
+                      </a>
+                    </div>
+                  )}
+                </Col>
+              </Row>
+
+              <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  htmlType="submit"
+                  loading={submitting || uploading}
+                  style={{
+                    background: "#1a3c6e",
+                    borderColor: "#1a3c6e",
+                    height: 46,
+                    fontWeight: 700,
+                    fontSize: 15,
+                  }}
+                >
+                  {uploading
+                    ? t("officer.uploadingButton")
+                    : t("officer.submitButton")}
+                </Button>
+              </Form.Item>
+            </Form>
           </Card>
         </Col>
       </Row>
     </div>
   );
 }
-

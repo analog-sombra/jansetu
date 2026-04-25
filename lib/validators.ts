@@ -44,9 +44,18 @@ export const assignSchema = z.object({
 
 export const respondSchema = z.object({
   token: z.string().min(10),
-  type: z.enum(["RESOLVED", "QUERY", "REJECTED"]),
+  type: z.enum(["RESOLVED", "QUERY", "REJECTED", "WORK_IN_PROGESS"]),
   message: z.string().min(3),
   proofUrl: z.string().optional(),
+  plannedCompletionDate: z.string().datetime().optional(),
+}).superRefine((payload, ctx) => {
+  if (payload.type === "WORK_IN_PROGESS" && !payload.plannedCompletionDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "plannedCompletionDate is required for WORK_IN_PROGESS",
+      path: ["plannedCompletionDate"],
+    });
+  }
 });
 
 export const confirmResolutionSchema = z.object({
@@ -57,4 +66,138 @@ export const confirmResolutionSchema = z.object({
 
 export const raiseQuerySchema = z.object({
   message: z.string().min(3),
+});
+
+export const createMeetingSchema = z
+  .object({
+    assignedToUserId: z.string().min(1),
+    type: z.enum([
+      "CONSTITUENCY_VISIT",
+      "DEPARTMENT_VISIT",
+      "CITIZEN_MEET",
+      "PERSONAL_MEET",
+    ]),
+    purpose: z.string().min(5),
+    meetingDateTime: z.string().datetime().optional(),
+    meetingPlace: z.string().min(2).optional(),
+    preferredDateTime: z.string().datetime().optional(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+    citizenName: z.string().min(2).optional(),
+    citizenMobile: z.string().regex(mobileRegex).optional(),
+    citizenArea: z.string().min(2).optional(),
+    citizenDetails: z.string().min(3).optional(),
+    contactName: z.string().min(2).optional(),
+    contactMobile: z.string().regex(mobileRegex).optional(),
+    contactDesignation: z.string().min(2).optional(),
+    contactDepartment: z.string().min(2).optional(),
+  })
+  .superRefine((payload, ctx) => {
+    if (payload.type === "CITIZEN_MEET") {
+      if (!payload.preferredDateTime) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "preferredDateTime is required for CITIZEN_MEET",
+          path: ["preferredDateTime"],
+        });
+      }
+      if (!payload.priority) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "priority is required for CITIZEN_MEET",
+          path: ["priority"],
+        });
+      }
+      if (!payload.citizenName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "citizenName is required for CITIZEN_MEET",
+          path: ["citizenName"],
+        });
+      }
+      if (!payload.citizenMobile) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "citizenMobile is required for CITIZEN_MEET",
+          path: ["citizenMobile"],
+        });
+      }
+      if (!payload.citizenArea) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "citizenArea is required for CITIZEN_MEET",
+          path: ["citizenArea"],
+        });
+      }
+      if (!payload.citizenDetails) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "citizenDetails is required for CITIZEN_MEET",
+          path: ["citizenDetails"],
+        });
+      }
+      return;
+    }
+
+    if (!payload.meetingDateTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "meetingDateTime is required for non-citizen meetings",
+        path: ["meetingDateTime"],
+      });
+    }
+    if (!payload.meetingPlace) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "meetingPlace is required for non-citizen meetings",
+        path: ["meetingPlace"],
+      });
+    }
+
+    if (
+      payload.type === "DEPARTMENT_VISIT" ||
+      payload.type === "PERSONAL_MEET"
+    ) {
+      if (!payload.contactName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "contactName is required",
+          path: ["contactName"],
+        });
+      }
+      if (!payload.contactMobile) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "contactMobile is required",
+          path: ["contactMobile"],
+        });
+      }
+      if (!payload.contactDesignation) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "contactDesignation is required",
+          path: ["contactDesignation"],
+        });
+      }
+      if (!payload.contactDepartment) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "contactDepartment is required",
+          path: ["contactDepartment"],
+        });
+      }
+    }
+  });
+
+export const approveMeetingSchema = z.object({
+  meetingDateTime: z.string().datetime(),
+  meetingPlace: z.string().min(2),
+  approvalRemarks: z.string().optional(),
+});
+
+export const rejectMeetingSchema = z.object({
+  rejectionRemarks: z.string().min(3),
+});
+
+export const completeMeetingSchema = z.object({
+  completionRemarks: z.string().min(3).optional(),
 });

@@ -99,6 +99,7 @@ export const CATEGORY_DEPARTMENT_MAP: Record<string, string[]> = {
 export const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pending",
   IN_PROGRESS: "In Progress",
+  WORK_IN_PROGESS: "Work In Progess",
   QUERY_RAISED: "Query Raised",
   RESOLVED: "Resolved",
   REJECTED: "Rejected",

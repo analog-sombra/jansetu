@@ -9,6 +9,7 @@ type Props = {
 const statusColors: Record<string, string> = {
   PENDING: "orange",
   IN_PROGRESS: "blue",
+  WORK_IN_PROGESS: "cyan",
   QUERY_RAISED: "volcano",
   RESOLVED: "green",
   REJECTED: "red",

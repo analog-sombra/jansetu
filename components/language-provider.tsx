@@ -3,8 +3,9 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import en from "@/messages/en.json";
 import hi from "@/messages/hi.json";
+import pa from "@/messages/pa.json";
 
-type Language = "en" | "hi";
+type Language = "en" | "hi" | "pa";
 const LANGUAGE_STORAGE_KEY = "jansetu_language";
 
 type LanguageContextType = {
@@ -16,14 +17,18 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en");
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (saved === "en" || saved === "hi") {
-      setLanguage(saved);
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window === "undefined") {
+      return "en";
     }
-  }, []);
+
+    const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (saved === "en" || saved === "hi" || saved === "pa") {
+      return saved;
+    }
+
+    return "en";
+  });
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -31,7 +36,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, [language]);
 
   const value = useMemo(() => {
-    const dictionary = (language === "en" ? en : hi) as Record<string, string>;
+    const dictionaryByLanguage: Record<Language, Record<string, string>> = {
+      en,
+      hi,
+      pa,
+    };
+    const dictionary = dictionaryByLanguage[language];
     return {
       language,
       setLanguage,

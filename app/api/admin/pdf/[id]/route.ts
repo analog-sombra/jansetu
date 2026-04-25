@@ -49,6 +49,7 @@ export async function GET(
     `Category: ${complaint.category}`,
     `Subcategory: ${complaint.subcategory ?? "N/A"}`,
     `Status: ${complaint.status}`,
+    `Target Completion Date: ${(complaint as { plannedCompletionDate?: Date | null }).plannedCompletionDate ? (complaint as { plannedCompletionDate?: Date | null }).plannedCompletionDate?.toLocaleDateString("en-IN") : "N/A"}`,
     `Area: ${complaint.area ?? "N/A"}`,
     `Coordinates: ${complaint.lat}, ${complaint.lng}`,
     `Assignments: ${complaint.assignments.length}`,

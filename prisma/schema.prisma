@@ -16,6 +16,7 @@ enum UserRole {
 enum ComplaintStatus {
   PENDING
   IN_PROGRESS
+  WORK_IN_PROGESS
   QUERY_RAISED
   RESOLVED
   REJECTED
@@ -36,6 +37,7 @@ enum ResponseType {
   RESOLVED
   QUERY
   REJECTED
+  WORK_IN_PROGESS
 }
 
 enum MediaType {
@@ -55,6 +57,27 @@ enum NotificationStatus {
   FAILED
 }
 
+enum MeetingType {
+  CONSTITUENCY_VISIT
+  DEPARTMENT_VISIT
+  CITIZEN_MEET
+  PERSONAL_MEET
+}
+
+enum MeetingApprovalStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MeetingPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
   id                 String         @id @default(cuid())
   name               String?
@@ -67,6 +90,8 @@ model User {
   complaints         Complaint[]
   auditLogs          AuditLog[]
   notifications      Notification[]
+  meetingsCreated    Meeting[]      @relation("MeetingCreatedBy")
+  meetingsAssigned   Meeting[]      @relation("MeetingAssignedTo")
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -91,6 +116,7 @@ model Complaint {
   subcategory String?
   description String           @db.LongText
   status      ComplaintStatus  @default(PENDING)
+  plannedCompletionDate DateTime?
   lat         Float
   lng         Float
   area        String?
@@ -196,4 +222,38 @@ model Notification {
 
   @@index([userId, createdAt])
   @@index([assignmentId, createdAt])
+}
+
+model Meeting {
+  id                    Int                   @id @default(autoincrement())
+  createdByUserId       String
+  createdByUser         User                  @relation("MeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  assignedToUserId      String
+  assignedToUser        User                  @relation("MeetingAssignedTo", fields: [assignedToUserId], references: [id], onDelete: Cascade)
+  type                  MeetingType
+  purpose               String                @db.LongText
+  meetingDateTime       DateTime?
+  meetingPlace          String?
+  approvalStatus        MeetingApprovalStatus @default(NOT_REQUIRED)
+  approvedAt            DateTime?
+  rejectedAt            DateTime?
+  completedAt           DateTime?
+  approvalRemarks       String?               @db.LongText
+  preferredDateTime     DateTime?
+  priority              MeetingPriority?
+  citizenName           String?
+  citizenMobile         String?
+  citizenArea           String?
+  citizenDetails        String?               @db.LongText
+  contactName           String?
+  contactMobile         String?
+  contactDesignation    String?
+  contactDepartment     String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([createdByUserId, createdAt])
+  @@index([assignedToUserId, createdAt])
+  @@index([type, approvalStatus])
+  @@index([meetingDateTime])
 }

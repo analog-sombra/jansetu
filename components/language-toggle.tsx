@@ -4,12 +4,26 @@ import { Button } from "antd";
 import { useLanguage } from "@/components/language-provider";
 
 export function LanguageToggle() {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+
+  const nextLanguageByCurrent = {
+    en: "hi",
+    hi: "pa",
+    pa: "en",
+  } as const;
+
+  const buttonLabelByNextLanguage = {
+    en: "English",
+    hi: "हिंदी",
+    pa: "ਪੰਜਾਬੀ",
+  } as const;
+
+  const nextLanguage = nextLanguageByCurrent[language];
 
   return (
     <Button
       size="small"
-      onClick={() => setLanguage(language === "en" ? "hi" : "en")}
+      onClick={() => setLanguage(nextLanguage)}
       style={{
         borderColor: "rgba(255,255,255,0.4)",
         color: "#fff",
@@ -18,7 +32,7 @@ export function LanguageToggle() {
         fontSize: 12,
       }}
     >
-      {t("switchLang")}
+      {buttonLabelByNextLanguage[nextLanguage]}
     </Button>
   );
 }

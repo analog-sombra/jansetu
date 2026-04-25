@@ -13,7 +13,6 @@ import {
   Alert,
   Row,
   Col,
-  Descriptions,
   Space,
   Divider,
   Skeleton,
@@ -24,11 +23,12 @@ import {
   getLocalizedSubcategory,
 } from "@/lib/complaint-i18n";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "orange",
   IN_PROGRESS: "blue",
+  WORK_IN_PROGESS: "cyan",
   QUERY_RAISED: "volcano",
   RESOLVED: "green",
   REJECTED: "red",
@@ -73,6 +73,7 @@ type Complaint = {
   subcategory: string | null;
   description: string;
   status: string;
+  plannedCompletionDate: string | null;
   lat: number;
   lng: number;
   area: string | null;
@@ -94,6 +95,7 @@ export default function AdminComplaintDetailPage() {
   } | null>(null);
   const [assigning, setAssigning] = useState(false);
   const [querying, setQuerying] = useState(false);
+  const [assignedOfficerLink, setAssignedOfficerLink] = useState<string>("");
 
   useEffect(() => {
     async function loadData() {
@@ -136,16 +138,54 @@ export default function AdminComplaintDetailPage() {
     const result = await response.json();
     setAssigning(false);
     if (response.ok) {
+      setAssignedOfficerLink(result.tokenLink ?? "");
       setAlert({
         type: "success",
         text: `Officer assigned successfully. Secure access link: ${result.tokenLink}`,
       });
     } else {
+      setAssignedOfficerLink("");
       setAlert({
         type: "error",
         text: result.error ?? t("adminDetail.error.assign"),
       });
     }
+  }
+
+  function sendOfficerLinkOnWhatsApp() {
+    if (!assignedOfficerLink || !complaint) return;
+
+    const phone = "9773356997";
+    const selectedOfficer = officers.find(
+      (item) => String(item.id) === officerId,
+    );
+    const evidenceLines = complaint.media.length
+      ? complaint.media
+          .map((item, index) => `${index + 1}. ${item.type}: ${item.fileUrl}`)
+          .join("\n")
+      : "No evidence uploaded";
+
+    const message = [
+      "Complaint Assignment Details",
+      "",
+      `Complaint ID: ${complaint.id}`,
+      `Status: ${complaint.status.replaceAll("_", " ")}`,
+      `Category: ${getLocalizedCategory(complaint.category, t)}`,
+      `Subcategory: ${complaint.subcategory ? getLocalizedSubcategory(complaint.subcategory, t) : "N/A"}`,
+      `Complainant Name: ${complaint.user.name?.trim() || "Not provided"}`,
+      `Complainant Mobile: ${complaint.user.mobile}`,
+      `Address: ${complaint.user.address?.trim() || "Not provided"}`,
+      `Area: ${complaint.area ?? "Not specified"}`,
+      `Target Date: ${complaint.plannedCompletionDate ? new Date(complaint.plannedCompletionDate).toLocaleDateString("en-IN") : "Not set"}`,
+      "Description:",
+      complaint.description,
+      "",
+      "Officer Link:",
+      assignedOfficerLink,
+    ].join("\n");
+
+    const whatsappUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
   async function raiseQuery() {
@@ -196,7 +236,8 @@ export default function AdminComplaintDetailPage() {
     )
     .sort(
       (left, right) =>
-        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+        new Date(right.createdAt).getTime() -
+        new Date(left.createdAt).getTime(),
     );
 
   return (
@@ -287,6 +328,20 @@ export default function AdminComplaintDetailPage() {
             </div>
 
             <div className="h-4"></div>
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">
+                {t("adminDetail.targetDate")}
+              </h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {complaint.plannedCompletionDate
+                  ? new Date(
+                      complaint.plannedCompletionDate,
+                    ).toLocaleDateString("en-IN")
+                  : "Not set"}
+              </p>
+            </div>
+
+            <div className="h-4"></div>
             <div className="flex gap-4">
               <div className="bg-gray-100 rounded-md p-3 flex-1">
                 <h1 className="text-sm font-normal">
@@ -361,12 +416,19 @@ export default function AdminComplaintDetailPage() {
                 >
                   {t("adminDetail.officerResponse")}
                 </Divider>
-                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+                <Space
+                  orientation="vertical"
+                  size="middle"
+                  style={{ width: "100%" }}
+                >
                   {officerResponses.map((response) => (
                     <Card
                       key={response.id}
                       size="small"
-                      style={{ borderRadius: 6, borderLeft: "3px solid #1a3c6e" }}
+                      style={{
+                        borderRadius: 6,
+                        borderLeft: "3px solid #1a3c6e",
+                      }}
                     >
                       <div
                         style={{
@@ -381,28 +443,49 @@ export default function AdminComplaintDetailPage() {
                           <Text strong style={{ color: "#1a3c6e" }}>
                             {response.officer.name}
                           </Text>
-                          <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
+                          <Text
+                            type="secondary"
+                            style={{ display: "block", fontSize: 12 }}
+                          >
                             {response.officer.department.name}
                           </Text>
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <Tag color={RESPONSE_COLORS[response.type] ?? "default"}>
+                          <Tag
+                            color={RESPONSE_COLORS[response.type] ?? "default"}
+                          >
                             {response.type.replaceAll("_", " ")}
                           </Tag>
-                          <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
+                          <Text
+                            type="secondary"
+                            style={{ display: "block", fontSize: 12 }}
+                          >
                             {new Date(response.createdAt).toLocaleString()}
                           </Text>
                         </div>
                       </div>
-                      <Text style={{ display: "block", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                      <Text
+                        style={{
+                          display: "block",
+                          lineHeight: 1.7,
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
                         {response.message}
                       </Text>
                       {response.proofUrl && (
                         <div style={{ marginTop: 12 }}>
-                          <a href={response.proofUrl} target="_blank" rel="noreferrer">
+                          <a
+                            href={response.proofUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
                             <Button
                               size="small"
-                              style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                              style={{
+                                borderColor: "#1a3c6e",
+                                color: "#1a3c6e",
+                              }}
                             >
                               {t("adminDetail.viewProof")}
                             </Button>
@@ -482,7 +565,7 @@ export default function AdminComplaintDetailPage() {
 
         {/* Right: Actions */}
         <Col xs={24} lg={8}>
-          <Space direction="vertical" style={{ width: "100%" }} size="middle">
+          <Space orientation="vertical" style={{ width: "100%" }} size="middle">
             {/* Assign Officer Card */}
             <Card
               title={
@@ -538,6 +621,27 @@ export default function AdminComplaintDetailPage() {
                 >
                   {t("adminDetail.assignOfficer")}
                 </Button>
+
+                {assignedOfficerLink && (
+                  <div style={{ marginTop: 12 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Officer link: {assignedOfficerLink}
+                    </Text>
+                    <Button
+                      block
+                      onClick={sendOfficerLinkOnWhatsApp}
+                      style={{
+                        marginTop: 8,
+                        background: "#25d366",
+                        borderColor: "#25d366",
+                        color: "#fff",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Send Link on WhatsApp
+                    </Button>
+                  </div>
+                )}
               </Form>
             </Card>
 

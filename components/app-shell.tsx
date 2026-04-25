@@ -19,11 +19,13 @@ const ADMIN_NAV_LINKS = [
   { href: "/admin/queue-demo", labelKey: "nav.adminQueueDemo" },
   { href: "/admin/escalation-demo", labelKey: "nav.adminEscalationDemo" },
   { href: "/admin/priority-cases-demo", labelKey: "nav.adminPriorityCasesDemo" },
+  { href: "/admin/create-meeting", labelKey: "nav.adminCreateMeeting" },
+  { href: "/admin/meeting-section", labelKey: "nav.adminMeetingSection" },
 ];
 
 const REPORT_NAV_LINKS = [
-  // { href: "/report", labelKey: "nav.mlaReport" },
   { href: "/report/demo", labelKey: "nav.mlaReport" },
+  { href: "/report/meeting-calendar", labelKey: "nav.reportMeetingCalendar" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -43,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return ADMIN_NAV_LINKS;
     }
 
-    if (pathname.startsWith("/report/demo")) {
+    if (pathname.startsWith("/report")) {
       return REPORT_NAV_LINKS;
     }
 

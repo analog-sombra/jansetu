@@ -2,7 +2,6 @@ import {
   AssignmentStatus,
   ComplaintStatus,
   NotificationChannel,
-  ResponseType,
 } from "@prisma/client";
 import { NextResponse } from "next/server";
 import sanitizeHtml from "sanitize-html";
@@ -10,18 +9,25 @@ import { prisma } from "@/lib/prisma";
 import { respondSchema } from "@/lib/validators";
 import { logNotification } from "@/services/notification-service";
 
-function mapStatuses(type: ResponseType) {
-  if (type === ResponseType.RESOLVED) {
+function mapStatuses(type: string) {
+  if (type === "RESOLVED") {
     return {
       complaint: ComplaintStatus.RESOLVED,
       assignment: AssignmentStatus.RESOLVED,
     };
   }
 
-  if (type === ResponseType.QUERY) {
+  if (type === "QUERY") {
     return {
       complaint: ComplaintStatus.QUERY_RAISED,
       assignment: AssignmentStatus.QUERY,
+    };
+  }
+
+  if (type === "WORK_IN_PROGESS") {
+    return {
+      complaint: "WORK_IN_PROGESS" as ComplaintStatus,
+      assignment: AssignmentStatus.IN_PROGRESS,
     };
   }
 
@@ -52,11 +58,17 @@ export async function POST(request: Request) {
   }
 
   const statuses = mapStatuses(parsed.data.type);
+  const plannedCompletionDate =
+    parsed.data.type === "WORK_IN_PROGESS"
+      ? new Date(parsed.data.plannedCompletionDate as string)
+      : parsed.data.type === "RESOLVED" || parsed.data.type === "REJECTED"
+        ? null
+        : undefined;
 
   const response = await prisma.response.create({
     data: {
       assignmentId: assignment.id,
-      type: parsed.data.type,
+      type: parsed.data.type as never,
       message: sanitizeHtml(parsed.data.message),
       proofUrl: parsed.data.proofUrl ? sanitizeHtml(parsed.data.proofUrl) : null,
     },
@@ -69,7 +81,12 @@ export async function POST(request: Request) {
 
   await prisma.complaint.update({
     where: { id: assignment.complaintId },
-    data: { status: statuses.complaint },
+    data: {
+      status: statuses.complaint as never,
+      ...(plannedCompletionDate !== undefined
+        ? { plannedCompletionDate }
+        : {}),
+    } as never,
   });
 
   await prisma.auditLog.create({
@@ -79,6 +96,10 @@ export async function POST(request: Request) {
       meta: {
         assignmentId: assignment.id,
         officerId: assignment.officerId,
+        plannedCompletionDate:
+          plannedCompletionDate instanceof Date
+            ? plannedCompletionDate.toISOString()
+            : null,
       },
     },
   });
@@ -88,7 +109,11 @@ export async function POST(request: Request) {
     assignmentId: assignment.id,
     channel: NotificationChannel.SMS,
     recipient: assignment.complaint.user.mobile,
-    message: `Update on complaint #${assignment.complaintId}: ${parsed.data.type}`,
+    message:
+      parsed.data.type === "WORK_IN_PROGESS" &&
+      plannedCompletionDate instanceof Date
+        ? `Update on complaint #${assignment.complaintId}: WORK IN PROGESS till ${plannedCompletionDate.toLocaleDateString("en-IN")}`
+        : `Update on complaint #${assignment.complaintId}: ${parsed.data.type}`,
   });
 
   return NextResponse.json({ ok: true, response });
