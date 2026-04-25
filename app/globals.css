@@ -28,6 +28,21 @@ a {
   background: transparent !important;
 }
 
+/* Language dropdown in dark header */
+.lang-select .ant-select-selector {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #fff !important;
+}
+.lang-select .ant-select-arrow {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+.lang-select .ant-select-selection-item {
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 12px;
+}
+
 .ant-card {
   border: 1px solid #e8e8e8;
 }
