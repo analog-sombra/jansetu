@@ -84,311 +84,104 @@ export default function CitizenDashboardPage() {
   async function generateCertificateCanvas(
     complaint: Complaint,
   ): Promise<HTMLCanvasElement> {
-    const W = 900;
-    const H = 640;
+    const W = 1408;
+    const H = 768;
     const canvas = document.createElement("canvas");
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext("2d")!;
 
-    // Parchment-like backdrop
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, "#fffdf6");
-    bg.addColorStop(1, "#f8f1df");
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    // Formal layered border
-    ctx.strokeStyle = "#7f6744";
-    ctx.lineWidth = 14;
-    ctx.strokeRect(12, 12, W - 24, H - 24);
-    ctx.strokeStyle = "#c9a227";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(24, 24, W - 48, H - 48);
-    ctx.strokeStyle = "#1a3c6e";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(34, 34, W - 68, H - 68);
-
-    // Corner ornaments
-    ctx.strokeStyle = "#c9a227";
-    ctx.lineWidth = 2;
-    const corner = 26;
-    const points: Array<[number, number, number, number, number, number]> = [
-      [46, 46, 46 + corner, 46, 46, 46 + corner],
-      [W - 46, 46, W - 46 - corner, 46, W - 46, 46 + corner],
-      [46, H - 46, 46 + corner, H - 46, 46, H - 46 - corner],
-      [W - 46, H - 46, W - 46 - corner, H - 46, W - 46, H - 46 - corner],
-    ];
-    points.forEach(([x1, y1, x2, y2, x3, y3]) => {
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x3, y3);
-      ctx.stroke();
-    });
-
-    // Top tricolor ribbon
-    const bx = 56;
-    const bw = W - 112;
-    ctx.fillStyle = "#ff9933";
-    ctx.fillRect(bx, 44, bw, 7);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(bx, 51, bw, 7);
-    ctx.fillStyle = "#138808";
-    ctx.fillRect(bx, 58, bw, 7);
-
-    // Header
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#1a3c6e";
-    ctx.font = "bold 34px Georgia, serif";
-    ctx.fillText("JAN SETU", W / 2, 112);
-    ctx.fillStyle = "#7f6744";
-    ctx.font = "16px Georgia, serif";
-    ctx.fillText("PUBLIC GRIEVANCE REDRESSAL AUTHORITY", W / 2, 136);
-
-    // Title block
-    ctx.fillStyle = "#c9a227";
-    ctx.fillRect(180, 156, W - 360, 2);
-    ctx.fillStyle = "#1a3c6e";
-    ctx.font = "bold 28px Georgia, serif";
-    ctx.fillText("CERTIFICATE OF RESOLUTION", W / 2, 188);
-    ctx.fillStyle = "#7f6744";
-    ctx.font = "italic 14px Georgia, serif";
-    ctx.fillText(
-      "In recognition of responsible civic participation",
-      W / 2,
-      210,
-    );
-
-    // Watermark seal behind content
-    ctx.save();
-    ctx.globalAlpha = 0.06;
-    ctx.strokeStyle = "#1a3c6e";
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.arc(W / 2, 336, 120, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-
-    // Citizen photo medallion
-    const personImg = await new Promise<HTMLImageElement>((resolve) => {
+    const template = await new Promise<HTMLImageElement>((resolve) => {
       const img = new Image();
       img.onload = () => resolve(img);
       img.onerror = () => resolve(img);
-      img.src = "/image/person.png";
+      img.src = "/image/cert.jpg";
     });
-    const px = 132;
-    const py = 286;
-    const pr = 58;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(px, py, pr, 0, Math.PI * 2);
-    ctx.clip();
-    if (personImg.naturalWidth > 0) {
-      ctx.drawImage(personImg, px - pr, py - pr, pr * 2, pr * 2);
+
+    if (template.naturalWidth > 0 && template.naturalHeight > 0) {
+      ctx.drawImage(template, 0, 0, W, H);
     } else {
-      ctx.fillStyle = "#d9deea";
-      ctx.fill();
+      ctx.fillStyle = "#f5f1e8";
+      ctx.fillRect(0, 0, W, H);
     }
-    ctx.restore();
-    ctx.strokeStyle = "#1a3c6e";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(px, py, pr, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.strokeStyle = "#c9a227";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(px, py, pr + 8, 0, Math.PI * 2);
-    ctx.stroke();
 
-    // Citizen identity text
-    ctx.fillStyle = "#1a3c6e";
-    ctx.font = "bold 14px Arial, sans-serif";
-    ctx.fillText(profile?.name ?? "Citizen", px, 368);
-    ctx.fillStyle = "#666";
-    ctx.font = "12px Arial, sans-serif";
-    ctx.fillText(profile?.mobile ?? "", px, 388);
+    const receiverName = profile?.name?.trim() || "Citizen";
+    const location = profile?.address?.trim() || "Constituency Area";
+    const issueType = complaint.category.replaceAll("_", " ").toLowerCase();
+    const issueDate = new Date().toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+    const certificateId = `JS-${complaint.id}-${new Date().getFullYear()}`;
 
-    // Appreciation statement
-    const tx = 228;
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#3d3d3d";
-    ctx.font = "14px Georgia, serif";
-    ctx.fillText(
-      "This certifies that the grievance raised by the citizen below has been formally resolved, demonstrating ",
-      tx,
-      242,
-    );
-    ctx.fillText(
-      "accountable governance and responsible public participation in local civic improvement.",
-      tx,
-      264,
-    );
-    // ctx.fillText("", tx, 286);
+    const centerX = W / 2;
+    const wrapText = (
+      text: string,
+      x: number,
+      y: number,
+      maxWidth: number,
+      lineHeight: number,
+    ) => {
+      const words = text.split(" ");
+      let line = "";
+      let currentY = y;
 
-    // Details panel
-    const panelX = tx;
-    // const panelY = 304;
-    const panelY = 280;
-    const panelW = 610;
-    const panelH = 160;
-    ctx.fillStyle = "rgba(255,255,255,0.88)";
-    ctx.fillRect(panelX, panelY, panelW, panelH);
-    ctx.strokeStyle = "#c9a227";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(panelX, panelY, panelW, panelH);
+      words.forEach((word) => {
+        const testLine = line ? `${line} ${word}` : word;
+        if (ctx.measureText(testLine).width > maxWidth && line) {
+          ctx.fillText(line, x, currentY);
+          line = word;
+          currentY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      });
 
-    // const resolvedAssignment = complaint.assignments.find((assignment) =>
-    //   assignment.responses.some((response) => response.type.toUpperCase().includes("RESOLV")),
-    // );
-    // const fallbackAssignment = complaint.assignments[0];
-    // const resolverName = resolvedAssignment?.officer.name ?? fallbackAssignment?.officer.name ?? "Jan Setu Team";
-    // const resolverDepartment = resolvedAssignment?.officer.department.name ?? fallbackAssignment?.officer.department.name ?? "Public Grievance Cell";
-
-    const rows: Array<[string, string]> = [
-      ["Certificate No.", `JS-${complaint.id}-${new Date().getFullYear()}`],
-      ["Complaint Ref.", `#${complaint.id}`],
-      ["Category", complaint.category.replaceAll("_", " ")],
-      ["Filed On", new Date(complaint.createdAt).toLocaleDateString("en-IN")],
-      ["Resolved On", new Date().toLocaleDateString("en-IN")],
-      // ["Resolved By", `${resolverName} (${resolverDepartment})`],
-    ];
-    rows.forEach(([label, value], index) => {
-      const y = panelY + 28 + index * 30;
-      if (index % 2 === 0) {
-        ctx.fillStyle = "#f7f3e7";
-        ctx.fillRect(panelX + 1, y - 18, panelW - 2, 28);
+      if (line) {
+        ctx.fillText(line, x, currentY);
       }
-      ctx.fillStyle = "#1a3c6e";
-      ctx.font = "bold 12px Arial, sans-serif";
-      ctx.fillText(label, panelX + 12, y);
-      ctx.fillStyle = "#2d2d2d";
-      ctx.font = "12px Arial, sans-serif";
-      ctx.fillText(value, panelX + 170, y);
-    });
 
-    // Short issue excerpt
-    // const excerpt = complaint.description.length > 70
-    //   ? complaint.description.slice(0, 70) + "..."
-    //   : complaint.description;
-    // ctx.fillStyle = "#666";
-    // ctx.font = "italic 12px Arial, sans-serif";
-    // ctx.fillText(`Issue: "${excerpt}"`, panelX + 12, panelY + panelH - 12);
+      return currentY;
+    };
 
-    // Official seal
-    const sx = 118;
-    const sy = 500;
-    const sr = 56;
-    ctx.strokeStyle = "#1a3c6e";
-    ctx.lineWidth = 2.6;
-    ctx.beginPath();
-    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(sx, sy, sr - 9, 0, Math.PI * 2);
-    ctx.stroke();
     ctx.textAlign = "center";
+    ctx.fillStyle = "#333";
+
+    // Line 1 — intro
+    ctx.font = "400 19px Georgia, serif";
+    ctx.fillText("This is to certify that", centerX, 302);
+
+    // Line 2 — prominent name
+    ctx.font = "bold 52px Georgia, serif";
     ctx.fillStyle = "#1a3c6e";
-    ctx.font = "bold 10px Arial, sans-serif";
-    ctx.fillText("VERIFIED", sx, sy - 14);
-    ctx.fillText("AND RESOLVED", sx, sy + 1);
-    ctx.fillStyle = "#7f6744";
-    ctx.font = "10px Arial, sans-serif";
-    ctx.fillText("JAN SETU", sx, sy + 18);
-    ctx.fillStyle = "#7f6744";
-    ctx.font = "10px Arial, sans-serif";
-    ctx.fillText("AUTHORITY", sx, sy + 28);
+    ctx.fillText(receiverName, centerX, 366);
 
-    // MLA acknowledgment/profile block (replaces signatures)
-    const mlaBoxX = W - 62 - 470;
-    const mlaBoxY = 466;
-    const mlaBoxW = 470;
-    const mlaBoxH = 86;
-    ctx.fillStyle = "rgba(255,255,255,0.86)";
-    ctx.fillRect(mlaBoxX, mlaBoxY, mlaBoxW, mlaBoxH);
-    ctx.strokeStyle = "#c9a227";
-    ctx.lineWidth = 1.2;
-    ctx.strokeRect(mlaBoxX, mlaBoxY, mlaBoxW, mlaBoxH);
+    // Line 3 onwards — rest of the body
+    ctx.font = "400 19px Georgia, serif";
+    ctx.fillStyle = "#333";
+    const restText =
+      `has acted as a responsible citizen by bringing attention to and successfully getting a ${issueType} issue resolved` +
+      ` in ${location} through the Jan Setu grievance portal.` +
+      ` We sincerely appreciate the awareness and civic responsibility demonstrated towards community development.`;
+    wrapText(restText, centerX, 412, 960, 26);
 
-    // Mini profile photo for acknowledgment
-    const mlaPx = mlaBoxX + 44;
-    const mlaPy = mlaBoxY + 38;
-    const mlaPr = 24;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(mlaPx, mlaPy, mlaPr, 0, Math.PI * 2);
-    ctx.clip();
-    if (personImg.naturalWidth > 0) {
-      ctx.drawImage(
-        personImg,
-        mlaPx - mlaPr,
-        mlaPy - mlaPr,
-        mlaPr * 2,
-        mlaPr * 2,
-      );
-    } else {
-      ctx.fillStyle = "#d9deea";
-      ctx.fill();
-    }
-    ctx.restore();
-    ctx.strokeStyle = "#1a3c6e";
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.arc(mlaPx, mlaPy, mlaPr, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.font = "700 20px Arial, sans-serif";
+    ctx.fillStyle = "#111";
+    ctx.fillText(`Date of Issue: ${issueDate}`, centerX, 502);
+
+    ctx.font = "700 20px Arial, sans-serif";
+    ctx.fillText(`Certificate ID: ${certificateId}`, centerX, 530);
 
     ctx.textAlign = "left";
-    ctx.fillStyle = "#1a3c6e";
-    ctx.font = "bold 12px Arial, sans-serif";
-    ctx.fillText(
-      "Under the guidance and continuous follow-up of:",
-      mlaBoxX + 80,
-      mlaBoxY + 22,
-    );
-    ctx.font = "bold 13px Arial, sans-serif";
-    ctx.fillText("Manjider Singh Sirsa", mlaBoxX + 80, mlaBoxY + 40);
-    ctx.fillStyle = "#4d4d4d";
-    ctx.font = "12px Arial, sans-serif";
-    ctx.fillText(
-      "Minister for Environment, Forest",
-      mlaBoxX + 80,
-      mlaBoxY + 56,
-    );
-    ctx.fillText("MLA Rajouri Garden", mlaBoxX + 80, mlaBoxY + 70);
-
-    ctx.fillStyle = "#6b5f47";
-    ctx.font = "italic 10px Arial, sans-serif";
-    ctx.fillText(
-      "Acknowledged with gratitude for constituency leadership.",
-      mlaBoxX + 80,
-      mlaBoxY + 82,
-    );
-
-    // Footer pledge + Hindi tagline
-    ctx.fillStyle = "#7f6744";
-    ctx.font = "12px Georgia, serif";
-    ctx.fillText(
-      "Together we build a responsible and responsive constituency.",
-      W / 2 - 150,
-      576,
-    );
-    ctx.fillStyle = "#1a3c6e";
-    ctx.font = "bold 15px Nirmala UI, Mangal, Arial, sans-serif";
-    ctx.fillText(
-      "समस्या आपने बताई, समाधान हमने करके दिखाया।",
-      W / 2 - 150,
-      592,
-    );
-    ctx.fillStyle = "#999";
-    ctx.font = "11px Arial, sans-serif";
-    ctx.fillText(
-      `Issued on ${new Date().toLocaleDateString("en-IN")}`,
-      W / 2-20,
-      604,
-    );
+    ctx.fillStyle = "#111";
+    // ctx.font = "700 20px Arial, sans-serif";
+    // ctx.fillText("Presented By:", 390, 575);
+    ctx.font = "700 30px Georgia, serif";
+    ctx.fillText("Manjider Singh Sirsa", 390, 605);
+    ctx.font = "500 18px Arial, sans-serif";
+    ctx.fillText("Minister of Food & Supplies, Industry, Forest & Environment", 390, 632);
+    ctx.fillText("MLA of Rajouri Garden", 390, 660);
 
     return canvas;
   }
