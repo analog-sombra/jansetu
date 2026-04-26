@@ -26,7 +26,7 @@ import { getLocalizedArea } from "@/lib/complaint-i18n";
 import { RAJOURI_GARDEN_AREAS } from "@/lib/constants";
 
 const { Title, Text } = Typography;
-const DATE_TIME_FORMAT = "DD-MM-YYYY HH:mm";
+const DATE_TIME_FORMAT = "DD-MM-YYYY hh:mm A";
 
 const PAGE_COPY = {
   en: {
@@ -211,6 +211,12 @@ type FormValues = {
   contactDepartment?: string;
 };
 
+type OfficerLookup = {
+  name: string;
+  designation: string;
+  department: { name: string };
+};
+
 export default function CreateMeetingPage() {
   const router = useRouter();
   const { language, t } = useLanguage();
@@ -278,8 +284,12 @@ export default function CreateMeetingPage() {
     }
 
     setLoadingLookup(true);
+    const shouldLookupOfficer = target === "contact" && selectedType === "DEPARTMENT_VISIT";
     const roleQuery = target === "citizen" ? "&role=CITIZEN" : "";
-    const response = await fetch(`/api/admin/users?mobile=${mobile}${roleQuery}`);
+    const endpoint = shouldLookupOfficer
+      ? `/api/admin/officers?mobile=${mobile}`
+      : `/api/admin/users?mobile=${mobile}${roleQuery}`;
+    const response = await fetch(endpoint);
     const result = await response.json();
     setLoadingLookup(false);
 
@@ -293,23 +303,42 @@ export default function CreateMeetingPage() {
       return;
     }
 
-    const matchedUser = result.user as (UserLite & { address?: string | null }) | null;
-    if (!matchedUser) {
+    const matchedOfficer = shouldLookupOfficer ? (result.officer as OfficerLookup | null) : null;
+    const matchedUser = shouldLookupOfficer
+      ? null
+      : (result.user as (UserLite & { address?: string | null }) | null);
+
+    if (!matchedOfficer && !matchedUser) {
       if (target === "citizen") {
         setCitizenDetailsLocked(false);
       } else {
+        if (shouldLookupOfficer) {
+          setError(copy.userLookupFailed);
+        }
+        form.setFieldsValue({
+          contactName: undefined,
+          contactDesignation: undefined,
+          contactDepartment: undefined,
+        });
         setContactDetailsLocked(false);
       }
       return;
     }
 
-    if (target === "citizen") {
+    if (target === "citizen" && matchedUser) {
       form.setFieldsValue({
         citizenName: matchedUser.name ?? form.getFieldValue("citizenName"),
         citizenArea: matchedUser.address ?? form.getFieldValue("citizenArea"),
       });
       setCitizenDetailsLocked(true);
-    } else {
+    } else if (shouldLookupOfficer && matchedOfficer) {
+      form.setFieldsValue({
+        contactName: matchedOfficer.name,
+        contactDesignation: matchedOfficer.designation,
+        contactDepartment: matchedOfficer.department.name,
+      });
+      setContactDetailsLocked(true);
+    } else if (matchedUser) {
       form.setFieldsValue({
         contactName: matchedUser.name ?? form.getFieldValue("contactName"),
       });
@@ -389,6 +418,7 @@ export default function CreateMeetingPage() {
   }
 
   const isCitizenMeet = selectedType === "CITIZEN_MEET";
+  const isDepartmentVisit = selectedType === "DEPARTMENT_VISIT";
   const showContactFields = selectedType === "DEPARTMENT_VISIT" || selectedType === "PERSONAL_MEET";
 
   return (
@@ -482,7 +512,12 @@ export default function CreateMeetingPage() {
                     name="meetingDateTime"
                     rules={[{ required: true, message: copy.selectMeetingDateTime }]}
                   >
-                    <DatePicker showTime needConfirm={false} style={{ width: "100%" }} format={DATE_TIME_FORMAT} />
+                    <DatePicker
+                      showTime={{ use12Hours: true, format: "hh:mm A", minuteStep: 5 }}
+                      needConfirm={false}
+                      style={{ width: "100%" }}
+                      format={DATE_TIME_FORMAT}
+                    />
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
@@ -505,7 +540,11 @@ export default function CreateMeetingPage() {
                     name="preferredDateTime"
                     rules={[{ required: true, message: copy.selectPreferredDateTime }]}
                   >
-                    <DatePicker showTime style={{ width: "100%" }} format={DATE_TIME_FORMAT} />
+                    <DatePicker
+                      showTime={{ use12Hours: true, format: "hh:mm A", minuteStep: 5 }}
+                      style={{ width: "100%" }}
+                      format={DATE_TIME_FORMAT}
+                    />
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
@@ -596,6 +635,13 @@ export default function CreateMeetingPage() {
                         if (sanitized.length === 10) {
                           void fetchUserByMobile(sanitized, "contact");
                         } else {
+                          if (selectedType === "DEPARTMENT_VISIT") {
+                            form.setFieldsValue({
+                              contactName: undefined,
+                              contactDesignation: undefined,
+                              contactDepartment: undefined,
+                            });
+                          }
                           setContactDetailsLocked(false);
                         }
                       }}
@@ -608,7 +654,10 @@ export default function CreateMeetingPage() {
                     name="contactName"
                     rules={[{ required: true, message: copy.enterContactName }]}
                   >
-                    <Input placeholder={copy.enterContactName} disabled={contactDetailsLocked} />
+                    <Input
+                      placeholder={copy.enterContactName}
+                      disabled={isDepartmentVisit || contactDetailsLocked}
+                    />
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
@@ -617,7 +666,7 @@ export default function CreateMeetingPage() {
                     name="contactDesignation"
                     rules={[{ required: true, message: copy.enterDesignation }]}
                   >
-                    <Input placeholder={copy.enterDesignation} />
+                    <Input placeholder={copy.enterDesignation} disabled={isDepartmentVisit} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
@@ -626,7 +675,7 @@ export default function CreateMeetingPage() {
                     name="contactDepartment"
                     rules={[{ required: true, message: copy.enterDepartment }]}
                   >
-                    <Input placeholder={copy.enterDepartment} />
+                    <Input placeholder={copy.enterDepartment} disabled={isDepartmentVisit} />
                   </Form.Item>
                 </Col>
               </>

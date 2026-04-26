@@ -2,13 +2,32 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Alert, Card, Col, Descriptions, Divider, Row, Space, Table, Tag, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Divider,
+  Row,
+  Space,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
 import type { TableColumnsType } from "antd";
 
 import { useLanguage } from "@/components/language-provider";
-import { getLocalizedCategory, getLocalizedSubcategory } from "@/lib/complaint-i18n";
+import {
+  getLocalizedCategory,
+  getLocalizedSubcategory,
+} from "@/lib/complaint-i18n";
 
-import { buildPriorityClusters, DEMO_COMPLAINTS, getClusterKey } from "../demo-data";
+import {
+  buildPriorityClusters,
+  DEMO_COMPLAINTS,
+  getClusterKey,
+} from "../demo-data";
 
 const { Title, Text } = Typography;
 
@@ -39,7 +58,10 @@ export default function QueueDemoViewPage() {
   );
 
   const relatedCases = cluster
-    ? DEMO_COMPLAINTS.filter((item) => cluster.complaintIds.includes(item.id) && item.id !== complaint.id)
+    ? DEMO_COMPLAINTS.filter(
+        (item) =>
+          cluster.complaintIds.includes(item.id) && item.id !== complaint.id,
+      )
     : [];
 
   const relatedColumns: TableColumnsType<(typeof relatedCases)[number]> = [
@@ -49,7 +71,9 @@ export default function QueueDemoViewPage() {
       key: "id",
       render: (id: number) => (
         <Link href={`/admin/queue-demo/${id}`}>
-          <Text strong style={{ color: "#1a3c6e" }}>#{id}</Text>
+          <Text strong style={{ color: "#1a3c6e" }}>
+            #{id}
+          </Text>
         </Link>
       ),
     },
@@ -58,7 +82,9 @@ export default function QueueDemoViewPage() {
       dataIndex: "status",
       key: "status",
       render: (status: string) => (
-        <Tag color={STATUS_COLORS[status] ?? "default"}>{status.replaceAll("_", " ")}</Tag>
+        <Tag color={STATUS_COLORS[status] ?? "default"}>
+          {status.replaceAll("_", " ")}
+        </Tag>
       ),
     },
     {
@@ -72,7 +98,9 @@ export default function QueueDemoViewPage() {
   return (
     <div>
       <div style={{ marginBottom: 18 }}>
-        <Text type="secondary">Admin Portal &gt; Queue &gt; Complaint #{complaint.id}</Text>
+        <Text type="secondary">
+          Admin Portal &gt; Queue &gt; Complaint #{complaint.id}
+        </Text>
       </div>
 
       <Card
@@ -93,60 +121,104 @@ export default function QueueDemoViewPage() {
           </Space>
         }
       >
-        <Descriptions
-          column={{ xs: 1, md: 2 }}
-          size="small"
-          bordered
-          styles={{ label: { width: 180, fontWeight: 600, background: "#f7f9fc" } }}
-        >
-          <Descriptions.Item label="Category">
-            {getLocalizedCategory(complaint.category, t)}
-          </Descriptions.Item>
-          <Descriptions.Item label="Sub-Category">
-            {getLocalizedSubcategory(complaint.subcategory, t)}
-          </Descriptions.Item>
-          <Descriptions.Item label={t("admin.table.area")}>{complaint.area}</Descriptions.Item>
-          <Descriptions.Item label="Coordinates">
-            {complaint.lat}, {complaint.lng}
-          </Descriptions.Item>
-          <Descriptions.Item label="Description" span={2}>
-            <Text style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-              {complaint.description}
-            </Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="Created On">
-            {new Date(complaint.createdAt).toLocaleString()}
-          </Descriptions.Item>
-          <Descriptions.Item label={t("admin.table.officer")}>
-            {complaint.assignments[0]?.officer.name ?? t("admin.table.unassigned")}
-          </Descriptions.Item>
-        </Descriptions>
+        <div className="flex gap-4 flex-wrap">
+          <div className="bg-gray-100 rounded-md p-3 flex-1 min-w-55">
+            <h1 className="text-sm font-normal">Category</h1>
+            <p className="text-xs font-semibold text-gray-500">
+              {getLocalizedCategory(complaint.category, t)}
+            </p>
+          </div>
+          <div className="bg-gray-100 rounded-md p-3 flex-1 min-w-55">
+            <h1 className="text-sm font-normal">Sub-Category</h1>
+            <p className="text-xs font-semibold text-gray-500">
+              {getLocalizedSubcategory(complaint.subcategory, t)}
+            </p>
+          </div>
+        </div>
+
+        <div className="h-4" />
+
+        <div className="flex gap-4 flex-wrap">
+          <div className="bg-gray-100 rounded-md p-3 flex-1 min-w-55">
+            <h1 className="text-sm font-normal">{t("admin.table.area")}</h1>
+            <p className="text-xs font-semibold text-gray-500">
+              {complaint.area}
+            </p>
+          </div>
+          <div className="bg-gray-100 rounded-md p-3 flex-1 min-w-55">
+            <h1 className="text-sm font-normal">Coordinates</h1>
+            <p className="text-xs font-semibold text-gray-500">
+              {complaint.lat}, {complaint.lng}
+            </p>
+            <a
+              href={`https://www.google.com/maps?layer=c&cbll=${complaint.lat},${complaint.lng}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{ display: "inline-block", marginTop: 8 }}
+            >
+              <Button
+                size="small"
+                style={{ borderColor: "#1a3c6e", color: "#1a3c6e", fontSize: 11 }}
+              >
+                Open in Google Maps
+              </Button>
+            </a>
+          </div>
+        </div>
+
+        <div className="h-4" />
+
+        <div className="flex gap-4 flex-wrap">
+          <div className="bg-gray-100 rounded-md p-3 flex-1 min-w-55">
+            <h1 className="text-sm font-normal">Created On</h1>
+            <p className="text-xs font-semibold text-gray-500">
+              {new Date(complaint.createdAt).toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-gray-100 rounded-md p-3 flex-1 min-w-55">
+            <h1 className="text-sm font-normal">{t("admin.table.officer")}</h1>
+            <p className="text-xs font-semibold text-gray-500">
+              {complaint.assignments[0]?.officer.name ?? t("admin.table.unassigned")}
+            </p>
+          </div>
+        </div>
+
+        <div className="h-4" />
+
+        <div className="bg-gray-100 rounded-md p-3">
+          <h1 className="text-sm font-normal">Description</h1>
+          <p
+            className="text-xs font-semibold text-gray-500"
+            style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+          >
+            {complaint.description}
+          </p>
+        </div>
       </Card>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card title="Priority & Cluster Insight" style={{ borderRadius: 6 }}>
             {cluster ? (
-              <>
-                <Alert
-                  type="warning"
-                  showIcon
-                  title="Priority case detected"
-                  description="This complaint belongs to a repeat cluster (same area + category + sub-category)."
-                  style={{ marginBottom: 12 }}
-                />
-                <Descriptions column={1} size="small" bordered>
-                  <Descriptions.Item label="Cluster Key">{cluster.key}</Descriptions.Item>
-                  <Descriptions.Item label="Cluster Volume">{cluster.complaintIds.length} complaints</Descriptions.Item>
-                  <Descriptions.Item label="Pending/Active">{cluster.pendingCount}</Descriptions.Item>
-                  <Descriptions.Item label="Escalated">{cluster.escalatedCount}</Descriptions.Item>
-                  <Descriptions.Item label="Priority Score">
-                    <Tag color={cluster.priorityScore >= 40 ? "red" : "volcano"}>
-                      {cluster.priorityScore}
-                    </Tag>
-                  </Descriptions.Item>
-                </Descriptions>
-              </>
+              <Descriptions column={1} size="small" bordered>
+                <Descriptions.Item label="Cluster Key">
+                  {cluster.key}
+                </Descriptions.Item>
+                <Descriptions.Item label="Cluster Volume">
+                  {cluster.complaintIds.length} complaints
+                </Descriptions.Item>
+                <Descriptions.Item label="Pending/Active">
+                  {cluster.pendingCount}
+                </Descriptions.Item>
+                <Descriptions.Item label="Escalated">
+                  {cluster.escalatedCount}
+                </Descriptions.Item>
+                <Descriptions.Item label="Priority Score">
+                  <Tag color={cluster.priorityScore >= 40 ? "red" : "volcano"}>
+                    {cluster.priorityScore}
+                  </Tag>
+                </Descriptions.Item>
+              </Descriptions>
             ) : (
               <Alert
                 type="success"
@@ -162,16 +234,27 @@ export default function QueueDemoViewPage() {
           <Card title="Assignment Snapshot" style={{ borderRadius: 6 }}>
             {complaint.assignments.length > 0 ? (
               <Descriptions column={1} size="small" bordered>
-                <Descriptions.Item label={t("admin.table.officer")}>{complaint.assignments[0].officer.name}</Descriptions.Item>
-                <Descriptions.Item label={t("admin.table.department")}>{complaint.assignments[0].officer.department.name}</Descriptions.Item>
+                <Descriptions.Item label={t("admin.table.officer")}>
+                  {complaint.assignments[0].officer.name}
+                </Descriptions.Item>
+                <Descriptions.Item label={t("admin.table.department")}>
+                  {complaint.assignments[0].officer.department.name}
+                </Descriptions.Item>
                 <Descriptions.Item label="Escalation Risk">
-                  <Tag color={complaint.status === "ESCALATED" ? "red" : "blue"}>
+                  <Tag
+                    color={complaint.status === "ESCALATED" ? "red" : "blue"}
+                  >
                     {complaint.status === "ESCALATED" ? "High" : "Monitor"}
                   </Tag>
                 </Descriptions.Item>
               </Descriptions>
             ) : (
-              <Alert type="info" showIcon title="Unassigned" description="No officer assigned yet in this record." />
+              <Alert
+                type="info"
+                showIcon
+                title="Unassigned"
+                description="No officer assigned yet in this record."
+              />
             )}
           </Card>
         </Col>
@@ -190,7 +273,9 @@ export default function QueueDemoViewPage() {
           }}
           locale={{
             emptyText: (
-              <Text type="secondary">No related complaints in same cluster.</Text>
+              <Text type="secondary">
+                No related complaints in same cluster.
+              </Text>
             ),
           }}
         />

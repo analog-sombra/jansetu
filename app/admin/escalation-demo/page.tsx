@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  Alert,
   Button,
   Card,
   Col,
@@ -57,7 +56,7 @@ const DEMO_ESCALATIONS: EscalationRecord[] = [
     subcategory: "POTHOLE",
     officer: "Rohit Verma",
     department: "PWD",
-    ageHours: 54,
+    ageHours: 168,
     status: "IN_PROGRESS",
     trigger: "REMINDER_48H",
     lastActionAt: "2026-04-15T12:20:00Z",
@@ -70,7 +69,7 @@ const DEMO_ESCALATIONS: EscalationRecord[] = [
     subcategory: "GARBAGE_NOT_COLLECTED",
     officer: "Meena Sharma",
     department: "Sanitation",
-    ageHours: 198,
+    ageHours: 240,
     status: "ESCALATED",
     trigger: "AUTO_ESCALATED_7D",
     lastActionAt: "2026-04-10T10:10:00Z",
@@ -83,7 +82,7 @@ const DEMO_ESCALATIONS: EscalationRecord[] = [
     subcategory: "WATER_LEAKAGE",
     officer: "Anil Kumar",
     department: "Delhi Jal Board",
-    ageHours: 74,
+    ageHours: 288,
     status: "QUERY",
     trigger: "REMINDER_48H",
     lastActionAt: "2026-04-14T08:45:00Z",
@@ -96,7 +95,7 @@ const DEMO_ESCALATIONS: EscalationRecord[] = [
     subcategory: "POTHOLE",
     officer: "Rohit Verma",
     department: "PWD",
-    ageHours: 216,
+    ageHours: 336,
     status: "ESCALATED",
     trigger: "AUTO_ESCALATED_7D",
     lastActionAt: "2026-04-09T09:15:00Z",
@@ -109,7 +108,7 @@ const DEMO_ESCALATIONS: EscalationRecord[] = [
     subcategory: "POWER_CUT",
     officer: "Pooja Singh",
     department: "BSES",
-    ageHours: 61,
+    ageHours: 360,
     status: "ASSIGNED",
     trigger: "REMINDER_48H",
     lastActionAt: "2026-04-15T14:00:00Z",
@@ -126,6 +125,7 @@ export default function EscalationDemoPage() {
     (row) => row.trigger === "REMINDER_48H",
   ).length;
   const oldestHours = Math.max(...DEMO_ESCALATIONS.map((row) => row.ageHours));
+  const oldestDays = Math.floor(oldestHours / 24);
 
   const columns: TableColumnsType<EscalationRecord> = [
     {
@@ -171,10 +171,10 @@ export default function EscalationDemoPage() {
       ),
     },
     {
-      title: "Age",
+      title: "Open for (Days)",
       dataIndex: "ageHours",
       key: "ageHours",
-      render: (value: number) => `${value} hrs`,
+      render: (value: number) => `${Math.floor(value / 24)} days`,
       sorter: (a, b) => a.ageHours - b.ageHours,
     },
     {
@@ -221,8 +221,8 @@ export default function EscalationDemoPage() {
           <Card size="small">
             <Statistic
               title="Oldest Open Age"
-              value={oldestHours}
-              suffix="hrs"
+              value={oldestDays}
+              suffix="days"
             />
           </Card>
         </Col>

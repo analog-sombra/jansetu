@@ -46,6 +46,7 @@ type Officer = {
   id: number;
   name: string;
   department: { name: string };
+  designation: string;
 };
 
 type OfficerResponse = {
@@ -83,8 +84,9 @@ type Complaint = {
 
 export default function AdminComplaintDetailPage() {
   const params = useParams<{ id: string }>();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [complaint, setComplaint] = useState<Complaint | null>(null);
+  const [displayDescription, setDisplayDescription] = useState("");
   const [officers, setOfficers] = useState<Officer[]>([]);
   const [officerId, setOfficerId] = useState<string>("");
   const [queryMessage, setQueryMessage] = useState("");
@@ -122,7 +124,45 @@ export default function AdminComplaintDetailPage() {
       setLoading(false);
     }
     void loadData();
-  }, [params.id]);
+  }, [params.id, t]);
+
+  useEffect(() => {
+    async function translateDescriptionIfNeeded() {
+      const baseDescription = complaint?.description ?? "";
+      setDisplayDescription(baseDescription);
+
+      if (!baseDescription.trim()) {
+        return;
+      }
+
+      const response = await fetch("/api/admin/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: baseDescription,
+          targetLanguage: language,
+        }),
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const result = (await response.json()) as {
+        translatedText?: string;
+      };
+      console.log(language);
+      console.log(
+        "Translation API response status:",
+        response.status,
+        "body:",
+        result,
+      );
+      setDisplayDescription(result.translatedText ?? baseDescription);
+    }
+
+    void translateDescriptionIfNeeded();
+  }, [complaint?.description, language]);
 
   async function assignOfficer() {
     if (!officerId) return;
@@ -156,15 +196,6 @@ export default function AdminComplaintDetailPage() {
     if (!assignedOfficerLink || !complaint) return;
 
     const phone = "9773356997";
-    const selectedOfficer = officers.find(
-      (item) => String(item.id) === officerId,
-    );
-    const evidenceLines = complaint.media.length
-      ? complaint.media
-          .map((item, index) => `${index + 1}. ${item.type}: ${item.fileUrl}`)
-          .join("\n")
-      : "No evidence uploaded";
-
     const message = [
       "Complaint Assignment Details",
       "",
@@ -403,9 +434,45 @@ export default function AdminComplaintDetailPage() {
               <h1 className="text-sm font-normal">
                 {t("adminDetail.description")}
               </h1>
-              <p className="text-xs font-semibold text-gray-500">
+              <p
+                className="text-xs font-semibold text-gray-500"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
                 {complaint.description}
               </p>
+              {displayDescription &&
+                displayDescription !== complaint.description && (
+                  <>
+                    <div
+                      style={{
+                        marginTop: 10,
+                        borderTop: "1px dashed #d0d0d0",
+                        paddingTop: 8,
+                      }}
+                    >
+                      <Text
+                        type="secondary"
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        Translated
+                      </Text>
+                      <p
+                        className="text-xs font-semibold"
+                        style={{
+                          color: "#1a3c6e",
+                          marginTop: 4,
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
+                        {displayDescription}
+                      </p>
+                    </div>
+                  </>
+                )}
             </div>
 
             {officerResponses.length > 0 && (
@@ -589,7 +656,7 @@ export default function AdminComplaintDetailPage() {
                     style={{ width: "100%" }}
                     options={officers.map((o) => ({
                       value: String(o.id),
-                      label: `${o.name} — ${o.department.name}`,
+                      label: `${o.name} (${o.designation}) — ${o.department.name}`,
                     }))}
                     notFoundContent={
                       <Text type="secondary" style={{ fontSize: 12 }}>
@@ -665,7 +732,6 @@ export default function AdminComplaintDetailPage() {
                     value={queryMessage}
                     onChange={(e) => setQueryMessage(e.target.value)}
                     placeholder={t("adminDetail.queryPlaceholder")}
-                    showCount
                     maxLength={500}
                   />
                 </Form.Item>

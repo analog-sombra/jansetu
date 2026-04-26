@@ -67,6 +67,7 @@ type Complaint = {
   plannedCompletionDate: string | null;
   createdAt: string;
   assignments: Assignment[];
+  area: string;
 };
 
 export default function CitizenDashboardPage() {
@@ -106,7 +107,7 @@ export default function CitizenDashboardPage() {
     }
 
     const receiverName = profile?.name?.trim() || "Citizen";
-    const location = profile?.address?.trim() || "Constituency Area";
+    const location = complaint?.area?.trim() || "Constituency Area";
     const issueType = complaint.category.replaceAll("_", " ").toLowerCase();
     const issueDate = new Date().toLocaleDateString("en-IN", {
       day: "2-digit",
@@ -180,7 +181,11 @@ export default function CitizenDashboardPage() {
     ctx.font = "700 30px Georgia, serif";
     ctx.fillText("Manjider Singh Sirsa", 390, 605);
     ctx.font = "500 18px Arial, sans-serif";
-    ctx.fillText("Minister of Food & Supplies, Industry, Forest & Environment", 390, 632);
+    ctx.fillText(
+      "Minister of Food & Supplies, Industry, Forest & Environment",
+      390,
+      632,
+    );
     ctx.fillText("MLA of Rajouri Garden", 390, 660);
 
     return canvas;

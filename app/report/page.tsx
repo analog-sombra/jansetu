@@ -480,7 +480,6 @@ export default function ReportDashboardPage() {
 
           <div style={{ marginLeft: "auto" }}>
             <Space>
-              <Tag color="blue">{t("report.demoTag")}</Tag>
               <Button disabled>{t("report.exportSummary")}</Button>
             </Space>
           </div>

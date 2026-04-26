@@ -1666,6 +1666,8 @@ export default function ReportDashboardPage() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
+
+        
         <div
           style={{
             display: "flex",
@@ -1683,7 +1685,7 @@ export default function ReportDashboardPage() {
             }}
           />
           <Title level={3} style={{ margin: 0, color: "#1a3c6e" }}>
-            {t("report.title")}
+            {t("report.titlename")}
           </Title>
         </div>
         <Text type="secondary" style={{ marginLeft: 14 }}>
@@ -1757,7 +1759,6 @@ export default function ReportDashboardPage() {
 
           <div style={{ marginLeft: "auto" }}>
             <Space>
-              <Tag color="blue">{t("report.demoTag")}</Tag>
               <Button
                 onClick={() => void downloadReportExcel("weekly")}
                 loading={exporting === "weekly"}

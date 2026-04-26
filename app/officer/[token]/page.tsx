@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   Card,
@@ -21,25 +21,49 @@ import {
 
 import type { UploadFile } from "antd/es/upload";
 import { useLanguage } from "@/components/language-provider";
-import { getLocalizedCategory } from "@/lib/complaint-i18n";
+import { getLocalizedCategory, getLocalizedSubcategory } from "@/lib/complaint-i18n";
 
 const { Text } = Typography;
+
+const RESPONSE_COLORS: Record<string, string> = {
+  RESOLVED: "green",
+  QUERY: "volcano",
+  REJECTED: "red",
+  WORK_IN_PROGESS: "cyan",
+};
+
+type OfficerResponse = {
+  id: number;
+  type: string;
+  message: string;
+  proofUrl: string | null;
+  createdAt: string;
+};
 
 type Assignment = {
   id: number;
   complaintId: number;
   complaint: {
     category: string;
+    subcategory: string | null;
     description: string;
+    status: string;
     plannedCompletionDate: string | null;
     lat: number;
     lng: number;
+    area: string | null;
+    user: {
+      name: string | null;
+      mobile: string;
+      address: string | null;
+    };
     media: Array<{ id: number; fileUrl: string; type: string }>;
   };
   officer: {
     name: string;
     department: { name: string };
   };
+  responses: OfficerResponse[];
 };
 
 type FormValues = {
@@ -51,7 +75,7 @@ type FormValues = {
 };
 export default function OfficerTokenPage() {
   const params = useParams<{ token: string }>();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [form] = Form.useForm<FormValues>();
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [proofUrl, setProofUrl] = useState("");
@@ -63,6 +87,9 @@ export default function OfficerTokenPage() {
     text: string;
   } | null>(null);
   const [loadStatus, setLoadStatus] = useState(t("officer.loading"));
+  const [displayDescription, setDisplayDescription] = useState("");
+  const [translating, setTranslating] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const selectedResponseType = Form.useWatch("type", form);
 
   useEffect(() => {
@@ -77,7 +104,54 @@ export default function OfficerTokenPage() {
       setLoadStatus("");
     }
     void loadAssignment();
-  }, [params.token]);
+  }, [params.token, t]);
+
+  useEffect(() => {
+    const baseDescription = assignment?.complaint.description ?? "";
+    let isActive = true;
+
+    void (async () => {
+      if (!baseDescription.trim()) {
+        return;
+      }
+
+      await Promise.resolve(); // defer to microtask so setState is not synchronous in effect body
+      if (!isActive) return;
+
+      setTranslating(true);
+
+      try {
+        const res = await fetch("/api/admin/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: baseDescription,
+            targetLanguage: language,
+          }),
+        });
+
+        if (!isActive) return;
+
+        if (!res.ok) {
+          setDisplayDescription(baseDescription);
+          return;
+        }
+
+        const result = (await res.json()) as { translatedText?: string };
+        if (isActive) {
+          setDisplayDescription(result.translatedText ?? baseDescription);
+        }
+      } catch {
+        if (isActive) setDisplayDescription(baseDescription);
+      } finally {
+        if (isActive) setTranslating(false);
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [assignment?.complaint.description, language]);
 
   async function handleProofUpload(file: File): Promise<boolean> {
     setUploading(true);
@@ -199,6 +273,21 @@ export default function OfficerTokenPage() {
                 <Tag color="blue" style={{ fontWeight: 600 }}>
                   {assignment.officer.department.name}
                 </Tag>
+                <Tag
+                  color={
+                    assignment.complaint.status === "RESOLVED"
+                      ? "green"
+                      : assignment.complaint.status === "REJECTED"
+                        ? "red"
+                        : assignment.complaint.status === "IN_PROGRESS" ||
+                            assignment.complaint.status === "WORK_IN_PROGESS"
+                          ? "cyan"
+                          : "orange"
+                  }
+                  style={{ fontWeight: 600 }}
+                >
+                  {assignment.complaint.status.replaceAll("_", " ")}
+                </Tag>
               </div>
             }
             extra={
@@ -239,32 +328,78 @@ export default function OfficerTokenPage() {
               </div>
             }
           >
-            <div className="flex flex-col gap-4 md:flex-row">
-              <div className="rounded-md bg-gray-100 p-3 flex-1">
-                <h1 className="text-sm font-normal">
-                  {t("officer.complaintId")}
-                </h1>
+            {/* Complainant info */}
+            <div className="flex gap-4">
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">Complainant Name</h1>
                 <p className="text-xs font-semibold text-gray-500">
-                  #{assignment.complaintId}
+                  {assignment.complaint.user.name?.trim() || "Not provided"}
                 </p>
               </div>
-              <div className="rounded-md bg-gray-100 p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("officer.category")}</h1>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">Mobile</h1>
                 <p className="text-xs font-semibold text-gray-500">
-                  {getLocalizedCategory(assignment.complaint.category, t)}
+                  {assignment.complaint.user.mobile}
                 </p>
               </div>
             </div>
 
             <div className="h-4" />
 
-            <div className="flex flex-col gap-4 md:flex-row">
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">Address</h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {assignment.complaint.user.address?.trim() || "Not provided"}
+              </p>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="flex gap-4">
+              <div className="rounded-md bg-gray-100 p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.category")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {getLocalizedCategory(assignment.complaint.category, t)}
+                </p>
+              </div>
+              <div className="rounded-md bg-gray-100 p-3 flex-1">
+                <h1 className="text-sm font-normal">Sub-Category</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.subcategory
+                    ? getLocalizedSubcategory(assignment.complaint.subcategory, t)
+                    : "N/A"}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="flex gap-4">
+              <div className="rounded-md bg-gray-100 p-3 flex-1">
+                <h1 className="text-sm font-normal">Area</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.area ?? "Not specified"}
+                </p>
+              </div>
               <div className="rounded-md bg-gray-100 p-3 flex-1">
                 <h1 className="text-sm font-normal">
                   {t("officer.department")}
                 </h1>
                 <p className="text-xs font-semibold text-gray-500">
                   {assignment.officer.department.name}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="flex gap-4">
+              <div className="rounded-md bg-gray-100 p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.targetDate")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.plannedCompletionDate
+                    ? new Date(assignment.complaint.plannedCompletionDate).toLocaleDateString("en-IN")
+                    : "—"}
                 </p>
               </div>
               <div className="rounded-md bg-gray-100 p-3 flex-1">
@@ -282,11 +417,7 @@ export default function OfficerTokenPage() {
                 >
                   <Button
                     size="small"
-                    style={{
-                      borderColor: "#1a3c6e",
-                      color: "#1a3c6e",
-                      fontSize: 11,
-                    }}
+                    style={{ borderColor: "#1a3c6e", color: "#1a3c6e", fontSize: 11 }}
                   >
                     {t("officer.openMap")}
                   </Button>
@@ -297,24 +428,122 @@ export default function OfficerTokenPage() {
             <div className="h-4" />
 
             <div className="rounded-md bg-gray-100 p-3 flex-1">
-              <h1 className="text-sm font-normal">{t("officer.targetDate")}</h1>
-              <p className="text-xs font-semibold text-gray-500">
-                {assignment.complaint.plannedCompletionDate
-                  ? new Date(assignment.complaint.plannedCompletionDate).toLocaleDateString("en-IN")
-                  : "—"}
-              </p>
-            </div>
-
-            <div className="h-4" />
-
-            <div className="rounded-md bg-gray-100 p-3 flex-1">
-              <h1 className="text-sm font-normal">
-                {t("officer.description")}
-              </h1>
-              <p className="text-xs font-semibold text-gray-500 whitespace-pre-wrap break-words">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <h1 className="text-sm font-normal" style={{ margin: 0 }}>
+                  {t("officer.description")}
+                </h1>
+                {translating && (
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    Translating…
+                  </Text>
+                )}
+              </div>
+              <p
+                className="text-xs font-semibold text-gray-500"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
                 {assignment.complaint.description}
               </p>
+              {displayDescription &&
+                displayDescription !== assignment.complaint.description && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      borderTop: "1px dashed #d0d0d0",
+                      paddingTop: 8,
+                    }}
+                  >
+                    <Text
+                      type="secondary"
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      Translated
+                    </Text>
+                    <p
+                      className="text-xs font-semibold"
+                      style={{
+                        color: "#1a3c6e",
+                        marginTop: 4,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {displayDescription}
+                    </p>
+                  </div>
+                )}
             </div>
+
+            {assignment.responses.length > 0 && (
+              <>
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+                >
+                  Previous Responses
+                </Divider>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[...assignment.responses]
+                    .sort(
+                      (a, b) =>
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime(),
+                    )
+                    .map((response) => (
+                      <Card
+                        key={response.id}
+                        size="small"
+                        style={{ borderRadius: 6, borderLeft: "3px solid #1a3c6e" }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 12,
+                            flexWrap: "wrap",
+                            marginBottom: 8,
+                          }}
+                        >
+                          <Text strong style={{ color: "#1a3c6e" }}>
+                            {assignment.officer.name}
+                          </Text>
+                          <div style={{ textAlign: "right" }}>
+                            <Tag color={RESPONSE_COLORS[response.type] ?? "default"}>
+                              {response.type.replaceAll("_", " ")}
+                            </Tag>
+                            <Text
+                              type="secondary"
+                              style={{ display: "block", fontSize: 11 }}
+                            >
+                              {new Date(response.createdAt).toLocaleString()}
+                            </Text>
+                          </div>
+                        </div>
+                        <Text
+                          style={{ display: "block", lineHeight: 1.7, whiteSpace: "pre-wrap" }}
+                        >
+                          {response.message}
+                        </Text>
+                        {response.proofUrl && (
+                          <div style={{ marginTop: 10 }}>
+                            <a href={response.proofUrl} target="_blank" rel="noreferrer">
+                              <Button
+                                size="small"
+                                style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                              >
+                                {t("adminDetail.viewProof")}
+                              </Button>
+                            </a>
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                </div>
+              </>
+            )}
 
             {assignment.complaint.media.length > 0 && (
               <>
@@ -442,7 +671,6 @@ export default function OfficerTokenPage() {
                 <Input.TextArea
                   rows={4}
                   placeholder={t("officer.responsePlaceholder")}
-                  showCount
                   maxLength={500}
                   size="large"
                 />
@@ -458,27 +686,94 @@ export default function OfficerTokenPage() {
               <Row gutter={16} align="top">
                 <Col xs={24}>
                   <Form.Item label={t("officer.uploadLabel")}>
-                    <Upload
-                      listType="text"
-                      fileList={fileList}
+                    {/* Hidden camera input — opens rear camera directly on mobile */}
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
                       accept="image/*"
-                      maxCount={1}
-                      customRequest={async ({ file, onSuccess, onError }) => {
-                        const ok = await handleProofUpload(file as File);
-                        if (ok) onSuccess?.("ok");
-                        else onError?.(new Error("Upload failed"));
+                      capture="environment"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        // mirror into antd fileList for UI feedback
+                        const uid = `camera-${Date.now()}`;
+                        setFileList([{ uid, name: file.name, status: "uploading" }]);
+                        const ok = await handleProofUpload(file);
+                        setFileList([
+                          { uid, name: file.name, status: ok ? "done" : "error" },
+                        ]);
+                        // reset so the same file can be re-captured if needed
+                        e.target.value = "";
                       }}
-                      onChange={({ fileList: newList }) => setFileList(newList)}
-                    >
+                    />
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <Upload
+                        listType="text"
+                        fileList={fileList}
+                        accept="image/*"
+                        maxCount={1}
+                        customRequest={async ({ file, onSuccess, onError }) => {
+                          const ok = await handleProofUpload(file as File);
+                          if (ok) onSuccess?.("ok");
+                          else onError?.(new Error("Upload failed"));
+                        }}
+                        onChange={({ fileList: newList }) => setFileList(newList)}
+                        showUploadList={false}
+                      >
+                        <Button
+                          disabled={uploading}
+                          style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                        >
+                          {uploading
+                            ? t("officer.uploadingShort")
+                            : t("officer.uploadButton")}
+                        </Button>
+                      </Upload>
+
                       <Button
                         disabled={uploading}
-                        style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                        icon={<span>📷</span>}
+                        style={{ borderColor: "#2e7d32", color: "#2e7d32" }}
+                        onClick={() => cameraInputRef.current?.click()}
                       >
-                        {uploading
-                          ? t("officer.uploadingShort")
-                          : t("officer.uploadButton")}
+                        Take Photo
                       </Button>
-                    </Upload>
+                    </div>
+
+                    {/* Show file list below both buttons */}
+                    {fileList.length > 0 && (
+                      <div style={{ marginTop: 8 }}>
+                        {fileList.map((f) => (
+                          <div
+                            key={f.uid}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              fontSize: 12,
+                              color:
+                                f.status === "error"
+                                  ? "#c62828"
+                                  : f.status === "done"
+                                    ? "#2e7d32"
+                                    : "#888",
+                            }}
+                          >
+                            <span>
+                              {f.status === "done"
+                                ? "✅"
+                                : f.status === "error"
+                                  ? "❌"
+                                  : "⏳"}
+                            </span>
+                            {f.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <Text
                       type="secondary"
                       style={{ fontSize: 12, display: "block", marginTop: 6 }}

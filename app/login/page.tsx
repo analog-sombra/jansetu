@@ -73,7 +73,7 @@ export default function LoginPage() {
       return;
     }
     if (result.role === "REPORT") {
-      router.push("/report/demo");
+      router.push("/report/meeting-calendar");
       return;
     }
     router.push("/dashboard");

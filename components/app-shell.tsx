@@ -24,8 +24,8 @@ const ADMIN_NAV_LINKS = [
 ];
 
 const REPORT_NAV_LINKS = [
-  { href: "/report/demo", labelKey: "nav.mlaReport" },
   { href: "/report/meeting-calendar", labelKey: "nav.reportMeetingCalendar" },
+  { href: "/report/demo", labelKey: "nav.mlaReport" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

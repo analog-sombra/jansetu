@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { Alert, Card, Col, Row, Table, Tag, Typography } from "antd";
+import { Card, Col, Row, Table, Tag, Typography } from "antd";
 import type { TableColumnsType } from "antd";
 
 import { useLanguage } from "@/components/language-provider";
-import { getLocalizedCategory, getLocalizedSubcategory } from "@/lib/complaint-i18n";
+import {
+  getLocalizedCategory,
+  getLocalizedSubcategory,
+} from "@/lib/complaint-i18n";
 
 const { Title, Text } = Typography;
 
@@ -119,7 +122,8 @@ function buildPriorityGroups(rows: ComplaintRecord[]) {
         category: row.category,
         subcategory: row.subcategory,
         complaintIds: [row.id],
-        pendingCount: row.status === "PENDING" || row.status === "IN_PROGRESS" ? 1 : 0,
+        pendingCount:
+          row.status === "PENDING" || row.status === "IN_PROGRESS" ? 1 : 0,
         escalatedCount: row.status === "ESCALATED" ? 1 : 0,
         newestAt: row.createdAt,
         priorityScore: 0,
@@ -134,7 +138,9 @@ function buildPriorityGroups(rows: ComplaintRecord[]) {
     if (row.status === "ESCALATED") {
       existing.escalatedCount += 1;
     }
-    if (new Date(row.createdAt).getTime() > new Date(existing.newestAt).getTime()) {
+    if (
+      new Date(row.createdAt).getTime() > new Date(existing.newestAt).getTime()
+    ) {
       existing.newestAt = row.createdAt;
     }
   }
@@ -154,7 +160,10 @@ function buildPriorityGroups(rows: ComplaintRecord[]) {
 export default function PriorityCasesDemoPage() {
   const { t } = useLanguage();
 
-  const priorityGroups = useMemo(() => buildPriorityGroups(DEMO_COMPLAINTS), []);
+  const priorityGroups = useMemo(
+    () => buildPriorityGroups(DEMO_COMPLAINTS),
+    [],
+  );
 
   const totalPriorityComplaints = priorityGroups.reduce(
     (sum, group) => sum + group.complaintIds.length,
@@ -170,7 +179,8 @@ export default function PriorityCasesDemoPage() {
           <Text strong>{row.area}</Text>
           <div>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {getLocalizedCategory(row.category, t)} / {getLocalizedSubcategory(row.subcategory, t)}
+              {getLocalizedCategory(row.category, t)} /{" "}
+              {getLocalizedSubcategory(row.subcategory, t)}
             </Text>
           </div>
         </div>
@@ -209,7 +219,10 @@ export default function PriorityCasesDemoPage() {
       dataIndex: "priorityScore",
       key: "priorityScore",
       render: (score: number) => (
-        <Tag color={score >= 40 ? "red" : "volcano"} style={{ fontWeight: 700 }}>
+        <Tag
+          color={score >= 40 ? "red" : "volcano"}
+          style={{ fontWeight: 700 }}
+        >
           {score}
         </Tag>
       ),
@@ -226,14 +239,6 @@ export default function PriorityCasesDemoPage() {
         </Title>
         <Text type="secondary">{t("admin.priority.subtitle")}</Text>
       </div>
-
-      <Alert
-        type="warning"
-        showIcon
-        style={{ marginBottom: 20 }}
-        title="Priority Rule Active"
-        description="If multiple complaints share same area + category + sub-category, cluster is marked as priority case."
-      />
 
       <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
         <Col xs={12} sm={8}>
@@ -262,7 +267,13 @@ export default function PriorityCasesDemoPage() {
         </Col>
       </Row>
 
-      <Card title={<span style={{ color: "#1a3c6e", fontWeight: 700 }}>Priority Case Queue</span>}>
+      <Card
+        title={
+          <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
+            Priority Case Queue
+          </span>
+        }
+      >
         <Table
           rowKey="key"
           columns={columns}

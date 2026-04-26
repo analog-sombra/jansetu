@@ -10,6 +10,17 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
+  const mobile = url.searchParams.get("mobile")?.trim();
+
+  if (mobile) {
+    const officer = await prisma.officer.findFirst({
+      where: { phone: mobile },
+      include: { department: true },
+    });
+
+    return NextResponse.json({ ok: true, officer });
+  }
+
   const rawCategory = url.searchParams.get("category");
   const category = rawCategory?.trim();
 

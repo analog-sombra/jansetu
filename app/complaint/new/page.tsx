@@ -211,7 +211,6 @@ export default function NewComplaintPage() {
               rows={4}
               placeholder={t("newComplaint.descriptionPlaceholder")}
               size="large"
-              showCount
               maxLength={1000}
             />
           </Form.Item>
