@@ -98,6 +98,7 @@ export default function AdminComplaintDetailPage() {
   const [assigning, setAssigning] = useState(false);
   const [querying, setQuerying] = useState(false);
   const [assignedOfficerLink, setAssignedOfficerLink] = useState<string>("");
+  const [assignedOfficerLink2, setAssignedOfficerLink2] = useState<string>("");
 
   useEffect(() => {
     async function loadData() {
@@ -179,6 +180,7 @@ export default function AdminComplaintDetailPage() {
     setAssigning(false);
     if (response.ok) {
       setAssignedOfficerLink(result.tokenLink ?? "");
+      setAssignedOfficerLink2(result.tokenLink.toString().replaceAll("http://72.61.240.122:4016/", "https://smartechwebworks.com/jansetu/") ?? "");
       setAlert({
         type: "success",
         text: `Officer assigned successfully. Secure access link: ${result.tokenLink}`,
@@ -212,7 +214,7 @@ export default function AdminComplaintDetailPage() {
       complaint.description,
       "",
       "Officer Link:",
-      assignedOfficerLink,
+      assignedOfficerLink2,
     ].join("\n");
 
     const whatsappUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`;

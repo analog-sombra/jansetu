@@ -34,7 +34,7 @@
   "home.feature.portal.title": "24×7 Online Portal",
   "home.feature.portal.desc": "Submit and track grievances anytime, from anywhere.",
   "home.feature.secure.title": "Secure Token Access",
-  "home.feature.secure.desc": "Officers receive secure email links — no password required.",
+  "home.feature.secure.desc": "Citizen login via secure OTP.",
   "home.feature.tracking.title": "Real-Time Tracking",
   "home.feature.tracking.desc": "Monitor complaint status from submission to final resolution.",
   "home.service.road.title": "Road & Infrastructure",

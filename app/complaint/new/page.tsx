@@ -42,7 +42,6 @@ export default function NewComplaintPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>(COMPLAINT_CATEGORIES[0]);
   const [media, setMedia] = useState<Uploaded[]>([]);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [alert, setAlert] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
@@ -52,27 +51,11 @@ export default function NewComplaintPage() {
   }
 
   function pickLocation() {
-    if (!navigator.geolocation) {
-      setAlert({ type: "error", text: t("newComplaint.error.geoUnsupported") });
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        form.setFieldsValue({
-          lat: String(position.coords.latitude),
-          lng: String(position.coords.longitude),
-        });
-        setLocating(false);
-      },
-      () => {
-        setAlert({
-          type: "error",
-          text: t("newComplaint.error.geoDetect"),
-        });
-        setLocating(false);
-      }
-    );
+
+    form.setFieldsValue({
+      lat: "28.6281882",
+      lng: "77.2501995",
+    });
   }
 
   async function handleUpload(file: File): Promise<boolean> {
@@ -259,7 +242,6 @@ export default function NewComplaintPage() {
                   block
                   size="large"
                   icon={<span>📍</span>}
-                  loading={locating}
                   onClick={pickLocation}
                   style={{
                     borderColor: "#1a3c6e",
@@ -267,7 +249,7 @@ export default function NewComplaintPage() {
                     fontWeight: 600,
                   }}
                 >
-                  {locating ? t("newComplaint.detecting") : t("newComplaint.autoDetect")}
+                  {t("newComplaint.autoDetect")}
                 </Button>
               </Form.Item>
             </Col>

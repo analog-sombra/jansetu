@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button, Card, Col, Row, Typography, Tag, Space } from "antd";
+import { Button, Card, Col, Row, Typography, Space } from "antd";
 import { useLanguage } from "@/components/language-provider";
 
 const { Title, Paragraph, Text } = Typography;
