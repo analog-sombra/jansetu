@@ -144,12 +144,14 @@ export default function AdminDashboardPage() {
       title: t("admin.table.category"),
       dataIndex: "category",
       key: "category",
+      width: 150,
       render: (cat: string) => <Text strong>{getLocalizedCategory(cat, t)}</Text>,
     },
     {
       title: t("admin.table.area"),
       dataIndex: "area",
       key: "area",
+      width: 130,
       render: (area: string | null) =>
         area ? <Text>{area}</Text> : <Text type="secondary">—</Text>,
     },
@@ -186,6 +188,7 @@ export default function AdminDashboardPage() {
     {
       title: t("admin.table.officer"),
       key: "officer",
+      width: 130,
       render: (_, record) =>
         record.assignments.length > 0 ? (
           <Text>{record.assignments[0].officer.name}</Text>
@@ -198,6 +201,7 @@ export default function AdminDashboardPage() {
     {
       title: t("admin.table.department"),
       key: "dept",
+      width: 160,
       render: (_, record) =>
         record.assignments.length > 0 ? (
           <Text type="secondary" style={{ fontSize: 12 }}>
@@ -484,7 +488,8 @@ export default function AdminDashboardPage() {
           dataSource={complaints}
           rowKey="id"
           loading={loading}
-          size="middle"
+          size="small"
+          scroll={{ x: 1050 }}
           pagination={{
             pageSize: 15,
             showSizeChanger: true,

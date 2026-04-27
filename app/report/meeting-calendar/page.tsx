@@ -1140,26 +1140,31 @@ export default function ReportMeetingCalendarPage() {
       title: "Time",
       dataIndex: "time",
       key: "time",
+      width: 110,
       render: (value) => <Text strong>{value}</Text>,
     },
     {
       title: "Meeting Type",
       dataIndex: "meetingType",
       key: "meetingType",
+      width: 180,
     },
     {
       title: "Address",
       dataIndex: "address",
       key: "address",
+      width: 260,
     },
     {
       title: "Whom To Meet",
       dataIndex: "person",
       key: "person",
+      width: 190,
     },
     {
       title: "Action",
       key: "action",
+      width: 100,
       render: (_, row) => (
         <Button
           size="small"
@@ -1370,6 +1375,7 @@ export default function ReportMeetingCalendarPage() {
           rowKey="key"
           columns={todayTaskColumns}
           dataSource={TODAY_TASKS}
+          scroll={{ x: "max-content" }}
           pagination={{ pageSize: 10, showSizeChanger: false }}
         />
       </Card>
@@ -1396,6 +1402,7 @@ export default function ReportMeetingCalendarPage() {
                 columns={groupedColumns}
                 dataSource={groupedRows}
                 size="small"
+                scroll={{ x: "max-content" }}
                 pagination={false}
               />
             </Card>

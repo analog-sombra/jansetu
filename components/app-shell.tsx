@@ -84,15 +84,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           flexShrink: 0,
         }}
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "12px 24px" }}>
-          <Row align="middle" justify="space-between">
-            <Col>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "10px 16px" }}>
+          <Row align="middle" justify="space-between" wrap={false}>
+            <Col flex="auto" style={{ minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 {/* Government Emblem Area */}
                 <div
                   style={{
-                    width: 54,
-                    height: 54,
+                    width: 44,
+                    height: 44,
                     borderRadius: "50%",
                     background: "rgba(255,255,255,0.12)",
                     display: "flex",
@@ -102,9 +102,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     flexShrink: 0,
                   }}
                 >
-                  <span style={{ fontSize: 26, lineHeight: 1 }}>⚖️</span>
+                  <span style={{ fontSize: 22, lineHeight: 1 }}>⚖️</span>
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <Link href="/">
                     <Title
                       level={4}
@@ -114,6 +114,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         letterSpacing: "0.08em",
                         fontWeight: 800,
                         lineHeight: 1.2,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       {t("shell.brand")}
@@ -122,20 +125,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Text
                     style={{
                       color: "rgba(255,255,255,0.8)",
-                      fontSize: 11,
+                      fontSize: 10,
                       display: "block",
-                      letterSpacing: "0.06em",
+                      letterSpacing: "0.04em",
                       fontWeight: 600,
                       lineHeight: 1.4,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {t("shell.subtitle")}
                   </Text>
-         
                 </div>
               </div>
             </Col>
-            <Col>
+            <Col flex="none">
               <Space size="small">
                 {isHomePage && (
                   <Link href="/login">
@@ -183,15 +188,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }}
         >
           <div
-            style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex" }}
+            className="nav-scroll"
+            style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px", display: "flex" }}
           >
             {navLinks.map((link) => {
               const isActive = activeNavHref === link.href;
               return (
-                <Link key={link.href} href={link.href}>
+                <Link key={link.href} href={link.href} style={{ flexShrink: 0 }}>
                   <div
                     style={{
-                      padding: "11px 18px",
+                      padding: "11px 16px",
                       fontSize: 13,
                       fontWeight: 600,
                       color: isActive ? "#FF9933" : "rgba(255,255,255,0.82)",
@@ -200,6 +206,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       cursor: "pointer",
                       transition: "all 0.2s",
                       userSelect: "none",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {t(link.labelKey)}
@@ -218,7 +225,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             maxWidth: 1200,
             margin: "0 auto",
             width: "100%",
-            padding: "28px 24px",
+            padding: "20px 16px",
           }}
         >
           {children}
@@ -229,7 +236,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Footer
         style={{
           background: "#12294a",
-          padding: "20px 24px",
+          padding: "20px 16px",
           textAlign: "center",
           flexShrink: 0,
         }}
@@ -257,6 +264,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Text>
           <div style={{ marginTop: 10 }}>
             <Space
+              wrap
               separator={
                 <Divider
                   orientation="vertical"
@@ -270,13 +278,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 "shell.footerTerms",
                 "shell.footerAccessibility",
               ].map((item) => (
-                  <Text
-                    key={item}
-                    style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, cursor: "pointer" }}
-                  >
-                    {t(item)}
-                  </Text>
-                ))}
+                <Text
+                  key={item}
+                  style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, cursor: "pointer" }}
+                >
+                  {t(item)}
+                </Text>
+              ))}
             </Space>
           </div>
         </div>
@@ -284,4 +292,3 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </Layout>
   );
 }
-

@@ -439,7 +439,8 @@ export default function AdminQueueDemoPage() {
           columns={columns}
           dataSource={complaints}
           rowKey="id"
-          size="middle"
+           size="small"
+           scroll={{ x: "max-content" }}
           pagination={{
             pageSize: 15,
             showSizeChanger: true,

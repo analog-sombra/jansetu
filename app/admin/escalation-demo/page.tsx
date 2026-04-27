@@ -250,6 +250,8 @@ export default function EscalationDemoPage() {
           rowKey="id"
           columns={columns}
           dataSource={DEMO_ESCALATIONS}
+          size="small"
+          scroll={{ x: "max-content" }}
           pagination={{
             pageSize: 10,
             showTotal: (total) => `${total} records`,

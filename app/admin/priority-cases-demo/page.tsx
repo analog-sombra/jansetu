@@ -244,7 +244,7 @@ export default function PriorityCasesDemoPage() {
         <Col xs={12} sm={8}>
           <Card size="small">
             <Text type="secondary">Priority Clusters</Text>
-            <Title level={3} style={{ margin: "6px 0 0", color: "#b42318" }}>
+            <Title level={3} style={{ margin: "6px 0 0", color: "#1a3c6e" }}>
               {priorityGroups.length}
             </Title>
           </Card>
@@ -278,6 +278,8 @@ export default function PriorityCasesDemoPage() {
           rowKey="key"
           columns={columns}
           dataSource={priorityGroups}
+          size="small"
+          scroll={{ x: "max-content" }}
           pagination={{
             pageSize: 10,
             showTotal: (total) => `${total} clusters`,

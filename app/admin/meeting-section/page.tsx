@@ -90,6 +90,8 @@ export default function MeetingSectionPage() {
 
   useEffect(() => {
     void loadMeetings();
+    // Run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadMeetings() {
@@ -279,28 +281,6 @@ export default function MeetingSectionPage() {
     }
     if (!response.ok) {
       setError(result.error ?? t("meetingSection.error.rejection"));
-      return;
-    }
-
-    await loadMeetings();
-  }
-
-  async function completeMeeting(meeting: MeetingRecord) {
-    setActionLoadingId(meeting.id);
-    const response = await fetch(`/api/meetings/${meeting.id}/complete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completionRemarks: "Completed by admin" }),
-    });
-    const result = await response.json();
-    setActionLoadingId(null);
-
-    if (response.status === 401) {
-      router.push("/login");
-      return;
-    }
-    if (!response.ok) {
-      setError(result.error ?? t("meetingSection.error.completion"));
       return;
     }
 
@@ -591,6 +571,8 @@ export default function MeetingSectionPage() {
                 rowKey="id"
                 columns={selectedDateColumns}
                 dataSource={selectedDateMeetings}
+                size="small"
+                scroll={{ x: "max-content" }}
                 pagination={{ pageSize: 5 }}
               />
             )}
@@ -658,6 +640,8 @@ export default function MeetingSectionPage() {
             columns={columns}
             dataSource={filteredMeetings}
             loading={loading}
+            size="small"
+            scroll={{ x: "max-content" }}
             pagination={{ pageSize: 8 }}
           />
         )}

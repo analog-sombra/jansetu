@@ -1702,63 +1702,62 @@ export default function ReportDashboardPage() {
       /> */}
 
       <Card style={{ borderRadius: 6, marginBottom: 20 }}>
-        <Space wrap style={{ width: "100%" }}>
-          <div>
+        <Row gutter={[12, 12]}>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
               Report Window
             </Text>
             <Select
               value={windowMode}
               onChange={(value) => setWindowMode(value as ReportWindow)}
-              style={{ minWidth: 170 }}
+              style={{ width: "100%" }}
               options={[
                 { value: "weekly", label: "Weekly" },
                 { value: "monthly", label: "Monthly" },
               ]}
             />
-          </div>
+          </Col>
 
-          <div>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
               Group By
             </Text>
             <Select
               value={groupBy}
               onChange={(value) => setGroupBy(value as GroupByKey)}
-              style={{ minWidth: 170 }}
+              style={{ width: "100%" }}
               options={[
                 { value: "ward", label: "Ward" },
                 { value: "category", label: "Category" },
               ]}
             />
-          </div>
+          </Col>
 
-          <div>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
               {t("report.filter.wardFocus")}
             </Text>
             <Select
               value={wardFilter}
               onChange={setWardFilter}
-              style={{ minWidth: 220 }}
+              style={{ width: "100%" }}
               options={wardOptions}
             />
-          </div>
+          </Col>
 
-          <div>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
               Category
             </Text>
             <Select
               value={categoryFilter}
               onChange={setCategoryFilter}
-              style={{ minWidth: 220 }}
+              style={{ width: "100%" }}
               options={categoryOptions}
             />
-          </div>
+          </Col>
 
-          <div style={{ marginLeft: "auto" }}>
-            <Space>
+          <div className="flex flex-wrap gap-4">
               <Button
                 onClick={() => void downloadReportExcel("weekly")}
                 loading={exporting === "weekly"}
@@ -1773,9 +1772,8 @@ export default function ReportDashboardPage() {
               >
                 Download Monthly Report
               </Button>
-            </Space>
           </div>
-        </Space>
+        </Row>
       </Card>
 
       {/* <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
@@ -1923,6 +1921,7 @@ export default function ReportDashboardPage() {
                 columns={groupedColumns}
                 dataSource={groupedRows}
                 size="small"
+                scroll={{ x: "max-content" }}
                 pagination={false}
               />
             </Card>
@@ -2396,8 +2395,8 @@ export default function ReportDashboardPage() {
           dataSource={overview.departmentReportCard}
           rowKey="department"
           pagination={false}
-          size="middle"
-          scroll={{ x: 720 }}
+          size="small"
+          scroll={{ x: "max-content" }}
         />
 
         <Divider />
@@ -2449,7 +2448,7 @@ export default function ReportDashboardPage() {
             <Col xs={24} md={12} lg={8} key={item.id}>
               <Card size="small" title={`#${item.id} - ${item.category}`}>
                 <Row gutter={10}>
-                  <Col span={12}>
+                  <Col xs={24} sm={12}>
                     <Text strong style={{ display: "block", marginBottom: 6 }}>
                       {t("report.before")}
                     </Text>
@@ -2472,7 +2471,7 @@ export default function ReportDashboardPage() {
                       {item.area}
                     </Text>
                   </Col>
-                  <Col span={12}>
+                  <Col xs={24} sm={12}>
                     <Text strong style={{ display: "block", marginBottom: 6 }}>
                       {t("report.after")}
                     </Text>
@@ -2554,7 +2553,7 @@ export default function ReportDashboardPage() {
         title={draftTitle}
         open={draftOpen}
         onCancel={() => setDraftOpen(false)}
-        width={760}
+        width="min(760px, 95vw)"
         footer={[
           <Button key="close" onClick={() => setDraftOpen(false)}>
             Close

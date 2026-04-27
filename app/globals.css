@@ -14,6 +14,19 @@ body {
   font-family: var(--font-sora), 'Noto Sans Devanagari', -apple-system, sans-serif;
 }
 
+  /* Hide scrollbar for horizontal nav on mobile */
+  .nav-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
 * {
   box-sizing: border-box;
 }
