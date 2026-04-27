@@ -285,6 +285,7 @@ export default function CitizenDashboardPage() {
       title: t("dashboard.table.category"),
       dataIndex: "category",
       key: "category",
+      width: 150,
       render: (cat: string) => (
         <Text strong>{getLocalizedCategory(cat, t)}</Text>
       ),
@@ -298,6 +299,7 @@ export default function CitizenDashboardPage() {
       title: t("dashboard.table.description"),
       dataIndex: "description",
       key: "description",
+      width: 220,
       ellipsis: true,
       render: (desc: string) => (
         <Tooltip title={desc}>
@@ -443,7 +445,7 @@ export default function CitizenDashboardPage() {
             {t("dashboard.subtitle")}
           </Text>
         </div>
-        <Link href="/complaint/new">
+        <Link href="/complaint/new" style={{ flexShrink: 0 }}>
           <Button
             type="primary"
             size="large"
@@ -539,7 +541,8 @@ export default function CitizenDashboardPage() {
           dataSource={complaints}
           rowKey="id"
           loading={loading}
-          size="middle"
+          size="small"
+          scroll={{ x: 1110 }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
@@ -616,6 +619,8 @@ export default function CitizenDashboardPage() {
           setSharingComplaint(null);
         }}
         footer={null}
+        width="min(520px, 95vw)"
+        style={{ top: 20 }}
       >
         {sharingComplaint && (
           <Space direction="vertical" style={{ width: "100%" }} size="middle">
