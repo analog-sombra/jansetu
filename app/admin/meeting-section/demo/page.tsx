@@ -835,17 +835,17 @@ export default function MeetingSectionDemoPage() {
                 rowKey="id"
                 columns={selectedDateColumns}
                 dataSource={selectedDateMeetings}
+                size="small"
+                scroll={{ x: "max-content" }}
                 pagination={{ pageSize: 5 }}
               />
             )}
-                <Table
-                  rowKey="id"
-                  columns={selectedDateColumns}
-                  dataSource={selectedDateMeetings}
-                  size="small"
-                  scroll={{ x: "max-content" }}
-                  pagination={{ pageSize: 5 }}
-                />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* All Meetings */}
+      <Card style={{ borderRadius: 8 }}>
         <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
           <Col xs={24} sm={8}>
             <Input
@@ -859,14 +859,12 @@ export default function MeetingSectionDemoPage() {
               allowClear
               value={typeFilter}
               onChange={(v) => setTypeFilter(v)}
-          <Table
-            rowKey="id"
-            columns={columns}
-            dataSource={filteredMeetings}
-            size="small"
-            scroll={{ x: "max-content" }}
-            pagination={{ pageSize: 8 }}
-          />
+              style={{ width: "100%" }}
+              placeholder="Filter by type"
+              options={MEETING_TYPE_OPTIONS}
+            />
+          </Col>
+          <Col xs={24} sm={8}>
             <Select
               allowClear
               value={statusFilter}
@@ -891,6 +889,8 @@ export default function MeetingSectionDemoPage() {
             rowKey="id"
             columns={columns}
             dataSource={filteredMeetings}
+            size="small"
+            scroll={{ x: "max-content" }}
             pagination={{ pageSize: 8 }}
           />
         )}
