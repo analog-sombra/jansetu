@@ -1,0 +1,115 @@
+import { UserRole } from "@prisma/client";
+
+export type CampCitizenInput = {
+  mobile: string;
+  name: string;
+  address: string;
+  aadhaar?: string;
+  voterId: string;
+};
+
+export type CampComplaintInput = {
+  category: string;
+  subcategory: string;
+  description: string;
+  area?: string;
+  lat: string;
+  lng: string;
+};
+
+export type CampCreateComplaintInput = {
+  citizen: CampCitizenInput;
+  complaint: CampComplaintInput;
+};
+
+export type CampUserSummary = {
+  id: string;
+  role: UserRole;
+  name: string | null;
+  mobile: string;
+  address: string | null;
+  aadhaar: string | null;
+  voterId: string | null;
+  complaintCount: number;
+  lastComplaintAt: string | null;
+};
+
+export type CampComplaintSummary = {
+  id: number;
+  citizenName: string;
+  citizenMobile: string;
+  category: string;
+  subcategory: string | null;
+  status: string;
+  area: string;
+  createdAt: string;
+};
+
+export type CampAuthResult = {
+  ok: false;
+  error: string;
+};
+
+export type GetCitizenByMobileResult =
+  | {
+      ok: true;
+      found: true;
+      user: {
+        id: string;
+        name: string;
+        mobile: string;
+        address: string;
+        aadhaar: string;
+        voterId: string;
+      };
+    }
+  | {
+      ok: true;
+      found: false;
+    }
+  | CampAuthResult;
+
+export type CreateCampComplaintResult =
+  | {
+      ok: true;
+      complaintId: number;
+      userId: string;
+      createdNewUser: boolean;
+    }
+  | CampAuthResult
+  | {
+      ok: false;
+      error: string;
+    };
+
+export type CampComplaintsDashboardResult =
+  | {
+      ok: true;
+      complaints: CampComplaintSummary[];
+    }
+  | CampAuthResult;
+
+export type CampUsersListResult =
+  | {
+      ok: true;
+      users: CampUserSummary[];
+    }
+  | CampAuthResult;
+
+export type UpdateCampCitizenProfileInput = {
+  userId: string;
+  name: string;
+  address: string;
+  aadhaar?: string;
+  voterId: string;
+};
+
+export type UpdateCampCitizenProfileResult =
+  | {
+      ok: true;
+    }
+  | CampAuthResult
+  | {
+      ok: false;
+      error: string;
+    };

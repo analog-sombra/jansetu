@@ -1,0 +1,560 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Alert, Button, Card, Divider, Spin, Typography } from "antd";
+import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
+import { valibotResolver } from "@hookform/resolvers/valibot";
+import { useLanguage } from "@/components/provider/language_provider";
+import { OptionValue } from "@/model/main";
+import {
+  RAJOURI_GARDEN_AREAS,
+} from "@/lib/constants";
+import {
+  createCampComplaintAction,
+  getCitizenByMobileAction,
+} from "@/actions/camp";
+import {
+  CategoryWithSubcategories,
+  getCategoriesWithSubcategoriesAction,
+} from "@/actions/user/getCategoriesAction";
+import {
+  campComplaintValidationForm,
+  campComplaintValidationSchema,
+} from "@/schema/campComplaintValidationSchema";
+import { CustomMultiSelect } from "@/components/inputfields/multiselect";
+import { CustomTextAreaInput } from "@/components/inputfields/textareainput";
+import { CustomTextInput } from "@/components/inputfields/textinput";
+import { onFormError } from "@/utils/method";
+
+const { Title, Text } = Typography;
+
+export default function CampNewComplaintForm() {
+  const { t } = useLanguage();
+  const [categories, setCategories] = useState<CategoryWithSubcategories[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [citizenFound, setCitizenFound] = useState<null | boolean>(null);
+  const [citizenFieldsLocked, setCitizenFieldsLocked] = useState(false);
+  const [citizenMissingBasicInfo, setCitizenMissingBasicInfo] = useState(false);
+  const [alert, setAlert] = useState<{
+    type: "error" | "success" | "info";
+    text: string;
+  } | null>(null);
+
+  const methods = useForm<campComplaintValidationForm>({
+    defaultValues: {
+      mobile: "",
+      name: "",
+      address: "",
+      aadhaar: "",
+      voterId: "",
+      category: "",
+      subcategory: "",
+      description: "",
+      area: "",
+      lat: "",
+      lng: "",
+    },
+    resolver: valibotResolver(
+      campComplaintValidationSchema,
+    ) as Resolver<campComplaintValidationForm>,
+  });
+
+  const {
+    handleSubmit,
+    setValue,
+    setFocus,
+    getValues,
+    reset,
+    formState: { errors },
+  } = methods;
+
+  const selectedCategory =
+    useWatch({ control: methods.control, name: "category" }) || "";
+  const selectedSubcategory =
+    useWatch({ control: methods.control, name: "subcategory" }) || "";
+
+  // Load categories on mount
+  useEffect(() => {
+    let disposed = false;
+
+    async function loadCategories() {
+      setLoadingCategories(true);
+      try {
+        const result = await getCategoriesWithSubcategoriesAction();
+        if (!disposed && result.ok) {
+          setCategories(result.categories);
+          
+          // Set default category and subcategory
+          if (result.categories.length > 0) {
+            const firstCategory = result.categories[0];
+            setValue("category", firstCategory.name);
+            if (firstCategory.subcategories.length > 0) {
+              setValue("subcategory", firstCategory.subcategories[0].name);
+            }
+          }
+        }
+      } finally {
+        if (!disposed) {
+          setLoadingCategories(false);
+        }
+      }
+    }
+
+    void loadCategories();
+
+    return () => {
+      disposed = true;
+    };
+  }, [setValue]);
+
+  // Find the selected category object
+  const selectedCategoryObj = categories.find(
+    (cat) => cat.name === selectedCategory
+  );
+
+  const categoryOptions: OptionValue[] = categories.map((category) => ({
+    value: category.name,
+    label: category.name,
+  }));
+
+  const subcategoryOptions: OptionValue[] = (
+    selectedCategoryObj?.subcategories ?? []
+  ).map((subcategory) => ({
+    value: subcategory.name,
+    label: subcategory.name,
+  }));
+
+  const areaOptions: OptionValue[] = RAJOURI_GARDEN_AREAS.map((area) => ({
+    value: area,
+    label: area,
+  }));
+
+  useEffect(() => {
+    if (!selectedCategoryObj) return;
+    
+    const allowedSubcategories = selectedCategoryObj.subcategories.map(s => s.name);
+    if (!allowedSubcategories.includes(selectedSubcategory)) {
+      setValue("subcategory", allowedSubcategories[0] ?? "", {
+        shouldValidate: true,
+      });
+    }
+  }, [selectedCategory, selectedSubcategory, selectedCategoryObj, setValue]);
+
+  function pickLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setAlert({ type: "error", text: t("newComplaint.error.geoUnsupported") });
+      return;
+    }
+
+    setAlert(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setValue("lat", position.coords.latitude.toFixed(6), {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+        setValue("lng", position.coords.longitude.toFixed(6), {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      },
+      () => {
+        setAlert({ type: "error", text: t("newComplaint.error.geoDetect") });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      },
+    );
+  }
+
+  async function lookupCitizen() {
+    const mobile = getValues("mobile");
+
+    if (!/^\d{10}$/.test((mobile ?? "").trim())) {
+      setAlert({ type: "error", text: t("login.validation.mobileInvalid") });
+      return;
+    }
+
+    setLookupLoading(true);
+    setAlert(null);
+
+    const result = await getCitizenByMobileAction(mobile);
+
+    setLookupLoading(false);
+
+    if (!result.ok) {
+      setCitizenFound(null);
+      setCitizenFieldsLocked(false);
+      setCitizenMissingBasicInfo(false);
+      setAlert({ type: "error", text: result.error });
+      return;
+    }
+
+    if (!result.found) {
+      setCitizenFound(false);
+      setCitizenFieldsLocked(false);
+      setCitizenMissingBasicInfo(false);
+      setValue("name", "");
+      setValue("address", "");
+      setValue("aadhaar", "");
+      setValue("voterId", "");
+      setAlert({ type: "info", text: t("camp.lookup.notFound") });
+      return;
+    }
+
+    setCitizenFound(true);
+    const missingBasicInfo =
+      !result.user.name.trim() ||
+      !result.user.address.trim() ||
+      !result.user.voterId.trim();
+
+    setCitizenMissingBasicInfo(missingBasicInfo);
+    setCitizenFieldsLocked(!missingBasicInfo);
+    setValue("name", result.user.name, { shouldValidate: true });
+    setValue("address", result.user.address, { shouldValidate: true });
+    setValue("aadhaar", result.user.aadhaar, { shouldValidate: true });
+    setValue("voterId", result.user.voterId, { shouldValidate: true });
+    setAlert({
+      type: missingBasicInfo ? "info" : "success",
+      text: missingBasicInfo ? t("camp.lookup.basicMissing") : t("camp.lookup.found"),
+    });
+  }
+
+  async function onSubmit(values: campComplaintValidationForm) {
+    setLoading(true);
+    setAlert(null);
+
+    const result = await createCampComplaintAction({
+      citizen: {
+        mobile: values.mobile,
+        name: values.name ?? "",
+        address: values.address ?? "",
+        aadhaar: values.aadhaar,
+        voterId: values.voterId ?? "",
+      },
+      complaint: {
+        category: values.category,
+        subcategory: values.subcategory,
+        description: values.description,
+        area: values.area,
+        lat: values.lat,
+        lng: values.lng,
+      },
+    });
+
+    setLoading(false);
+
+    if (!result.ok) {
+      setAlert({ type: "error", text: result.error });
+      return;
+    }
+
+    setAlert({
+      type: "success",
+      text: result.createdNewUser
+        ? `${t("camp.create.success")} #${result.complaintId}. ${t("camp.create.userCreated")}`
+        : `${t("camp.create.success")} #${result.complaintId}. ${t("camp.create.userUpdated")}`,
+    });
+
+    setCitizenFound(null);
+    setCitizenFieldsLocked(false);
+    setCitizenMissingBasicInfo(false);
+    
+    // Reset form with first category and subcategory
+    const firstCategory = categories[0];
+    reset({
+      mobile: "",
+      name: "",
+      address: "",
+      aadhaar: "",
+      voterId: "",
+      category: firstCategory?.name ?? "",
+      subcategory: firstCategory?.subcategories[0]?.name ?? "",
+      description: "",
+      area: "",
+      lat: "",
+      lng: "",
+    });
+  }
+
+  return (
+    <div style={{ maxWidth: 760, margin: "0 auto" }}>
+      <div
+        style={{
+          background: "linear-gradient(135deg, #12294a 0%, #1a3c6e 100%)",
+          borderRadius: "6px 6px 0 0",
+          padding: "24px 28px",
+        }}
+      >
+        <Title level={4} style={{ color: "#fff", margin: 0, letterSpacing: "0.02em" }}>
+          {t("camp.new.title")}
+        </Title>
+        <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, display: "block", marginTop: 4 }}>
+          {t("camp.new.subtitle")}
+        </Text>
+      </div>
+
+      <Card
+        style={{
+          borderRadius: "0 0 6px 6px",
+          borderTop: 0,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
+        }}
+      >
+        {loadingCategories ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+            <Spin size="large" tip="Loading categories..." />
+          </div>
+        ) : (
+          <>
+            {alert && (
+              <Alert
+                type={alert.type}
+                title={alert.text}
+                showIcon
+                closable
+                style={{ marginBottom: 24 }}
+                onClose={() => setAlert(null)}
+              />
+            )}
+
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmit, onFormError)}>
+            <Divider>{t("camp.citizen.section")}</Divider>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="sm:col-span-2">
+                <CustomTextInput<campComplaintValidationForm>
+                  name="mobile"
+                  title={t("camp.citizen.mobile")}
+                  placeholder={t("login.mobilePlaceholder")}
+                  required
+                  onlynumber
+                  maxlength={10}
+                  disable={citizenFieldsLocked}
+                />
+              </div>
+              <div className="pt-6">
+                <Button
+                  block
+                  size="large"
+                  loading={lookupLoading}
+                  onClick={() => {
+                    void lookupCitizen();
+                  }}
+                  style={{
+                    borderColor: "#1a3c6e",
+                    color: "#1a3c6e",
+                    fontWeight: 700,
+                  }}
+                >
+                  {t("camp.lookup.button")}
+                </Button>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <CustomTextInput<campComplaintValidationForm>
+                name="name"
+                title={t("register.nameLabel")}
+                placeholder={t("register.namePlaceholder")}
+                maxlength={120}
+                disable={citizenFieldsLocked}
+              />
+            </div>
+
+            <div className="mb-3">
+              <CustomTextAreaInput<campComplaintValidationForm>
+                name="address"
+                title={t("register.addressLabel")}
+                placeholder={t("register.addressPlaceholder")}
+                required={false}
+                maxlength={500}
+                disable={citizenFieldsLocked}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mb-3">
+                <CustomTextInput<campComplaintValidationForm>
+                  name="aadhaar"
+                  title={t("register.aadhaarLabel")}
+                  placeholder={t("register.aadhaarPlaceholder")}
+                  onlynumber
+                  maxlength={12}
+                  disable={citizenFieldsLocked}
+                />
+              </div>
+
+              <div className="mb-3">
+                <CustomTextInput<campComplaintValidationForm>
+                  name="voterId"
+                  title={t("register.voterIdLabel")}
+                  placeholder={t("register.voterIdPlaceholder")}
+                  maxlength={30}
+                  disable={citizenFieldsLocked}
+                />
+              </div>
+            </div>
+
+            {citizenFieldsLocked && (
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {t("camp.lookup.locked")}
+                </Text>
+                <Button
+                  size="small"
+                  type="default"
+                  onClick={() => setCitizenFieldsLocked(false)}
+                >
+                  {t("camp.lookup.change")}
+                </Button>
+              </div>
+            )}
+
+            {citizenFound && citizenMissingBasicInfo && (
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <Text type="warning" style={{ fontSize: 12 }}>
+                  {t("camp.lookup.basicMissing")}
+                </Text>
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() => {
+                    setCitizenFieldsLocked(false);
+                    setFocus("name");
+                  }}
+                >
+                  {t("camp.lookup.fillBasic")}
+                </Button>
+              </div>
+            )}
+
+            {citizenFound === false && (
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {t("camp.lookup.notFound")}
+                </Text>
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() => {
+                    setCitizenFieldsLocked(false);
+                    setFocus("name");
+                  }}
+                >
+                  {t("camp.lookup.addDetails")}
+                </Button>
+              </div>
+            )}
+
+            <Divider>{t("camp.complaint.section")}</Divider>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <CustomMultiSelect<campComplaintValidationForm>
+                  name="category"
+                  title={t("newComplaint.category")}
+                  placeholder={t("newComplaint.validation.category")}
+                  required
+                  options={categoryOptions}
+                />
+              </div>
+
+              <div>
+                <CustomMultiSelect<campComplaintValidationForm>
+                  name="subcategory"
+                  title={t("newComplaint.subcategory")}
+                  placeholder={t("newComplaint.validation.subcategory")}
+                  required
+                  options={subcategoryOptions}
+                />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <CustomTextAreaInput<campComplaintValidationForm>
+                name="description"
+                title={t("newComplaint.description")}
+                placeholder={t("newComplaint.descriptionPlaceholder")}
+                required
+                maxlength={1000}
+              />
+            </div>
+
+            <div className="mb-3">
+              <CustomMultiSelect<campComplaintValidationForm>
+                name="area"
+                title={t("newComplaint.area")}
+                placeholder={t("newComplaint.areaPlaceholder")}
+                required={false}
+                options={areaOptions}
+              />
+              {errors.area && (
+                <p className="text-xs text-red-500">{errors.area.message?.toString()}</p>
+              )}
+            </div>
+
+            <Divider plain style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}>
+              {t("newComplaint.gps")}
+            </Divider>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <CustomTextInput<campComplaintValidationForm>
+                  name="lat"
+                  title={t("newComplaint.latitude")}
+                  placeholder="e.g. 28.6139"
+                  required
+                  numdes
+                />
+              </div>
+              <div>
+                <CustomTextInput<campComplaintValidationForm>
+                  name="lng"
+                  title={t("newComplaint.longitude")}
+                  placeholder="e.g. 77.2090"
+                  required
+                  numdes
+                />
+              </div>
+              <div className="pt-6">
+                <Button
+                  block
+                  size="large"
+                  onClick={pickLocation}
+                  style={{
+                    borderColor: "#1a3c6e",
+                    color: "#1a3c6e",
+                    fontWeight: 600,
+                  }}
+                >
+                  {t("newComplaint.autoDetect")}
+                </Button>
+              </div>
+            </div>
+
+            {citizenFound !== null && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {citizenFound ? t("camp.lookup.willUpdate") : t("camp.lookup.willCreate")}
+              </Text>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-3 h-11.5 w-full rounded bg-[#1a3c6e] text-[15px] font-bold text-white transition hover:bg-[#16335d] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {t("camp.create.button")}
+            </button>
+          </form>
+        </FormProvider>
+        </>
+        )}
+      </Card>
+    </div>
+  );
+}
