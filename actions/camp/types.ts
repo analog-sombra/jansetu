@@ -45,6 +45,56 @@ export type CampComplaintSummary = {
   createdAt: string;
 };
 
+export type CampComplaintResponseSummary = {
+  id: number;
+  type: string;
+  message: string;
+  proofUrl: string | null;
+  createdAt: string;
+};
+
+export type CampComplaintAssignmentSummary = {
+  id: number;
+  status: string;
+  dueDate: string;
+  officer: {
+    name: string;
+    designation: string;
+    department: {
+      name: string;
+    };
+  };
+  responses: CampComplaintResponseSummary[];
+};
+
+export type CampComplaintDetail = {
+  id: number;
+  citizen: {
+    name: string;
+    mobile: string;
+    address: string;
+    aadhaar: string;
+    voterId: string;
+  };
+  category: string;
+  subcategory: string | null;
+  description: string;
+  status: string;
+  plannedCompletionDate: string | null;
+  lat: number;
+  lng: number;
+  area: string | null;
+  media: Array<{ id: number; fileUrl: string; type: string }>;
+  assignments: CampComplaintAssignmentSummary[];
+  createdAt: string;
+  cluster: {
+    clusterId: string;
+    departmentName: string;
+    complaintCount: number;
+    bucketSizeMeters: number;
+  } | null;
+};
+
 export type CampAuthResult = {
   ok: false;
   error: string;
@@ -75,6 +125,8 @@ export type CreateCampComplaintResult =
       complaintId: number;
       userId: string;
       createdNewUser: boolean;
+      clusterId: string;
+      clusterComplaintCount: number;
     }
   | CampAuthResult
   | {
@@ -88,6 +140,17 @@ export type CampComplaintsDashboardResult =
       complaints: CampComplaintSummary[];
     }
   | CampAuthResult;
+
+export type CampComplaintDetailResult =
+  | {
+      ok: true;
+      complaint: CampComplaintDetail;
+    }
+  | CampAuthResult
+  | {
+      ok: false;
+      error: string;
+    };
 
 export type CampUsersListResult =
   | {

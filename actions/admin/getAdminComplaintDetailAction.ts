@@ -89,6 +89,37 @@ export async function getAdminComplaintDetailAction(
             },
             orderBy: { createdAt: "desc" },
           },
+          officerAssignments: {
+            select: {
+              id: true,
+              createdAt: true,
+              isCurrent: true,
+              officer: {
+                select: {
+                  id: true,
+                  name: true,
+                  designation: true,
+                  department: {
+                    select: { name: true },
+                  },
+                },
+              },
+              assignedByUser: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          complaintClusters: {
+            select: {
+              clusterId: true,
+              departmentName: true,
+            },
+            orderBy: { createdAt: "asc" },
+            take: 1,
+          },
         },
       }),
       prisma.officer.findMany({
@@ -106,6 +137,49 @@ export async function getAdminComplaintDetailAction(
 
     if (!complaint) {
       return { ok: false, error: "Complaint not found." };
+    }
+
+    let cluster = null;
+    const primaryCluster = complaint.complaintClusters[0];
+    if (primaryCluster) {
+      const clusterComplaints = await prisma.complaintCluster.findMany({
+        where: { clusterId: primaryCluster.clusterId },
+        select: {
+          complaint: {
+            select: {
+              id: true,
+              category: true,
+              subcategory: true,
+              status: true,
+              area: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: {
+          complaint: {
+            createdAt: "desc",
+          },
+        },
+      });
+
+      const clusterComplaintList = clusterComplaints.map((entry) => ({
+        id: entry.complaint.id,
+        category: entry.complaint.category,
+        subcategory: entry.complaint.subcategory,
+        status: entry.complaint.status,
+        area: entry.complaint.area,
+        createdAt: entry.complaint.createdAt.toISOString(),
+        isCurrentComplaint: entry.complaint.id === complaint.id,
+      }));
+
+      cluster = {
+        clusterId: primaryCluster.clusterId,
+        departmentName: primaryCluster.departmentName,
+        complaintCount: clusterComplaintList.length,
+        bucketSizeMeters: 500,
+        complaints: clusterComplaintList,
+      };
     }
 
     return {
@@ -136,6 +210,14 @@ export async function getAdminComplaintDetailAction(
             officer: response.assignment.officer,
           })),
         })),
+        officerAssignmentHistory: complaint.officerAssignments.map((entry) => ({
+          id: entry.id,
+          createdAt: entry.createdAt.toISOString(),
+          isCurrent: entry.isCurrent,
+          officer: entry.officer,
+          assignedByName: entry.assignedByUser?.name ?? null,
+        })),
+        cluster,
       },
       officers,
     };

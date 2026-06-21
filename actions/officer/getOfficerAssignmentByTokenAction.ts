@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { setAuthSession } from "@/lib/auth/session";
+import { CATEGORY_DEPARTMENT_MAP } from "@/lib/constants";
 import { GetOfficerAssignmentByTokenResult } from "./types";
 
 function normalizeToken(tokenInput: string): string {
@@ -144,6 +145,29 @@ export async function getOfficerAssignmentByTokenAction(
 
     await setAuthSession(officerUser.id, "OFFICER");
 
+    const relevantDepartments = CATEGORY_DEPARTMENT_MAP[assignment.complaint.category] ?? [];
+    const availableOfficers = await prisma.officer.findMany({
+      where:
+        relevantDepartments.length > 0
+          ? {
+              department: {
+                name: {
+                  in: relevantDepartments,
+                },
+              },
+            }
+          : undefined,
+      orderBy: [{ department: { name: "asc" } }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        designation: true,
+        department: {
+          select: { name: true },
+        },
+      },
+    });
+
     return {
       ok: true,
       assignment: {
@@ -183,6 +207,7 @@ export async function getOfficerAssignmentByTokenAction(
           status: item.complaint.status,
           completedAt: item.updatedAt.toISOString(),
         })),
+        availableOfficers,
       },
     };
   } catch {

@@ -1,0 +1,153 @@
+"use server";
+
+import prisma from "@/lib/prisma";
+import { requireCampUser } from "./_shared";
+import { CampComplaintDetailResult } from "./types";
+
+export async function getCampComplaintDetailAction(
+  complaintIdInput: number,
+): Promise<CampComplaintDetailResult> {
+  const auth = await requireCampUser();
+  if (!auth.ok) {
+    return auth;
+  }
+
+  const complaintId = Number(complaintIdInput);
+  if (!Number.isInteger(complaintId) || complaintId <= 0) {
+    return { ok: false, error: "Invalid complaint selected." };
+  }
+
+  try {
+    const complaint = await prisma.complaint.findFirst({
+      where: {
+        id: complaintId,
+        createdByUserId: auth.user.id,
+      },
+      select: {
+        id: true,
+        category: true,
+        subcategory: true,
+        description: true,
+        status: true,
+        plannedCompletionDate: true,
+        lat: true,
+        lng: true,
+        area: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+            mobile: true,
+            address: true,
+            aadhaar: true,
+            voterId: true,
+          },
+        },
+        media: {
+          select: {
+            id: true,
+            fileUrl: true,
+            type: true,
+          },
+          orderBy: { id: "asc" },
+        },
+        assignments: {
+          select: {
+            id: true,
+            status: true,
+            dueDate: true,
+            officer: {
+              select: {
+                name: true,
+                designation: true,
+                department: {
+                  select: { name: true },
+                },
+              },
+            },
+            responses: {
+              select: {
+                id: true,
+                type: true,
+                message: true,
+                proofUrl: true,
+                createdAt: true,
+              },
+              orderBy: { createdAt: "desc" },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+        complaintClusters: {
+          select: {
+            clusterId: true,
+            departmentName: true,
+          },
+          orderBy: { createdAt: "asc" },
+          take: 1,
+        },
+      },
+    });
+
+    if (!complaint) {
+      return { ok: false, error: "Complaint not found." };
+    }
+
+    let cluster = null;
+    const primaryCluster = complaint.complaintClusters[0];
+    if (primaryCluster) {
+      const clusterComplaintCount = await prisma.complaintCluster.count({
+        where: { clusterId: primaryCluster.clusterId },
+      });
+
+      cluster = {
+        clusterId: primaryCluster.clusterId,
+        departmentName: primaryCluster.departmentName,
+        complaintCount: clusterComplaintCount,
+        bucketSizeMeters: 500,
+      };
+    }
+
+    return {
+      ok: true,
+      complaint: {
+        id: complaint.id,
+        citizen: {
+          name: complaint.user.name ?? "Citizen",
+          mobile: complaint.user.mobile,
+          address: complaint.user.address ?? "",
+          aadhaar: complaint.user.aadhaar ?? "",
+          voterId: complaint.user.voterId ?? "",
+        },
+        category: complaint.category,
+        subcategory: complaint.subcategory,
+        description: complaint.description,
+        status: complaint.status,
+        plannedCompletionDate: complaint.plannedCompletionDate
+          ? complaint.plannedCompletionDate.toISOString()
+          : null,
+        lat: complaint.lat,
+        lng: complaint.lng,
+        area: complaint.area,
+        media: complaint.media,
+        assignments: complaint.assignments.map((assignment) => ({
+          id: assignment.id,
+          status: assignment.status,
+          dueDate: assignment.dueDate.toISOString(),
+          officer: assignment.officer,
+          responses: assignment.responses.map((response) => ({
+            id: response.id,
+            type: response.type,
+            message: response.message,
+            proofUrl: response.proofUrl,
+            createdAt: response.createdAt.toISOString(),
+          })),
+        })),
+        createdAt: complaint.createdAt.toISOString(),
+        cluster,
+      },
+    };
+  } catch {
+    return { ok: false, error: "Unable to fetch complaint details." };
+  }
+}

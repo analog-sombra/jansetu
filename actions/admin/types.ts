@@ -55,6 +55,14 @@ export type AdminComplaintAssignmentSummary = {
   responses: AdminComplaintResponseSummary[];
 };
 
+export type AdminOfficerAssignmentHistorySummary = {
+  id: number;
+  createdAt: string;
+  isCurrent: boolean;
+  officer: AdminOfficerSummary;
+  assignedByName: string | null;
+};
+
 export type AdminComplaintDetail = {
   id: number;
   user: {
@@ -72,6 +80,22 @@ export type AdminComplaintDetail = {
   area: string | null;
   media: Array<{ id: number; fileUrl: string; type: string }>;
   assignments: AdminComplaintAssignmentSummary[];
+  officerAssignmentHistory: AdminOfficerAssignmentHistorySummary[];
+  cluster: {
+    clusterId: string;
+    departmentName: string;
+    complaintCount: number;
+    bucketSizeMeters: number;
+    complaints: Array<{
+      id: number;
+      category: string;
+      subcategory: string | null;
+      status: string;
+      area: string | null;
+      createdAt: string;
+      isCurrentComplaint: boolean;
+    }>;
+  } | null;
 };
 
 export type AdminAuthResult = {

@@ -42,6 +42,14 @@ export type OfficerAssignmentDetail = {
   };
   responses: OfficerAssignmentResponse[];
   completedAssignments: OfficerCompletedAssignmentSummary[];
+  availableOfficers: Array<{
+    id: number;
+    name: string;
+    designation: string;
+    department: {
+      name: string;
+    };
+  }>;
 };
 
 export type OfficerAuthResult = {
@@ -69,3 +77,15 @@ export type SubmitOfficerResponseResult =
       ok: true;
     }
   | OfficerAuthResult;
+
+export type AssignOfficerByTokenResult =
+  | {
+      ok: true;
+      token: string;
+      assignmentId: number;
+    }
+  | OfficerAuthResult
+  | {
+      ok: false;
+      error: string;
+    };

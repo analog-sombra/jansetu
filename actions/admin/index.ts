@@ -35,3 +35,4 @@ export { updateAdminCategoryAction } from "./updateAdminCategoryAction";
 export { deleteAdminCategoryAction } from "./deleteAdminCategoryAction";
 export { updateAdminSubcategoryAction } from "./updateAdminSubcategoryAction";
 export { deleteAdminSubcategoryAction } from "./deleteAdminSubcategoryAction";
+export { getComplaintClusterPrecisionImpactAction } from "./getComplaintClusterPrecisionImpactAction";

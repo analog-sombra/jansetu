@@ -6,6 +6,7 @@ export type {
   GetOfficerAssignmentByTokenResult,
   SubmitOfficerResponseInput,
   SubmitOfficerResponseResult,
+  AssignOfficerByTokenResult,
 } from "./types";
 
 export { getOfficerAssignmentByTokenAction } from "./getOfficerAssignmentByTokenAction";

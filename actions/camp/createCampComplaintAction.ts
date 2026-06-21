@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { attachComplaintToCluster } from "@/lib/complaintCluster";
 import {
   requireCampUser,
   validateCitizenInput,
@@ -96,10 +97,25 @@ export async function createCampComplaintAction(
         select: { id: true },
       });
 
+      const clusterId = await attachComplaintToCluster(tx, {
+        complaintId: complaint.id,
+        category,
+        subcategory,
+        area,
+        lat,
+        lng,
+      });
+
+      const clusterComplaintCount = await tx.complaintCluster.count({
+        where: { clusterId },
+      });
+
       return {
         complaintId: complaint.id,
         userId: citizen.id,
         createdNewUser: !existingUser,
+        clusterId,
+        clusterComplaintCount,
       };
     });
 
@@ -108,6 +124,8 @@ export async function createCampComplaintAction(
       complaintId: result.complaintId,
       userId: result.userId,
       createdNewUser: result.createdNewUser,
+      clusterId: result.clusterId,
+      clusterComplaintCount: result.clusterComplaintCount,
     };
   } catch (error) {
     if (error instanceof Error) {

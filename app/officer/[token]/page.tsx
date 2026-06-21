@@ -71,6 +71,9 @@ export default function OfficerTokenPage() {
   );
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [officerId, setOfficerId] = useState<string>("");
+  const [assignedOfficerToken, setAssignedOfficerToken] = useState("");
   const [alert, setAlert] = useState<{
     type: "error" | "success" | "info" | "warning";
     text: string;
@@ -225,6 +228,40 @@ export default function OfficerTokenPage() {
     form.resetFields(["type", "message", "plannedCompletionDate", "proofUrl"]);
 
     await loadAssignment();
+  }
+
+  async function assignOfficer() {
+    if (!assignment || !officerId) {
+      return;
+    }
+
+    setAssigning(true);
+    setAlert(null);
+
+    // const result = await assignOfficerByTokenAction({
+    //   token,
+    //   officerId: Number(officerId),
+    // });
+
+    // setAssigning(false);
+
+    // if (!result.ok) {
+    //   setAssignedOfficerToken("");
+    //   setAlert({
+    //     type: "error",
+    //     text: result.error ?? t("adminDetail.error.assign"),
+    //   });
+    //   return;
+    // }
+
+    // setOfficerId("");
+    // setAssignedOfficerToken(result.token);
+    // setAlert({
+    //   type: "success",
+    //   text: `${t("adminDetail.success.assign")} ${t("adminDetail.assignmentToken")}: ${result.token}`,
+    // });
+
+    // window.location.href = `/officer/${result.token}`;
   }
 
   if (loading) {
@@ -454,6 +491,74 @@ export default function OfficerTokenPage() {
         </Col>
 
         <Col xs={24} lg={8}>
+          <Card title={t("adminDetail.assignOfficer")} style={{ marginBottom: 16 }}>
+            <Form layout="vertical" requiredMark={false}>
+              <div
+                style={{
+                  marginBottom: 12,
+                  padding: 10,
+                  background: "#f7f9fc",
+                  borderLeft: "3px solid #1a3c6e",
+                  borderRadius: 4,
+                }}
+              >
+                <div style={{ fontSize: 12, color: "#6b7280" }}>
+                  {t("adminDetail.currentAssignedOfficer")}
+                </div>
+                <div style={{ color: "#1a3c6e", fontWeight: 700, marginTop: 2 }}>
+                  {assignment.officer.name}
+                </div>
+                <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                  {assignment.officer.department.name}
+                </div>
+              </div>
+
+              <Form.Item
+                label={t("adminDetail.changeOfficer")}
+                style={{ marginBottom: 12 }}
+              >
+                <Select
+                  placeholder={t("adminDetail.selectOfficerReassignPlaceholder")}
+                  value={officerId || undefined}
+                  onChange={(val) => setOfficerId(val)}
+                  size="large"
+                  style={{ width: "100%" }}
+                  options={assignment.availableOfficers.map((officer) => ({
+                    value: String(officer.id),
+                    label: `${officer.name} (${officer.designation}) - ${officer.department.name}`,
+                  }))}
+                  notFoundContent={
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      {t("adminDetail.noOfficers")}
+                    </div>
+                  }
+                />
+              </Form.Item>
+
+              <Button
+                type="primary"
+                block
+                disabled={!officerId}
+                loading={assigning}
+                onClick={assignOfficer}
+                style={{
+                  background: "#1a3c6e",
+                  borderColor: "#1a3c6e",
+                  fontWeight: 700,
+                  color: "#fff",
+                }}
+              >
+                {t("adminDetail.assignOfficer")}
+              </Button>
+
+              {assignedOfficerToken && (
+                <div style={{ marginTop: 12, fontSize: 12, color: "#6b7280" }}>
+                  {t("adminDetail.assignmentToken")}: {assignedOfficerToken}
+                </div>
+              )}
+            </Form>
+          </Card>
+
           <Card title={t("officer.submitResponse")}>
             <Form
               form={form}

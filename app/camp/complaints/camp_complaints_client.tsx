@@ -91,6 +91,18 @@ export default function CampComplaintsClient({
       sorter: (left, right) =>
         new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
     },
+    {
+      title: t("dashboard.table.action"),
+      key: "action",
+      width: 120,
+      render: (_, record) => (
+        <Link href={`/camp/complaints/${record.id}`}>
+          <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+            View
+          </Button>
+        </Link>
+      ),
+    },
   ];
 
   return (
@@ -128,7 +140,7 @@ export default function CampComplaintsClient({
           columns={columns}
           dataSource={initialComplaints}
           rowKey="id"
-          scroll={{ x: 1080 }}
+          scroll={{ x: 1200 }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

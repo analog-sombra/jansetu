@@ -88,23 +88,28 @@ enum MeetingPriority {
 }
 
 model User {
-  id                 String         @id @default(cuid())
+  id                 String                              @id @default(cuid())
   name               String?
-  mobile             String         @unique
-  role               UserRole       @default(CITIZEN)
+  mobile             String                              @unique
+  role               UserRole                            @default(CITIZEN)
   address            String?
   aadhaar            String?
   voterId            String?
   pan                String?
-  firstLoginComplete Boolean        @default(false)
+  partySupporter     String?
+  pollingBooth       String?
+  locality           String?
+  isPartOfParty      Boolean?                            @default(false)
+  firstLoginComplete Boolean                             @default(false)
   complaints         Complaint[]
-  complaintsCreated  Complaint[]    @relation("ComplaintCreatedBy")
+  complaintsCreated  Complaint[]                         @relation("ComplaintCreatedBy")
   auditLogs          AuditLog[]
   notifications      Notification[]
-  meetingsCreated    Meeting[]      @relation("MeetingCreatedBy")
-  meetingsAssigned   Meeting[]      @relation("MeetingAssignedTo")
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  meetingsCreated    Meeting[]                           @relation("MeetingCreatedBy")
+  meetingsAssigned   Meeting[]                           @relation("MeetingAssignedTo")
+  officerAssignments ComplaintOfficerAssignmentHistory[] @relation("OfficerAssignedBy")
+  createdAt          DateTime                            @default(now())
+  updatedAt          DateTime                            @updatedAt
 }
 
 model OtpCode {
@@ -120,28 +125,50 @@ model OtpCode {
 }
 
 model Complaint {
-  id                    Int              @id @default(autoincrement())
+  id                    Int                                 @id @default(autoincrement())
   userId                String
-  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdByUserId       String?
-  createdByUser         User?            @relation("ComplaintCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdByUser         User?                               @relation("ComplaintCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   category              String
   subcategory           String?
-  description           String           @db.LongText
-  status                ComplaintStatus  @default(PENDING)
+  description           String                              @db.LongText
+  status                ComplaintStatus                     @default(PENDING)
   plannedCompletionDate DateTime?
   lat                   Float
   lng                   Float
   area                  String?
   media                 ComplaintMedia[]
   assignments           Assignment[]
+  officerAssignments    ComplaintOfficerAssignmentHistory[]
   auditLogs             AuditLog[]
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
+  affectedCitizensCount Int                                 @default(1)
+  createdAt             DateTime                            @default(now())
+  updatedAt             DateTime                            @updatedAt
+  complaintClusters     ComplaintCluster[]
 
   @@index([category, subcategory, createdAt])
   @@index([lat, lng])
   @@index([createdByUserId, createdAt])
+}
+
+model ComplaintCluster {
+  id             Int       @id @default(autoincrement())
+  complaintId    Int
+  complaint      Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  clusterId      String
+  departmentName String
+  category       String
+  subcategory    String?
+  areaKey        String?
+  latBucket      Int
+  lngBucket      Int
+  createdAt      DateTime  @default(now())
+
+  @@index([complaintId])
+  @@index([clusterId, createdAt])
+  @@index([departmentName, createdAt])
+  @@index([departmentName, category, subcategory, latBucket, lngBucket])
 }
 
 model ComplaintMedia {
@@ -164,36 +191,56 @@ model Department {
 }
 
 model Officer {
-  id           Int          @id @default(autoincrement())
+  id           Int                                 @id @default(autoincrement())
   name         String
   designation  String
-  email        String       @unique
+  email        String                              @unique
   phone        String
   departmentId Int
-  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  department   Department                          @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   assignments  Assignment[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  history      ComplaintOfficerAssignmentHistory[]
+  createdAt    DateTime                            @default(now())
+  updatedAt    DateTime                            @updatedAt
 
   @@index([departmentId])
 }
 
 model Assignment {
-  id            Int              @id @default(autoincrement())
+  id            Int                                 @id @default(autoincrement())
   complaintId   Int
-  complaint     Complaint        @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  complaint     Complaint                           @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   officerId     Int
-  officer       Officer          @relation(fields: [officerId], references: [id], onDelete: Restrict)
-  status        AssignmentStatus @default(ASSIGNED)
+  officer       Officer                             @relation(fields: [officerId], references: [id], onDelete: Restrict)
+  status        AssignmentStatus                    @default(ASSIGNED)
   dueDate       DateTime
-  token         String           @unique
+  token         String                              @unique
   responses     Response[]
   notifications Notification[]
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  history       ComplaintOfficerAssignmentHistory[]
+  createdAt     DateTime                            @default(now())
+  updatedAt     DateTime                            @updatedAt
 
   @@index([complaintId, officerId])
   @@index([status, dueDate])
+}
+
+model ComplaintOfficerAssignmentHistory {
+  id               Int         @id @default(autoincrement())
+  complaintId      Int
+  complaint        Complaint   @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  officerId        Int
+  officer          Officer     @relation(fields: [officerId], references: [id], onDelete: Restrict)
+  assignmentId     Int?
+  assignment       Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  assignedByUserId String?
+  assignedByUser   User?       @relation("OfficerAssignedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+  isCurrent        Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+
+  @@index([complaintId, createdAt])
+  @@index([complaintId, isCurrent])
+  @@index([officerId, createdAt])
 }
 
 model Response {
@@ -287,4 +334,4 @@ model Subcategory {
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
- }
+}

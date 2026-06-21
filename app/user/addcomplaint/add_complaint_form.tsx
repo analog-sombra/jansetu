@@ -1,21 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Button,
-  Card,
-  Divider,
-  Spin,
-  Typography,
-} from "antd";
+import { InboxOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Divider, Spin, Typography, Upload } from "antd";
+import type { UploadFile, UploadProps } from "antd";
+import type { RcFile } from "antd/es/upload/interface";
 import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useLanguage } from "@/components/provider/language_provider";
+import { RAJOURI_GARDEN_AREAS } from "@/lib/constants";
 import {
-  RAJOURI_GARDEN_AREAS,
-} from "@/lib/constants";
-import { addComplaintAction } from "@/actions/user/complaint";
+  addComplaintAction,
+  addComplaintMediaAction,
+} from "@/actions/user/complaint";
 import {
   CategoryWithSubcategories,
   getCategoriesWithSubcategoriesAction,
@@ -29,13 +26,19 @@ import { CustomTextAreaInput } from "@/components/inputfields/textareainput";
 import { CustomTextInput } from "@/components/inputfields/textinput";
 import { onFormError } from "@/utils/method";
 import { OptionValue } from "@/model/main";
+import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
+const { Dragger } = Upload;
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_COUNT = 10;
 
 export default function AddComplaintForm() {
+  const router = useRouter();
   const { t } = useLanguage();
   const [categories, setCategories] = useState<CategoryWithSubcategories[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [mediaFiles, setMediaFiles] = useState<UploadFile[]>([]);
 
   const methods = useForm<complaintValidationForm>({
     defaultValues: {
@@ -51,11 +54,7 @@ export default function AddComplaintForm() {
     ) as Resolver<complaintValidationForm>,
   });
 
-  const {
-    handleSubmit,
-    setValue,
-    reset,
-  } = methods;
+  const { handleSubmit, setValue, reset } = methods;
 
   const selectedCategory =
     useWatch({ control: methods.control, name: "category" }) || "";
@@ -67,6 +66,57 @@ export default function AddComplaintForm() {
     text: string;
   } | null>(null);
 
+  const uploadProps: UploadProps = {
+    accept: "image/*",
+    multiple: true,
+    fileList: mediaFiles,
+    disabled: submitting,
+    showUploadList: {
+      showPreviewIcon: false,
+    },
+    beforeUpload: (file) => {
+      if (!file.type.startsWith("image/")) {
+        setAlert({ type: "error", text: "Only image files are allowed." });
+        return Upload.LIST_IGNORE;
+      }
+
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setAlert({
+          type: "error",
+          text: "Each image must be 2 MB or smaller.",
+        });
+        return Upload.LIST_IGNORE;
+      }
+
+      return false;
+    },
+    onChange: ({ fileList }) => {
+      const limitedFiles = fileList.slice(0, MAX_IMAGE_COUNT);
+      if (fileList.length > MAX_IMAGE_COUNT) {
+        setAlert({ type: "error", text: "You can upload up to 10 images." });
+      }
+      setMediaFiles(limitedFiles);
+    },
+  };
+
+  async function uploadComplaintMedia(complaintId: number) {
+    const files: RcFile[] = mediaFiles.flatMap((item) =>
+      item.originFileObj ? [item.originFileObj] : [],
+    );
+
+    if (files.length === 0) {
+      return { ok: true };
+    }
+
+    const formData = new FormData();
+    formData.append("complaintId", String(complaintId));
+    for (const file of files) {
+      formData.append("files", file);
+    }
+
+    return addComplaintMediaAction(formData);
+  }
+
   // Load categories on mount
   useEffect(() => {
     let disposed = false;
@@ -77,7 +127,7 @@ export default function AddComplaintForm() {
         const result = await getCategoriesWithSubcategoriesAction();
         if (!disposed && result.ok) {
           setCategories(result.categories);
-          
+
           // Set default category and subcategory
           if (result.categories.length > 0) {
             const firstCategory = result.categories[0];
@@ -103,7 +153,7 @@ export default function AddComplaintForm() {
 
   // Find the selected category object
   const selectedCategoryObj = categories.find(
-    (cat) => cat.name === selectedCategory
+    (cat) => cat.name === selectedCategory,
   );
 
   const categoryOptions: OptionValue[] = categories.map((category) => ({
@@ -125,8 +175,10 @@ export default function AddComplaintForm() {
 
   useEffect(() => {
     if (!selectedCategoryObj) return;
-    
-    const allowedSubcategories = selectedCategoryObj.subcategories.map(s => s.name);
+
+    const allowedSubcategories = selectedCategoryObj.subcategories.map(
+      (s) => s.name,
+    );
     if (!allowedSubcategories.includes(selectedSubcategory)) {
       setValue("subcategory", allowedSubcategories[0] ?? "", {
         shouldValidate: true,
@@ -177,9 +229,25 @@ export default function AddComplaintForm() {
         return;
       }
 
+      if (result.complaintId && mediaFiles.length > 0) {
+        const uploadResult = await uploadComplaintMedia(result.complaintId);
+
+        if (!uploadResult.ok) {
+          setAlert({
+            type: "error",
+            text: `Complaint #${result.complaintId} submitted, but image upload failed. ${uploadResult.error ?? "Please try again."}`,
+          });
+          return;
+        }
+      }
+
       setAlert({
         type: "success",
-        text: `${t("newComplaint.success.prefix")} #${result.complaintId} ${t("newComplaint.success.suffix")}`,
+        text:
+          `${t("newComplaint.success.prefix")} #${result.complaintId} ${t("newComplaint.success.suffix")}` +
+          (result.clusterId
+            ? ` Cluster: ${result.clusterId} (${result.clusterComplaintCount ?? 1} complaints)`
+            : ""),
       });
 
       // Reset form with first category and subcategory
@@ -192,6 +260,8 @@ export default function AddComplaintForm() {
         lat: "",
         lng: "",
       });
+      setMediaFiles([]);
+      router.push(`/user/complaint/${result.complaintId}`);
     } finally {
       setSubmitting(false);
     }
@@ -206,11 +276,22 @@ export default function AddComplaintForm() {
           padding: "24px 28px",
         }}
       >
-        <Title level={4} style={{ color: "#fff", margin: 0, letterSpacing: "0.02em" }}>
+        <Title
+          level={4}
+          style={{ color: "#fff", margin: 0, letterSpacing: "0.02em" }}
+        >
           {t("newComplaint.title")}
         </Title>
-        <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, display: "block", marginTop: 4 }}>
-          {t("newComplaint.subtitle")} <Text style={{ color: "#FF9933" }}>*</Text>
+        <Text
+          style={{
+            color: "rgba(255,255,255,0.65)",
+            fontSize: 12,
+            display: "block",
+            marginTop: 4,
+          }}
+        >
+          {t("newComplaint.subtitle")}{" "}
+          <Text style={{ color: "#FF9933" }}>*</Text>
         </Text>
       </div>
 
@@ -222,8 +303,14 @@ export default function AddComplaintForm() {
         }}
       >
         {loadingCategories ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
-            <Spin size="large" tip="Loading categories..." />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "40px 0",
+            }}
+          >
+            <Spin size="large" description="Loading categories..." />
           </div>
         ) : (
           <>
@@ -238,111 +325,150 @@ export default function AddComplaintForm() {
               />
             )}
 
-        <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit, onFormError)}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <CustomMultiSelect<complaintValidationForm>
-                  name="category"
-                  title={t("newComplaint.category")}
-                  placeholder={t("newComplaint.validation.category")}
-                  required
-                  options={categoryOptions}
-                />
-              </div>
+            <FormProvider {...methods}>
+              <form onSubmit={handleSubmit(onSubmit, onFormError)}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <CustomMultiSelect<complaintValidationForm>
+                      name="category"
+                      title={t("newComplaint.category")}
+                      placeholder={t("newComplaint.validation.category")}
+                      required
+                      options={categoryOptions}
+                    />
+                  </div>
 
-              <div>
-                <CustomMultiSelect<complaintValidationForm>
-                  name="subcategory"
-                  title={t("newComplaint.subcategory")}
-                  placeholder={t("newComplaint.validation.subcategory")}
-                  required
-                  options={subcategoryOptions}
-                />
-              </div>
-            </div>
+                  <div>
+                    <CustomMultiSelect<complaintValidationForm>
+                      name="subcategory"
+                      title={t("newComplaint.subcategory")}
+                      placeholder={t("newComplaint.validation.subcategory")}
+                      required
+                      options={subcategoryOptions}
+                    />
+                  </div>
+                </div>
 
-            <div className="mb-3">
-              <CustomTextAreaInput<complaintValidationForm>
-                name="description"
-                title={t("newComplaint.description")}
-                placeholder={t("newComplaint.descriptionPlaceholder")}
-                required
-                maxlength={1000}
-              />
-            </div>
+                <div className="mb-3">
+                  <CustomTextAreaInput<complaintValidationForm>
+                    name="description"
+                    title={t("newComplaint.description")}
+                    placeholder={t("newComplaint.descriptionPlaceholder")}
+                    required
+                    maxlength={1000}
+                  />
+                </div>
 
-            <div className="mb-3">
-              <CustomMultiSelect<complaintValidationForm>
-                name="area"
-                title={t("newComplaint.area")}
-                placeholder={t("newComplaint.areaPlaceholder")}
-                required={false}
-                options={areaOptions}
-              />
-            </div>
+                <div className="mb-3">
+                  <CustomMultiSelect<complaintValidationForm>
+                    name="area"
+                    title={t("newComplaint.area")}
+                    placeholder={t("newComplaint.areaPlaceholder")}
+                    required={false}
+                    options={areaOptions}
+                  />
+                </div>
 
-            <Divider plain style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}>
-              {t("newComplaint.gps")}
-            </Divider>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div>
-                <CustomTextInput<complaintValidationForm>
-                  name="lat"
-                  title={t("newComplaint.latitude")}
-                  placeholder="e.g. 28.6139"
-                  required
-                  numdes
-                />
-              </div>
-              <div>
-                <CustomTextInput<complaintValidationForm>
-                  name="lng"
-                  title={t("newComplaint.longitude")}
-                  placeholder="e.g. 77.2090"
-                  required
-                  numdes
-                />
-              </div>
-              <div className="pt-6">
-                <Button
-                  block
-                  size="large"
-                  icon={<span>📍</span>}
-                  onClick={pickLocation}
-                  style={{
-                    borderColor: "#1a3c6e",
-                    color: "#1a3c6e",
-                    fontWeight: 600,
-                  }}
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}
                 >
-                  {t("newComplaint.autoDetect")}
-                </Button>
-              </div>
-            </div>
+                  Complaint Images
+                </Divider>
 
-            <div style={{ marginTop: 8 }}>
-              <Button
-                type="primary"
-                size="large"
-                block
-                htmlType="submit"
-                loading={submitting}
-                style={{
-                  background: "#1a3c6e",
-                  borderColor: "#1a3c6e",
-                  height: 46,
-                  fontWeight: 700,
-                  fontSize: 15,
-                }}
-              >
-                {t("newComplaint.submit")}
-              </Button>
-            </div>
-          </form>
-        </FormProvider>
-        </>
+                <div style={{ marginBottom: 16 }}>
+                  <Dragger
+                    {...uploadProps}
+                    listType="picture"
+                    maxCount={MAX_IMAGE_COUNT}
+                  >
+                    <p className="ant-upload-drag-icon">
+                      <InboxOutlined style={{ color: "#1a3c6e" }} />
+                    </p>
+                    <p className="ant-upload-text">
+                      Click or drag images to this area to upload
+                    </p>
+                    <p className="ant-upload-hint">
+                      Supports multiple images. Each image must be 2 MB or
+                      smaller.
+                    </p>
+                  </Dragger>
+                  <Text
+                    style={{
+                      color: "#666",
+                      fontSize: 12,
+                      display: "block",
+                      marginTop: 6,
+                    }}
+                  >
+                    {mediaFiles.length}/{MAX_IMAGE_COUNT} selected
+                  </Text>
+                </div>
+
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}
+                >
+                  {t("newComplaint.gps")}
+                </Divider>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <CustomTextInput<complaintValidationForm>
+                      name="lat"
+                      title={t("newComplaint.latitude")}
+                      placeholder="e.g. 28.6139"
+                      required
+                      numdes
+                    />
+                  </div>
+                  <div>
+                    <CustomTextInput<complaintValidationForm>
+                      name="lng"
+                      title={t("newComplaint.longitude")}
+                      placeholder="e.g. 77.2090"
+                      required
+                      numdes
+                    />
+                  </div>
+                  <div className="pt-6">
+                    <Button
+                      block
+                      size="large"
+                      icon={<span>📍</span>}
+                      onClick={pickLocation}
+                      style={{
+                        borderColor: "#1a3c6e",
+                        color: "#1a3c6e",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {t("newComplaint.autoDetect")}
+                    </Button>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 8 }}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    block
+                    htmlType="submit"
+                    loading={submitting}
+                    style={{
+                      background: "#1a3c6e",
+                      borderColor: "#1a3c6e",
+                      height: 46,
+                      fontWeight: 700,
+                      fontSize: 15,
+                    }}
+                  >
+                    {t("newComplaint.submit")}
+                  </Button>
+                </div>
+              </form>
+            </FormProvider>
+          </>
         )}
       </Card>
     </div>

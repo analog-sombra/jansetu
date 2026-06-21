@@ -337,10 +337,15 @@ export default function ComplaintDashboardClient({
     {
       title: t("dashboard.table.action"),
       key: "action",
-      width: 180,
+      width: 260,
       render: (_, record) =>
         record.status === "RESOLVED" ? (
           <Space size="small">
+            <Link href={`/user/complaint/${record.id}`}>
+              <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                View
+              </Button>
+            </Link>
             <Button
               size="small"
               type="primary"
@@ -361,7 +366,13 @@ export default function ComplaintDashboardClient({
               {t("dashboard.dispute")}
             </Button>
           </Space>
-        ) : null,
+        ) : (
+          <Link href={`/user/complaint/${record.id}`}>
+            <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+              View
+            </Button>
+          </Link>
+        ),
     },
     {
       title: "",

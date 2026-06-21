@@ -8,6 +8,8 @@ export type {
   GetCitizenByMobileResult,
   CreateCampComplaintResult,
   CampComplaintsDashboardResult,
+  CampComplaintDetail,
+  CampComplaintDetailResult,
   CampUsersListResult,
   UpdateCampCitizenProfileInput,
   UpdateCampCitizenProfileResult,
@@ -15,6 +17,8 @@ export type {
 
 export { getCitizenByMobileAction } from "./getCitizenByMobileAction";
 export { createCampComplaintAction } from "./createCampComplaintAction";
+export { addCampComplaintMediaAction } from "./addCampComplaintMediaAction";
 export { getCampComplaintsDashboardAction } from "./getCampComplaintsDashboardAction";
+export { getCampComplaintDetailAction } from "./getCampComplaintDetailAction";
 export { getCampUsersAction } from "./getCampUsersAction";
 export { updateCampCitizenProfileAction } from "./updateCampCitizenProfileAction";

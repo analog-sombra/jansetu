@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Alert,
@@ -10,6 +11,7 @@ import {
   Col,
   Divider,
   Form,
+  Image,
   Input,
   Row,
   Select,
@@ -55,7 +57,9 @@ function makeWhatsAppLink(message: string) {
 }
 
 function isComplaintClosed(status: string) {
-  return status === "RESOLVED" || status === "REJECTED" || status === "AUTO_CLOSED";
+  return (
+    status === "RESOLVED" || status === "REJECTED" || status === "AUTO_CLOSED"
+  );
 }
 
 export default function AdminComplaintDetailPage() {
@@ -127,7 +131,8 @@ export default function AdminComplaintDetailPage() {
       )
       .sort(
         (left, right) =>
-          new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+          new Date(right.createdAt).getTime() -
+          new Date(left.createdAt).getTime(),
       );
   }, [complaint]);
 
@@ -144,7 +149,8 @@ export default function AdminComplaintDetailPage() {
       return [];
     }
 
-    const relevantDepartments = CATEGORY_DEPARTMENT_MAP[complaint.category] ?? [];
+    const relevantDepartments =
+      CATEGORY_DEPARTMENT_MAP[complaint.category] ?? [];
     if (relevantDepartments.length === 0) {
       return [];
     }
@@ -205,7 +211,11 @@ export default function AdminComplaintDetailPage() {
           description: hasAssignment
             ? t("adminDetail.workflowAssignedDoneDesc")
             : t("adminDetail.workflowAssignedPendingDesc"),
-          status: hasAssignment ? ("finish" as const) : currentStep === 1 ? ("process" as const) : ("wait" as const),
+          status: hasAssignment
+            ? ("finish" as const)
+            : currentStep === 1
+              ? ("process" as const)
+              : ("wait" as const),
         },
         {
           title: t("adminDetail.workflowOfficerAction"),
@@ -375,7 +385,8 @@ export default function AdminComplaintDetailPage() {
                 }}
               >
                 <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
-                  {t("adminDetail.complaint")} #{complaint.id} - {complaint.category}
+                  {t("adminDetail.complaint")} #{complaint.id} -{" "}
+                  {complaint.category}
                 </span>
                 <span
                   style={{
@@ -397,13 +408,17 @@ export default function AdminComplaintDetailPage() {
           >
             <div className="flex gap-4">
               <div className="bg-gray-100 rounded-md p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("adminDetail.complainantName")}</h1>
+                <h1 className="text-sm font-normal">
+                  {t("adminDetail.complainantName")}
+                </h1>
                 <p className="text-xs font-semibold text-gray-500">
                   {complaint.user.name?.trim() || t("adminDetail.notProvided")}
                 </p>
               </div>
               <div className="bg-gray-100 rounded-md p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("adminDetail.mobile")}</h1>
+                <h1 className="text-sm font-normal">
+                  {t("adminDetail.mobile")}
+                </h1>
                 <p className="text-xs font-semibold text-gray-500">
                   {complaint.user.mobile}
                 </p>
@@ -413,7 +428,9 @@ export default function AdminComplaintDetailPage() {
             <div className="h-4" />
 
             <div className="bg-gray-100 rounded-md p-3 flex-1">
-              <h1 className="text-sm font-normal">{t("adminDetail.address")}</h1>
+              <h1 className="text-sm font-normal">
+                {t("adminDetail.address")}
+              </h1>
               <p className="text-xs font-semibold text-gray-500">
                 {complaint.user.address?.trim() || t("adminDetail.notProvided")}
               </p>
@@ -422,10 +439,14 @@ export default function AdminComplaintDetailPage() {
             <div className="h-4" />
 
             <div className="bg-gray-100 rounded-md p-3 flex-1">
-              <h1 className="text-sm font-normal">{t("adminDetail.targetDate")}</h1>
+              <h1 className="text-sm font-normal">
+                {t("adminDetail.targetDate")}
+              </h1>
               <p className="text-xs font-semibold text-gray-500">
                 {complaint.plannedCompletionDate
-                  ? new Date(complaint.plannedCompletionDate).toLocaleDateString("en-IN")
+                  ? new Date(
+                      complaint.plannedCompletionDate,
+                    ).toLocaleDateString("en-IN")
                   : t("adminDetail.notSet")}
               </p>
             </div>
@@ -434,11 +455,17 @@ export default function AdminComplaintDetailPage() {
 
             <div className="flex gap-4">
               <div className="bg-gray-100 rounded-md p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("adminDetail.category")}</h1>
-                <p className="text-xs font-semibold text-gray-500">{complaint.category}</p>
+                <h1 className="text-sm font-normal">
+                  {t("adminDetail.category")}
+                </h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {complaint.category}
+                </p>
               </div>
               <div className="bg-gray-100 rounded-md p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("adminDetail.subCategory")}</h1>
+                <h1 className="text-sm font-normal">
+                  {t("adminDetail.subCategory")}
+                </h1>
                 <p className="text-xs font-semibold text-gray-500">
                   {complaint.subcategory || t("adminDetail.na")}
                 </p>
@@ -484,18 +511,209 @@ export default function AdminComplaintDetailPage() {
             <div className="h-4" />
 
             <div className="bg-gray-100 rounded-md p-3 flex-1">
-              <h1 className="text-sm font-normal">{t("adminDetail.description")}</h1>
-              <p className="text-xs font-semibold text-gray-500" style={{ whiteSpace: "pre-wrap" }}>
+              <h1 className="text-sm font-normal">
+                {t("adminDetail.description")}
+              </h1>
+              <p
+                className="text-xs font-semibold text-gray-500"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
                 {complaint.description}
               </p>
             </div>
 
+            {complaint.cluster && (
+              <>
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+                >
+                  Complaint Cluster
+                </Divider>
+                <Card
+                  size="small"
+                  style={{ borderRadius: 6, borderLeft: "3px solid #1a3c6e" }}
+                >
+                  <div style={{ fontSize: 12, color: "#6b7280" }}>Department</div>
+                  <div style={{ fontWeight: 700, color: "#1a3c6e" }}>
+                    {complaint.cluster.departmentName}
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, color: "#6b7280" }}>
+                    Cluster Complaint Count: {complaint.cluster.complaintCount}
+                  </div>
+                  
+
+                  <Divider style={{ margin: "12px 0" }} />
+                  <Space direction="vertical" size="small" style={{ width: "100%" }}>
+                    {complaint.cluster.complaints.map((item) => (
+                      <Card
+                        key={item.id}
+                        size="small"
+                        style={{
+                          borderRadius: 6,
+                          borderLeft: item.isCurrentComplaint
+                            ? "3px solid #16a34a"
+                            : "3px solid #1a3c6e",
+                        }}
+                        styles={{
+                          body: {
+                            padding: 10,
+                          },
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 8,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div>
+                            <div style={{ color: "#1a3c6e", fontWeight: 700, fontSize: 12 }}>
+                              Complaint #{item.id}
+                              {item.isCurrentComplaint && (
+                                <span
+                                  style={{
+                                    marginLeft: 8,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    borderRadius: 999,
+                                    padding: "2px 8px",
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    background: "#dcfce7",
+                                    color: "#166534",
+                                    border: "1px solid #bbf7d0",
+                                  }}
+                                >
+                                  Main Complaint
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                              {item.category}
+                              {item.subcategory ? ` / ${item.subcategory}` : ""}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                              Status: {formatLabel(item.status)}
+                              {item.area ? ` | Area: ${item.area}` : ""}
+                            </div>
+                          </div>
+
+                          <Link href={`/admin/complaint/${item.id}`}>
+                            <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                              View
+                            </Button>
+                          </Link>
+                        </div>
+                      </Card>
+                    ))}
+                  </Space>
+                </Card>
+              </>
+            )}
+
+            {complaint.officerAssignmentHistory.length > 0 && (
+              <>
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+                >
+                  Officer Assignment History
+                </Divider>
+                <Space
+                  direction="vertical"
+                  size="small"
+                  style={{ width: "100%" }}
+                >
+                  {complaint.officerAssignmentHistory.map((entry) => (
+                    <Card
+                      key={entry.id}
+                      size="small"
+                      style={{
+                        borderRadius: 6,
+                        borderLeft: "3px solid #1a3c6e",
+                      }}
+                      styles={{
+                        body: {
+                          padding: 10,
+                        },
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div
+                          style={{
+                            color: "#1a3c6e",
+                            fontWeight: 700,
+                            fontSize: 12,
+                          }}
+                        >
+                          {entry.officer.name}
+                        </div>
+                        {entry.isCurrent && (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              borderRadius: 999,
+                              padding: "2px 10px",
+                              fontSize: 10,
+                              fontWeight: 700,
+                              background: "#dcfce7",
+                              color: "#166534",
+                              border: "1px solid #bbf7d0",
+                            }}
+                          >
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}
+                      >
+                        {entry.officer.designation} -{" "}
+                        {entry.officer.department.name}
+                      </div>
+                      <div
+                        style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}
+                      >
+                        Assigned on:{" "}
+                        {new Date(entry.createdAt).toLocaleString("en-IN")}
+                      </div>
+                      <div
+                        style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}
+                      >
+                        Assigned by: {entry.assignedByName?.trim() || "Admin"}
+                      </div>
+                    </Card>
+                  ))}
+                </Space>
+              </>
+            )}
+
             {officerResponses.length > 0 && (
               <>
-                <Divider plain style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}>
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+                >
                   {t("adminDetail.officerResponse")}
                 </Divider>
-                <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+                <Space
+                  orientation="vertical"
+                  size="middle"
+                  style={{ width: "100%" }}
+                >
                   {officerResponses.map((response) => (
                     <Card
                       key={response.id}
@@ -518,7 +736,13 @@ export default function AdminComplaintDetailPage() {
                           <div style={{ color: "#1a3c6e", fontWeight: 700 }}>
                             {response.officer.name}
                           </div>
-                          <div style={{ display: "block", fontSize: 12, color: "#6b7280" }}>
+                          <div
+                            style={{
+                              display: "block",
+                              fontSize: 12,
+                              color: "#6b7280",
+                            }}
+                          >
                             {response.officer.department.name}
                           </div>
                         </div>
@@ -532,23 +756,40 @@ export default function AdminComplaintDetailPage() {
                               fontSize: 12,
                               fontWeight: 700,
                               background: "#f3f4f6",
-                              color: RESPONSE_COLORS[response.type] ?? "#111827",
+                              color:
+                                RESPONSE_COLORS[response.type] ?? "#111827",
                               border: `1px solid ${RESPONSE_COLORS[response.type] ?? "#d1d5db"}`,
                             }}
                           >
                             {formatLabel(response.type)}
                           </span>
-                          <div style={{ display: "block", fontSize: 12, color: "#6b7280" }}>
+                          <div
+                            style={{
+                              display: "block",
+                              fontSize: 12,
+                              color: "#6b7280",
+                            }}
+                          >
                             {new Date(response.createdAt).toLocaleString()}
                           </div>
                         </div>
                       </div>
-                      <div style={{ display: "block", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                      <div
+                        style={{
+                          display: "block",
+                          lineHeight: 1.7,
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
                         {response.message}
                       </div>
                       {response.proofUrl && (
                         <div style={{ marginTop: 12 }}>
-                          <a href={response.proofUrl} target="_blank" rel="noreferrer">
+                          <a
+                            href={response.proofUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
                             <Button
                               size="small"
                               style={{
@@ -569,50 +810,73 @@ export default function AdminComplaintDetailPage() {
 
             {complaint.media.length > 0 && (
               <>
-                <Divider plain style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}>
+                <Divider
+                  plain
+                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+                >
                   {t("adminDetail.evidence")}
                 </Divider>
-                <Row gutter={[8, 8]}>
-                  {complaint.media.map((item) => (
-                    <Col key={item.id} xs={24} sm={12}>
-                      <a href={item.fileUrl} target="_blank" rel="noreferrer">
+                <Image.PreviewGroup>
+                  <Row gutter={[12, 12]}>
+                    {complaint.media.map((item) => (
+                      <Col key={item.id} xs={24} sm={12} md={8}>
                         <Card
                           size="small"
-                          hoverable
                           style={{
-                            borderRadius: 4,
+                            borderRadius: 6,
                             borderLeft: "3px solid #1a3c6e",
                           }}
                           styles={{
                             body: {
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 8,
+                              padding: 10,
                             },
                           }}
                         >
-                          <span
+                          {item.type === "IMAGE" ? (
+                            <Image
+                              src={item.fileUrl}
+                              alt={
+                                item.fileUrl.split("/").pop() ||
+                                "Complaint image"
+                              }
+                              width="100%"
+                              style={{
+                                borderRadius: 4,
+                                objectFit: "cover",
+                                aspectRatio: "4 / 3",
+                              }}
+                            />
+                          ) : (
+                            <a
+                              href={item.fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <Button
+                                block
+                                style={{
+                                  borderColor: "#1a3c6e",
+                                  color: "#1a3c6e",
+                                }}
+                              >
+                                {t("adminDetail.viewProof")}
+                              </Button>
+                            </a>
+                          )}
+                          <div
                             style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              borderRadius: 999,
-                              padding: "2px 10px",
-                              fontSize: 10,
-                              fontWeight: 700,
-                              background: "#f3f4f6",
-                              color: "#111827",
+                              marginTop: 8,
+                              fontSize: 11,
+                              color: "#6b7280",
                             }}
                           >
-                            {item.type}
-                          </span>
-                          <span style={{ fontSize: 11, color: "#6b7280" }}>
                             {item.fileUrl.split("/").pop()}
-                          </span>
+                          </div>
                         </Card>
-                      </a>
-                    </Col>
-                  ))}
-                </Row>
+                      </Col>
+                    ))}
+                  </Row>
+                </Image.PreviewGroup>
               </>
             )}
           </Card>
@@ -620,45 +884,6 @@ export default function AdminComplaintDetailPage() {
 
         <Col xs={24} lg={8}>
           <Space orientation="vertical" style={{ width: "100%" }} size="middle">
-            {workflowState && (
-              <Card
-                title={
-                  <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
-                    {t("adminDetail.workflowTitle")}
-                  </span>
-                }
-                style={{ borderRadius: 6, borderTop: "3px solid #1a3c6e" }}
-                size="small"
-              >
-                <div
-                  style={{
-                    marginBottom: 12,
-                    padding: 10,
-                    background: "#f7f9fc",
-                    borderLeft: "3px solid #1a3c6e",
-                    borderRadius: 4,
-                  }}
-                >
-                  <div style={{ fontSize: 12, color: "#6b7280" }}>
-                    {t("adminDetail.workflowCurrentStep")}
-                  </div>
-                  <div style={{ color: "#1a3c6e", fontWeight: 700, marginTop: 2 }}>
-                    {workflowState.currentStepLabel}
-                  </div>
-                  <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4, lineHeight: 1.6 }}>
-                    {workflowState.helperText}
-                  </div>
-                </div>
-
-                <Steps
-                  orientation="vertical"
-                  current={workflowState.currentStep}
-                  size="small"
-                  items={workflowState.items}
-                />
-              </Card>
-            )}
-
             <Card
               title={
                 <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
@@ -682,14 +907,26 @@ export default function AdminComplaintDetailPage() {
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       {t("adminDetail.currentAssignedOfficer")}
                     </div>
-                    <div style={{ color: "#1a3c6e", fontWeight: 700, marginTop: 2 }}>
+                    <div
+                      style={{
+                        color: "#1a3c6e",
+                        fontWeight: 700,
+                        marginTop: 2,
+                      }}
+                    >
                       {currentAssignment.officer.name}
                     </div>
-                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                      {currentAssignment.officer.designation} - {currentAssignment.officer.department.name}
+                    <div
+                      style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}
+                    >
+                      {currentAssignment.officer.designation} -{" "}
+                      {currentAssignment.officer.department.name}
                     </div>
-                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                      {t("adminDetail.status")}: {formatLabel(currentAssignment.status)}
+                    <div
+                      style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}
+                    >
+                      {t("adminDetail.status")}:{" "}
+                      {formatLabel(currentAssignment.status)}
                     </div>
                   </div>
                 )}
@@ -810,6 +1047,53 @@ export default function AdminComplaintDetailPage() {
                 </Button>
               </Form>
             </Card>
+            {workflowState && (
+              <Card
+                title={
+                  <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
+                    {t("adminDetail.workflowTitle")}
+                  </span>
+                }
+                style={{ borderRadius: 6, borderTop: "3px solid #1a3c6e" }}
+                size="small"
+              >
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 10,
+                    background: "#f7f9fc",
+                    borderLeft: "3px solid #1a3c6e",
+                    borderRadius: 4,
+                  }}
+                >
+                  <div style={{ fontSize: 12, color: "#6b7280" }}>
+                    {t("adminDetail.workflowCurrentStep")}
+                  </div>
+                  <div
+                    style={{ color: "#1a3c6e", fontWeight: 700, marginTop: 2 }}
+                  >
+                    {workflowState.currentStepLabel}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#6b7280",
+                      marginTop: 4,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {workflowState.helperText}
+                  </div>
+                </div>
+
+                <Steps
+                  orientation="vertical"
+                  current={workflowState.currentStep}
+                  size="small"
+                  items={workflowState.items}
+                />
+              </Card>
+            )}
           </Space>
         </Col>
       </Row>

@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Card, Divider, Spin, Typography } from "antd";
+import { Alert, Button, Card, Divider, Spin, Typography, Upload } from "antd";
+import { InboxOutlined } from "@ant-design/icons";
+import type { UploadFile, UploadProps } from "antd";
+import type { RcFile } from "antd/es/upload/interface";
 import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useLanguage } from "@/components/provider/language_provider";
@@ -10,6 +13,7 @@ import {
   RAJOURI_GARDEN_AREAS,
 } from "@/lib/constants";
 import {
+  addCampComplaintMediaAction,
   createCampComplaintAction,
   getCitizenByMobileAction,
 } from "@/actions/camp";
@@ -25,10 +29,15 @@ import { CustomMultiSelect } from "@/components/inputfields/multiselect";
 import { CustomTextAreaInput } from "@/components/inputfields/textareainput";
 import { CustomTextInput } from "@/components/inputfields/textinput";
 import { onFormError } from "@/utils/method";
+import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
+const { Dragger } = Upload;
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_COUNT = 10;
 
 export default function CampNewComplaintForm() {
+  const router = useRouter();
   const { t } = useLanguage();
   const [categories, setCategories] = useState<CategoryWithSubcategories[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -37,10 +46,59 @@ export default function CampNewComplaintForm() {
   const [citizenFound, setCitizenFound] = useState<null | boolean>(null);
   const [citizenFieldsLocked, setCitizenFieldsLocked] = useState(false);
   const [citizenMissingBasicInfo, setCitizenMissingBasicInfo] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<UploadFile[]>([]);
   const [alert, setAlert] = useState<{
     type: "error" | "success" | "info";
     text: string;
   } | null>(null);
+
+  const uploadProps: UploadProps = {
+    accept: "image/*",
+    multiple: true,
+    fileList: mediaFiles,
+    disabled: loading,
+    showUploadList: {
+      showPreviewIcon: false,
+    },
+    beforeUpload: (file) => {
+      if (!file.type.startsWith("image/")) {
+        setAlert({ type: "error", text: "Only image files are allowed." });
+        return Upload.LIST_IGNORE;
+      }
+
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setAlert({ type: "error", text: "Each image must be 2 MB or smaller." });
+        return Upload.LIST_IGNORE;
+      }
+
+      return false;
+    },
+    onChange: ({ fileList }) => {
+      const limitedFiles = fileList.slice(0, MAX_IMAGE_COUNT);
+      if (fileList.length > MAX_IMAGE_COUNT) {
+        setAlert({ type: "error", text: "You can upload up to 10 images." });
+      }
+      setMediaFiles(limitedFiles);
+    },
+  };
+
+  async function uploadComplaintMedia(complaintId: number) {
+    const files: RcFile[] = mediaFiles.flatMap((item) =>
+      item.originFileObj ? [item.originFileObj] : [],
+    );
+
+    if (files.length === 0) {
+      return { ok: true };
+    }
+
+    const formData = new FormData();
+    formData.append("complaintId", String(complaintId));
+    for (const file of files) {
+      formData.append("files", file);
+    }
+
+    return addCampComplaintMediaAction(formData);
+  }
 
   const methods = useForm<campComplaintValidationForm>({
     defaultValues: {
@@ -245,12 +303,26 @@ export default function CampNewComplaintForm() {
       },
     });
 
-    setLoading(false);
-
     if (!result.ok) {
+      setLoading(false);
       setAlert({ type: "error", text: result.error });
       return;
     }
+
+    if (result.complaintId && mediaFiles.length > 0) {
+      const uploadResult = await uploadComplaintMedia(result.complaintId);
+
+      if (!uploadResult.ok) {
+        setLoading(false);
+        setAlert({
+          type: "error",
+          text: `Complaint #${result.complaintId} submitted, but image upload failed. ${uploadResult.error ?? "Please try again."}`,
+        });
+        return;
+      }
+    }
+
+    setLoading(false);
 
     setAlert({
       type: "success",
@@ -258,6 +330,17 @@ export default function CampNewComplaintForm() {
         ? `${t("camp.create.success")} #${result.complaintId}. ${t("camp.create.userCreated")}`
         : `${t("camp.create.success")} #${result.complaintId}. ${t("camp.create.userUpdated")}`,
     });
+
+    if (result.clusterId) {
+      setAlert({
+        type: "success",
+        text:
+          (result.createdNewUser
+            ? `${t("camp.create.success")} #${result.complaintId}. ${t("camp.create.userCreated")}`
+            : `${t("camp.create.success")} #${result.complaintId}. ${t("camp.create.userUpdated")}`) +
+          ` Cluster: ${result.clusterId} (${result.clusterComplaintCount ?? 1} complaints)`,
+      });
+    }
 
     setCitizenFound(null);
     setCitizenFieldsLocked(false);
@@ -278,6 +361,8 @@ export default function CampNewComplaintForm() {
       lat: "",
       lng: "",
     });
+    setMediaFiles([]);
+    router.push(`/camp/complaints/${result.complaintId}`);
   }
 
   return (
@@ -306,7 +391,7 @@ export default function CampNewComplaintForm() {
       >
         {loadingCategories ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
-            <Spin size="large" tip="Loading categories..." />
+            <Spin size="large" description="Loading categories..." />
           </div>
         ) : (
           <>
@@ -496,6 +581,23 @@ export default function CampNewComplaintForm() {
               {errors.area && (
                 <p className="text-xs text-red-500">{errors.area.message?.toString()}</p>
               )}
+            </div>
+
+            <Divider plain style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}>
+              Complaint Images
+            </Divider>
+
+            <div style={{ marginBottom: 16 }}>
+              <Dragger {...uploadProps} listType="picture" maxCount={MAX_IMAGE_COUNT}>
+                <p className="ant-upload-drag-icon">
+                  <InboxOutlined style={{ color: "#1a3c6e" }} />
+                </p>
+                <p className="ant-upload-text">Click or drag images to this area to upload</p>
+                <p className="ant-upload-hint">Supports multiple images. Each image must be 2 MB or smaller.</p>
+              </Dragger>
+              <Text style={{ color: "#666", fontSize: 12, display: "block", marginTop: 6 }}>
+                {mediaFiles.length}/{MAX_IMAGE_COUNT} selected
+              </Text>
             </div>
 
             <Divider plain style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}>
