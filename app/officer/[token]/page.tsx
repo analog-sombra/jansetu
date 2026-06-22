@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/incompatible-library */
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -20,6 +21,7 @@ import {
   Divider,
   Empty,
   Form,
+  Image,
   Input,
   Row,
   Select,
@@ -28,12 +30,24 @@ import {
 import dayjs from "dayjs";
 import { useLanguage } from "@/components/provider/language_provider";
 import {
+  assignOfficerByTokenAction,
   getOfficerAssignmentByTokenAction,
   type OfficerCompletedAssignmentSummary,
   submitOfficerResponseAction,
   type OfficerAssignmentDetail,
   type SubmitOfficerResponseInput,
 } from "@/actions/officer";
+
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "#f59e0b",
+  IN_PROGRESS: "#2563eb",
+  WORK_IN_PROGRESS: "#06b6d4",
+  QUERY_RAISED: "#ea580c",
+  RESOLVED: "#16a34a",
+  REJECTED: "#dc2626",
+  ESCALATED: "#7c3aed",
+  AUTO_CLOSED: "#6b7280",
+};
 
 const RESPONSE_COLORS: Record<string, string> = {
   RESOLVED: "#16a34a",
@@ -84,6 +98,7 @@ export default function OfficerTokenPage() {
   const responseType = Form.useWatch("type", form);
 
   async function loadAssignment() {
+
     if (!token) {
       setLoading(false);
       setAlert({ type: "error", text: t("officer.error.invalidToken") });
@@ -94,6 +109,7 @@ export default function OfficerTokenPage() {
     setAlert(null);
 
     const result = await getOfficerAssignmentByTokenAction(token);
+
 
     if (!result.ok) {
       setAssignment(null);
@@ -183,8 +199,19 @@ export default function OfficerTokenPage() {
         cell: (info) => formatDateTime(info.getValue()),
         sortingFn: "datetime",
       }),
+      completedAssignmentColumnHelper.display({
+        id: "action",
+        header: t("officer.completedTableAction"),
+        cell: (info) => (
+          <Link href={`/officer/${token}/${info.row.original.complaintId}`}>
+            <Button size="small" type="link" style={{ paddingInline: 0 }}>
+              {t("admin.table.view")}
+            </Button>
+          </Link>
+        ),
+      }),
     ],
-    [t],
+    [t, token],
   );
 
   const completedAssignmentsTable = useReactTable({
@@ -238,30 +265,30 @@ export default function OfficerTokenPage() {
     setAssigning(true);
     setAlert(null);
 
-    // const result = await assignOfficerByTokenAction({
-    //   token,
-    //   officerId: Number(officerId),
-    // });
+    const result = await assignOfficerByTokenAction({
+      token,
+      officerId: Number(officerId),
+    });
 
-    // setAssigning(false);
+    setAssigning(false);
 
-    // if (!result.ok) {
-    //   setAssignedOfficerToken("");
-    //   setAlert({
-    //     type: "error",
-    //     text: result.error ?? t("adminDetail.error.assign"),
-    //   });
-    //   return;
-    // }
+    if (!result.ok) {
+      setAssignedOfficerToken("");
+      setAlert({
+        type: "error",
+        text: result.error ?? t("adminDetail.error.assign"),
+      });
+      return;
+    }
 
-    // setOfficerId("");
-    // setAssignedOfficerToken(result.token);
-    // setAlert({
-    //   type: "success",
-    //   text: `${t("adminDetail.success.assign")} ${t("adminDetail.assignmentToken")}: ${result.token}`,
-    // });
+    setOfficerId("");
+    setAssignedOfficerToken(result.token);
+    setAlert({
+      type: "success",
+      text: `${t("adminDetail.success.assign")} ${t("adminDetail.assignmentToken")}: ${result.token}`,
+    });
 
-    // window.location.href = `/officer/${result.token}`;
+    window.location.href = `/officer/${result.token}`;
   }
 
   if (loading) {
@@ -306,7 +333,35 @@ export default function OfficerTokenPage() {
       <Row gutter={[20, 20]}>
         <Col xs={24} lg={16}>
           <Card
-            title={`#${assignment.complaintId} - ${assignment.complaint.category}`}
+            title={
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
+                  #{assignment.complaintId} - {assignment.complaint.category}
+                </span>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    borderRadius: 999,
+                    padding: "2px 10px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    background: "#f3f4f6",
+                    color: STATUS_COLORS[assignment.complaint.status] ?? "#111827",
+                    border: `1px solid ${STATUS_COLORS[assignment.complaint.status] ?? "#d1d5db"}`,
+                  }}
+                >
+                  {formatLabel(assignment.complaint.status)}
+                </span>
+              </div>
+            }
             extra={
               <a
                 href={`https://www.google.com/maps?layer=c&cbll=${assignment.complaint.lat},${assignment.complaint.lng}`}
@@ -317,47 +372,134 @@ export default function OfficerTokenPage() {
               </a>
             }
           >
-            <div style={{ marginBottom: 8 }}>
-              <strong>{t("officer.department")}:</strong>{" "}
-              {assignment.officer.department.name}
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <strong>{t("officer.category")}:</strong>{" "}
-              {assignment.complaint.category}
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <strong>Subcategory:</strong>{" "}
-              {assignment.complaint.subcategory || "N/A"}
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <strong>{t("officer.coordinates")}:</strong>{" "}
-              {assignment.complaint.lat}, {assignment.complaint.lng}
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <strong>{t("officer.targetDate")}:</strong>{" "}
-              {assignment.complaint.plannedCompletionDate
-                ? new Date(
-                    assignment.complaint.plannedCompletionDate,
-                  ).toLocaleDateString("en-IN")
-                : "-"}
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <strong>{t("officer.description")}:</strong>
-              <div style={{ whiteSpace: "pre-wrap", marginTop: 4 }}>
-                {assignment.complaint.description}
+            <div className="flex gap-4">
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("adminDetail.complainantName")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.user.name?.trim() || t("adminDetail.notProvided")}
+                </p>
               </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("adminDetail.mobile")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.user.mobile}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">{t("adminDetail.address")}</h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {assignment.complaint.user.address?.trim() || t("adminDetail.notProvided")}
+              </p>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="flex gap-4">
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.department")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.officer.department.name}
+                </p>
+              </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.category")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.category}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="flex gap-4">
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">Subcategory</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.subcategory || "N/A"}
+                </p>
+              </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.targetDate")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.plannedCompletionDate
+                    ? new Date(
+                        assignment.complaint.plannedCompletionDate,
+                      ).toLocaleDateString("en-IN")
+                    : "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="flex gap-4">
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">{t("officer.coordinates")}</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.lat}, {assignment.complaint.lng}
+                </p>
+              </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">Area</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.area || "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">{t("officer.description")}</h1>
+              <p
+                className="text-xs font-semibold text-gray-500"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
+                {assignment.complaint.description}
+              </p>
             </div>
 
             {assignment.complaint.media.length > 0 && (
               <>
                 <Divider>{t("officer.problemEvidence")}</Divider>
-                {assignment.complaint.media.map((item) => (
-                  <div key={item.id} style={{ marginBottom: 8 }}>
-                    <a href={item.fileUrl} target="_blank" rel="noreferrer">
-                      {item.type} - {item.fileUrl.split("/").pop()}
-                    </a>
-                  </div>
-                ))}
+                <Image.PreviewGroup>
+                  <Row gutter={[12, 12]}>
+                    {assignment.complaint.media.map((item) => (
+                      <Col key={item.id} xs={24} sm={12} md={8}>
+                        <Card
+                          size="small"
+                          style={{ borderRadius: 6, borderLeft: "3px solid #1a3c6e" }}
+                          styles={{ body: { padding: 10 } }}
+                        >
+                          {item.type === "IMAGE" ? (
+                            <Image
+                              src={item.fileUrl}
+                              alt={item.fileUrl.split("/").pop() || "Complaint media"}
+                              width="100%"
+                              style={{ borderRadius: 4, objectFit: "cover", aspectRatio: "4 / 3" }}
+                            />
+                          ) : (
+                            <a href={item.fileUrl} target="_blank" rel="noreferrer">
+                              <Button
+                                block
+                                style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                              >
+                                Open File
+                              </Button>
+                            </a>
+                          )}
+                          <div style={{ marginTop: 8, fontSize: 11, color: "#6b7280" }}>
+                            {item.fileUrl.split("/").pop()}
+                          </div>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </Image.PreviewGroup>
               </>
             )}
 

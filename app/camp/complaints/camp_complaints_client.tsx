@@ -65,6 +65,15 @@ export default function CampComplaintsClient({
       render: (subcategory: string | null) => subcategory || "-",
     },
     {
+      title: t("newComplaint.affectedCitizensCount"),
+      dataIndex: "affectedCitizensCount",
+      key: "affectedCitizensCount",
+      width: 160,
+      sorter: (left, right) =>
+        left.affectedCitizensCount - right.affectedCitizensCount,
+      render: (count: number) => <Text>{count}</Text>,
+    },
+    {
       title: t("dashboard.table.status"),
       dataIndex: "status",
       key: "status",

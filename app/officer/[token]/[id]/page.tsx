@@ -18,9 +18,9 @@ import {
   Typography,
 } from "antd";
 import {
-  getCampComplaintDetailAction,
-  type CampComplaintDetail,
-} from "@/actions/camp";
+  getOfficerComplaintDetailAction,
+} from "@/actions/officer/getOfficerComplaintDetailAction";
+import type { OfficerComplaintDetail } from "@/actions/officer/types";
 
 const { Title, Text } = Typography;
 
@@ -41,9 +41,10 @@ function isComplaintClosed(status: string) {
   );
 }
 
-export default function CampComplaintDetailPage() {
-  const params = useParams<{ id: string }>();
-  const [complaint, setComplaint] = useState<CampComplaintDetail | null>(null);
+export default function OfficerComplaintDetailPage() {
+  const params = useParams<{ token: string; id: string }>();
+  const token = params.token ?? "";
+  const [complaint, setComplaint] = useState<OfficerComplaintDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -60,7 +61,7 @@ export default function CampComplaintDetailPage() {
       setLoading(true);
       setError("");
 
-      const result = await getCampComplaintDetailAction(complaintId);
+      const result = await getOfficerComplaintDetailAction(complaintId);
 
       if (!result.ok) {
         setComplaint(null);
@@ -90,8 +91,7 @@ export default function CampComplaintDetailPage() {
       )
       .sort(
         (left, right) =>
-          new Date(right.createdAt).getTime() -
-          new Date(left.createdAt).getTime(),
+          new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
       );
   }, [complaint]);
 
@@ -131,9 +131,7 @@ export default function CampComplaintDetailPage() {
         },
         {
           title: "Assigned",
-          description: hasAssignment
-            ? "Officer assigned"
-            : "Awaiting assignment",
+          description: hasAssignment ? "Officer assigned" : "Awaiting assignment",
           status: hasAssignment
             ? ("finish" as const)
             : currentStep === 1
@@ -155,9 +153,7 @@ export default function CampComplaintDetailPage() {
         },
         {
           title: "Completed",
-          description: closed
-            ? complaint.status.replaceAll("_", " ")
-            : "Not completed yet",
+          description: closed ? complaint.status.replaceAll("_", " ") : "Not completed yet",
           status: closed
             ? complaint.status === "REJECTED"
               ? ("error" as const)
@@ -182,27 +178,22 @@ export default function CampComplaintDetailPage() {
       >
         <div>
           <Title level={3} style={{ margin: 0, color: "#1a3c6e" }}>
-            Camp Complaint Detail
+            Officer Complaint Detail
           </Title>
           <Text type="secondary" style={{ fontSize: 12 }}>
             View complaint progress, evidence, and officer updates
           </Text>
         </div>
 
-        <Link href="/camp/complaints">
+        <Link href={`/officer/${token}`}>
           <Button style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
-            Back to Complaints
+            Back to Officer Dashboard
           </Button>
         </Link>
       </div>
 
       {error && (
-        <Alert
-          type="error"
-          title={error}
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
+        <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />
       )}
 
       {loading && (
@@ -252,9 +243,7 @@ export default function CampComplaintDetailPage() {
                   <Text type="secondary">Target Date</Text>
                   <div>
                     {complaint.plannedCompletionDate
-                      ? new Date(
-                          complaint.plannedCompletionDate,
-                        ).toLocaleDateString()
+                      ? new Date(complaint.plannedCompletionDate).toLocaleDateString()
                       : "-"}
                   </div>
                 </Col>
@@ -307,21 +296,14 @@ export default function CampComplaintDetailPage() {
                     size="small"
                     style={{ borderRadius: 6, borderLeft: "3px solid #1a3c6e" }}
                   >
-                    <div style={{ fontSize: 12, color: "#6b7280" }}>
-                      Department
-                    </div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>Department</div>
                     <div style={{ fontWeight: 700, color: "#1a3c6e" }}>
                       {complaint.cluster.departmentName}
                     </div>
-                    <div
-                      style={{ marginTop: 6, fontSize: 12, color: "#6b7280" }}
-                    >
-                      Cluster Complaint Count:{" "}
-                      {complaint.cluster.complaintCount}
+                    <div style={{ marginTop: 6, fontSize: 12, color: "#6b7280" }}>
+                      Cluster Complaint Count: {complaint.cluster.complaintCount}
                     </div>
-                    <div
-                      style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}
-                    >
+                    <div style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
                       Cluster Total Affected Citizens (Including This Complaint):{" "}
                       {complaint.cluster.totalAffectedCitizensCount}
                     </div>
@@ -356,10 +338,7 @@ export default function CampComplaintDetailPage() {
                             {item.type === "IMAGE" ? (
                               <Image
                                 src={item.fileUrl}
-                                alt={
-                                  item.fileUrl.split("/").pop() ||
-                                  "Complaint image"
-                                }
+                                alt={item.fileUrl.split("/").pop() || "Complaint image"}
                                 width="100%"
                                 style={{
                                   borderRadius: 4,
@@ -368,11 +347,7 @@ export default function CampComplaintDetailPage() {
                                 }}
                               />
                             ) : (
-                              <a
-                                href={item.fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
+                              <a href={item.fileUrl} target="_blank" rel="noreferrer">
                                 <Button
                                   block
                                   style={{
@@ -384,13 +359,7 @@ export default function CampComplaintDetailPage() {
                                 </Button>
                               </a>
                             )}
-                            <div
-                              style={{
-                                marginTop: 8,
-                                fontSize: 11,
-                                color: "#6b7280",
-                              }}
-                            >
+                            <div style={{ marginTop: 8, fontSize: 11, color: "#6b7280" }}>
                               {item.fileUrl.split("/").pop()}
                             </div>
                           </Card>
@@ -406,11 +375,7 @@ export default function CampComplaintDetailPage() {
           <Col xs={24} lg={8}>
             {workflowState && (
               <Card
-                title={
-                  <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
-                    Complaint Progress
-                  </span>
-                }
+                title={<span style={{ color: "#1a3c6e", fontWeight: 700 }}>Complaint Progress</span>}
                 style={{
                   borderRadius: 8,
                   borderTop: "3px solid #1a3c6e",
@@ -442,21 +407,13 @@ export default function CampComplaintDetailPage() {
             )}
 
             <Card
-              title={
-                <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
-                  Officer Updates
-                </span>
-              }
+              title={<span style={{ color: "#1a3c6e", fontWeight: 700 }}>Officer Updates</span>}
               style={{ borderRadius: 8, borderTop: "3px solid #1a3c6e" }}
             >
               {allResponses.length === 0 ? (
                 <Text type="secondary">No officer responses yet.</Text>
               ) : (
-                <Space
-                  orientation="vertical"
-                  size="middle"
-                  style={{ width: "100%" }}
-                >
+                <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
                   {allResponses.map((response) => (
                     <Card
                       key={response.id}
@@ -479,8 +436,7 @@ export default function CampComplaintDetailPage() {
                             {response.officer.name}
                           </div>
                           <div style={{ fontSize: 11, color: "#6b7280" }}>
-                            {response.officer.designation} -{" "}
-                            {response.officer.department.name}
+                            {response.officer.designation} - {response.officer.department.name}
                           </div>
                         </div>
                         <Tag color="blue" style={{ marginRight: 0 }}>
@@ -498,26 +454,14 @@ export default function CampComplaintDetailPage() {
                       </div>
                       {response.proofUrl && (
                         <div style={{ marginTop: 8 }}>
-                          <a
-                            href={response.proofUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <Button
-                              size="small"
-                              style={{
-                                borderColor: "#1a3c6e",
-                                color: "#1a3c6e",
-                              }}
-                            >
+                          <a href={response.proofUrl} target="_blank" rel="noreferrer">
+                            <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
                               View Proof
                             </Button>
                           </a>
                         </div>
                       )}
-                      <div
-                        style={{ marginTop: 8, fontSize: 11, color: "#6b7280" }}
-                      >
+                      <div style={{ marginTop: 8, fontSize: 11, color: "#6b7280" }}>
                         {new Date(response.createdAt).toLocaleString()}
                       </div>
                     </Card>

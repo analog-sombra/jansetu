@@ -12,6 +12,7 @@ export type CampComplaintInput = {
   category: string;
   subcategory: string;
   description: string;
+  affectedCitizensCount: string;
   area?: string;
   lat: string;
   lng: string;
@@ -40,6 +41,7 @@ export type CampComplaintSummary = {
   citizenMobile: string;
   category: string;
   subcategory: string | null;
+  affectedCitizensCount: number;
   status: string;
   area: string;
   createdAt: string;
@@ -79,6 +81,7 @@ export type CampComplaintDetail = {
   category: string;
   subcategory: string | null;
   description: string;
+  affectedCitizensCount: number;
   status: string;
   plannedCompletionDate: string | null;
   lat: number;
@@ -91,6 +94,7 @@ export type CampComplaintDetail = {
     clusterId: string;
     departmentName: string;
     complaintCount: number;
+    totalAffectedCitizensCount: number;
     bucketSizeMeters: number;
   } | null;
 };

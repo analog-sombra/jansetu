@@ -110,6 +110,7 @@ export default function CampNewComplaintForm() {
       category: "",
       subcategory: "",
       description: "",
+      affectedCitizensCount: "1",
       area: "",
       lat: "",
       lng: "",
@@ -297,6 +298,7 @@ export default function CampNewComplaintForm() {
         category: values.category,
         subcategory: values.subcategory,
         description: values.description,
+        affectedCitizensCount: values.affectedCitizensCount,
         area: values.area,
         lat: values.lat,
         lng: values.lng,
@@ -357,6 +359,7 @@ export default function CampNewComplaintForm() {
       category: firstCategory?.name ?? "",
       subcategory: firstCategory?.subcategories[0]?.name ?? "",
       description: "",
+      affectedCitizensCount: "1",
       area: "",
       lat: "",
       lng: "",
@@ -567,6 +570,16 @@ export default function CampNewComplaintForm() {
                 placeholder={t("newComplaint.descriptionPlaceholder")}
                 required
                 maxlength={1000}
+              />
+            </div>
+
+            <div className="mb-3">
+              <CustomTextInput<campComplaintValidationForm>
+                name="affectedCitizensCount"
+                title={t("newComplaint.affectedCitizensCount")}
+                placeholder="e.g. 12"
+                required
+                onlynumber
               />
             </div>
 

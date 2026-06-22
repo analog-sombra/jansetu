@@ -73,6 +73,7 @@ export type AdminComplaintDetail = {
   category: string;
   subcategory: string | null;
   description: string;
+  affectedCitizensCount: number;
   status: string;
   plannedCompletionDate: string | null;
   lat: number;
@@ -85,6 +86,7 @@ export type AdminComplaintDetail = {
     clusterId: string;
     departmentName: string;
     complaintCount: number;
+    totalAffectedCitizensCount: number;
     bucketSizeMeters: number;
     complaints: Array<{
       id: number;
@@ -92,6 +94,7 @@ export type AdminComplaintDetail = {
       subcategory: string | null;
       status: string;
       area: string | null;
+      affectedCitizensCount: number;
       createdAt: string;
       isCurrentComplaint: boolean;
     }>;

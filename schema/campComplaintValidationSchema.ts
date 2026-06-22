@@ -42,6 +42,11 @@ export const campComplaintValidationSchema = object({
     minLength(20, "Description must be at least 20 characters"),
     maxLength(1000, "Description must be at most 1000 characters"),
   ),
+  affectedCitizensCount: pipe(
+    string(),
+    trim(),
+    regex(/^[1-9]\d*$/, "Affected citizens count must be a positive number"),
+  ),
   area: optional(
     pipe(
       string(),

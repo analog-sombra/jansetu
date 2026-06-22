@@ -16,6 +16,59 @@ export type OfficerCompletedAssignmentSummary = {
   completedAt: string;
 };
 
+export type OfficerComplaintResponseSummary = {
+  id: number;
+  type: string;
+  message: string;
+  proofUrl: string | null;
+  createdAt: string;
+};
+
+export type OfficerComplaintAssignmentSummary = {
+  id: number;
+  status: string;
+  dueDate: string;
+  officer: {
+    id: number;
+    name: string;
+    designation: string;
+    department: {
+      name: string;
+    };
+  };
+  responses: OfficerComplaintResponseSummary[];
+};
+
+export type OfficerComplaintDetail = {
+  id: number;
+  citizen: {
+    name: string;
+    mobile: string;
+    address: string;
+    aadhaar: string;
+    voterId: string;
+  };
+  category: string;
+  subcategory: string | null;
+  description: string;
+  affectedCitizensCount: number;
+  status: string;
+  plannedCompletionDate: string | null;
+  lat: number;
+  lng: number;
+  area: string | null;
+  media: Array<{ id: number; fileUrl: string; type: string }>;
+  assignments: OfficerComplaintAssignmentSummary[];
+  createdAt: string;
+  cluster: {
+    clusterId: string;
+    departmentName: string;
+    complaintCount: number;
+    totalAffectedCitizensCount: number;
+    bucketSizeMeters: number;
+  } | null;
+};
+
 export type OfficerAssignmentDetail = {
   id: number;
   complaintId: number;
@@ -33,7 +86,11 @@ export type OfficerAssignmentDetail = {
       mobile: string;
       address: string | null;
     };
-    media: Array<{ id: number; fileUrl: string; type: string }>;
+    media: Array<{
+      id: number;
+      fileUrl: string;
+      type: string;
+    }>;
   };
   officer: {
     id: number;
@@ -63,6 +120,17 @@ export type GetOfficerAssignmentByTokenResult =
       assignment: OfficerAssignmentDetail;
     }
   | OfficerAuthResult;
+
+export type OfficerComplaintDetailResult =
+  | {
+      ok: true;
+      complaint: OfficerComplaintDetail;
+    }
+  | OfficerAuthResult
+  | {
+      ok: false;
+      error: string;
+    };
 
 export type SubmitOfficerResponseInput = {
   token: string;

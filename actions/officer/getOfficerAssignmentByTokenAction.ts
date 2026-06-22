@@ -77,6 +77,13 @@ export async function getOfficerAssignmentByTokenAction(
     if (!assignment) {
       return { ok: false, error: "Invalid or expired access token" };
     }
+      if (
+        assignment.complaint.status === "RESOLVED" ||
+        assignment.complaint.status === "REJECTED" ||
+        assignment.complaint.status === "AUTO_CLOSED"
+      ) {
+        return { ok: false, error: "This complaint is already completed." };
+      }
 
     const officerMobileKey = `officer_${assignment.officer.id}`;
 
@@ -86,25 +93,25 @@ export async function getOfficerAssignmentByTokenAction(
         OR: [
           {
             status: {
-              in: ["RESOLVED", "REJECTED"],
+              in: ["ASSIGNED", "IN_PROGRESS","QUERY","ESCALATED"],
             },
           },
           {
             complaint: {
               status: {
-                in: ["RESOLVED", "REJECTED", "AUTO_CLOSED"],
+                in: ["ESCALATED","IN_PROGRESS","PENDING","QUERY_RAISED","WORK_IN_PROGRESS"],
               },
             },
           },
-          {
-            responses: {
-              some: {
-                type: {
-                  in: ["RESOLVED", "REJECTED"],
-                },
-              },
-            },
-          },
+          // {
+          //   responses: {
+          //     some: {
+          //       type: {
+          //         in: ["RESOLVED", "REJECTED"],
+          //       },
+          //     },
+          //   },
+          // },
         ],
       },
       orderBy: {
@@ -125,6 +132,10 @@ export async function getOfficerAssignmentByTokenAction(
         },
       },
     });
+
+    console.log("Completed assignments fetched for officer:", assignment.officer.id);
+
+    console.log("Completed assignments for officer:", completedAssignments);
 
     const officerUser = await prisma.user.upsert({
       where: { mobile: officerMobileKey },
@@ -180,11 +191,11 @@ export async function getOfficerAssignmentByTokenAction(
           status: assignment.complaint.status,
           plannedCompletionDate:
             assignment.complaint.plannedCompletionDate?.toISOString() ?? null,
+          media: assignment.complaint.media,
           lat: assignment.complaint.lat,
           lng: assignment.complaint.lng,
           area: assignment.complaint.area,
           user: assignment.complaint.user,
-          media: assignment.complaint.media,
         },
         officer: {
           id: assignment.officer.id,

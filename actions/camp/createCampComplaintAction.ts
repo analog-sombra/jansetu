@@ -36,6 +36,7 @@ export async function createCampComplaintAction(
   const category = payload.complaint.category.trim();
   const subcategory = payload.complaint.subcategory.trim();
   const description = payload.complaint.description.trim();
+  const affectedCitizensCount = Number(payload.complaint.affectedCitizensCount);
   const area = payload.complaint.area?.trim() || null;
   const lat = Number(payload.complaint.lat);
   const lng = Number(payload.complaint.lng);
@@ -90,6 +91,7 @@ export async function createCampComplaintAction(
           category,
           subcategory,
           description,
+          affectedCitizensCount,
           area,
           lat,
           lng,

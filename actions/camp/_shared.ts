@@ -43,6 +43,7 @@ export async function validateComplaintInput(complaint: CampComplaintInput): Pro
   const category = complaint.category.trim();
   const subcategory = complaint.subcategory.trim();
   const description = complaint.description.trim();
+  const affectedCitizensCount = Number(complaint.affectedCitizensCount);
   const lat = Number(complaint.lat);
   const lng = Number(complaint.lng);
 
@@ -70,6 +71,10 @@ export async function validateComplaintInput(complaint: CampComplaintInput): Pro
 
   if (description.length < 20) {
     return "Description must be at least 20 characters.";
+  }
+
+  if (!Number.isInteger(affectedCitizensCount) || affectedCitizensCount <= 0) {
+    return "Affected citizens count must be a positive number.";
   }
 
   if (!Number.isFinite(lat) || lat < -90 || lat > 90) {

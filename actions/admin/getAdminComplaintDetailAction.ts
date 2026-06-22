@@ -26,6 +26,7 @@ export async function getAdminComplaintDetailAction(
           category: true,
           subcategory: true,
           description: true,
+          affectedCitizensCount: true,
           status: true,
           plannedCompletionDate: true,
           lat: true,
@@ -152,6 +153,7 @@ export async function getAdminComplaintDetailAction(
               subcategory: true,
               status: true,
               area: true,
+              affectedCitizensCount: true,
               createdAt: true,
             },
           },
@@ -169,14 +171,21 @@ export async function getAdminComplaintDetailAction(
         subcategory: entry.complaint.subcategory,
         status: entry.complaint.status,
         area: entry.complaint.area,
+        affectedCitizensCount: entry.complaint.affectedCitizensCount,
         createdAt: entry.complaint.createdAt.toISOString(),
         isCurrentComplaint: entry.complaint.id === complaint.id,
       }));
+
+      const totalAffectedCitizensCount = clusterComplaintList.reduce(
+        (sum, item) => sum + item.affectedCitizensCount,
+        0,
+      );
 
       cluster = {
         clusterId: primaryCluster.clusterId,
         departmentName: primaryCluster.departmentName,
         complaintCount: clusterComplaintList.length,
+        totalAffectedCitizensCount,
         bucketSizeMeters: 500,
         complaints: clusterComplaintList,
       };
@@ -190,6 +199,7 @@ export async function getAdminComplaintDetailAction(
         category: complaint.category,
         subcategory: complaint.subcategory,
         description: complaint.description,
+        affectedCitizensCount: complaint.affectedCitizensCount,
         status: complaint.status,
         plannedCompletionDate: complaint.plannedCompletionDate?.toISOString() ?? null,
         lat: complaint.lat,

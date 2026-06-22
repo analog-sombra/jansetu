@@ -1,15 +1,45 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireCampUser } from "./_shared";
-import { CampComplaintDetailResult } from "./types";
+import { getAuthenticatedUser } from "@/lib/auth/session";
+import { OfficerComplaintDetailResult } from "./types";
 
-export async function getCampComplaintDetailAction(
+function resolveOfficerIdFromMobile(mobile: string): number | null {
+  const match = /^officer_(\d+)$/.exec(mobile.trim());
+  if (!match) {
+    return null;
+  }
+
+  const officerId = Number(match[1]);
+  if (!Number.isInteger(officerId) || officerId <= 0) {
+    return null;
+  }
+
+  return officerId;
+}
+
+export async function getOfficerComplaintDetailAction(
   complaintIdInput: number,
-): Promise<CampComplaintDetailResult> {
-  const auth = await requireCampUser();
-  if (!auth.ok) {
-    return auth;
+): Promise<OfficerComplaintDetailResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return { ok: false, error: "Please login again to continue." };
+  }
+
+  if (user.role !== "OFFICER") {
+    return {
+      ok: false,
+      error: "You are not authorized for this section.",
+    };
+  }
+
+  const officerId = resolveOfficerIdFromMobile(user.mobile);
+  if (!officerId) {
+    return {
+      ok: false,
+      error: "Unable to determine officer identity from session.",
+    };
   }
 
   const complaintId = Number(complaintIdInput);
@@ -21,7 +51,11 @@ export async function getCampComplaintDetailAction(
     const complaint = await prisma.complaint.findFirst({
       where: {
         id: complaintId,
-        createdByUserId: auth.user.id,
+        assignments: {
+          some: {
+            officerId,
+          },
+        },
       },
       select: {
         id: true,
@@ -53,12 +87,16 @@ export async function getCampComplaintDetailAction(
           orderBy: { id: "asc" },
         },
         assignments: {
+          where: {
+            officerId,
+          },
           select: {
             id: true,
             status: true,
             dueDate: true,
             officer: {
               select: {
+                id: true,
                 name: true,
                 designation: true,
                 department: {
@@ -96,6 +134,7 @@ export async function getCampComplaintDetailAction(
 
     let cluster = null;
     const primaryCluster = complaint.complaintClusters[0];
+
     if (primaryCluster) {
       const clusterComplaints = await prisma.complaintCluster.findMany({
         where: { clusterId: primaryCluster.clusterId },
@@ -108,7 +147,7 @@ export async function getCampComplaintDetailAction(
         },
       });
 
-      const clusterComplaintCount = clusterComplaints.length;
+      const complaintCount = clusterComplaints.length;
       const totalAffectedCitizensCount = clusterComplaints.reduce(
         (sum, entry) => sum + entry.complaint.affectedCitizensCount,
         0,
@@ -117,7 +156,7 @@ export async function getCampComplaintDetailAction(
       cluster = {
         clusterId: primaryCluster.clusterId,
         departmentName: primaryCluster.departmentName,
-        complaintCount: clusterComplaintCount,
+        complaintCount,
         totalAffectedCitizensCount,
         bucketSizeMeters: 500,
       };

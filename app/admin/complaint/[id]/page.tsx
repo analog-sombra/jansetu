@@ -297,9 +297,9 @@ export default function AdminComplaintDetailPage() {
       `${t("adminDetail.whatsapp.area")}: ${complaint.area ?? t("adminDetail.notSpecified")}`,
       `${t("adminDetail.whatsapp.targetDate")}: ${complaint.plannedCompletionDate ? new Date(complaint.plannedCompletionDate).toLocaleDateString("en-IN") : t("adminDetail.notSet")}`,
       "",
-      `${t("adminDetail.assignmentToken")}: ${assignedOfficerToken}`,
       `${t("adminDetail.whatsapp.link")}: ${window.location.origin}/officer/${assignedOfficerToken}`,
     ].join("\n");
+      // `${t("adminDetail.assignmentToken")}: ${assignedOfficerToken}`,
 
     window.open(makeWhatsAppLink(message), "_blank", "noopener,noreferrer");
   }
@@ -511,6 +511,17 @@ export default function AdminComplaintDetailPage() {
             <div className="h-4" />
 
             <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">Affected Citizens Count</h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {complaint.cluster
+                  ? complaint.cluster.totalAffectedCitizensCount
+                  : complaint.affectedCitizensCount}
+              </p>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
               <h1 className="text-sm font-normal">
                 {t("adminDetail.description")}
               </h1>
@@ -540,6 +551,9 @@ export default function AdminComplaintDetailPage() {
                   </div>
                   <div style={{ marginTop: 6, fontSize: 12, color: "#6b7280" }}>
                     Cluster Complaint Count: {complaint.cluster.complaintCount}
+                  </div>
+                  <div style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
+                    Cluster Total Affected Citizens: {complaint.cluster.totalAffectedCitizensCount}
                   </div>
                   
 
@@ -599,6 +613,9 @@ export default function AdminComplaintDetailPage() {
                             <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
                               Status: {formatLabel(item.status)}
                               {item.area ? ` | Area: ${item.area}` : ""}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                              Affected Citizens (Cluster Total): {complaint.cluster?.totalAffectedCitizensCount ?? complaint.affectedCitizensCount}
                             </div>
                           </div>
 
