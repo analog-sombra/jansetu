@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { MeetingPriority, MeetingType } from "@prisma/client";
 import {
   Alert,
   Button,
@@ -16,13 +17,14 @@ import {
   Typography,
 } from "antd";
 
+import { useLanguage } from "@/components/provider/language_provider";
 import {
-  MEETING_TYPE_OPTIONS,
-  PRIORITY_OPTIONS,
-  UserLite,
-} from "@/app/admin/meeting-data";
-import { useLanguage } from "@/components/language-provider";
-import { getLocalizedArea } from "@/lib/complaint-i18n";
+  createAdminMeetingAction,
+  getAdminMeetingAssigneesAction,
+  lookupAdminMeetingCitizenByMobileAction,
+  lookupAdminMeetingContactByMobileAction,
+  type AdminMeetingAssignee,
+} from "@/actions/admin/meeting";
 import { RAJOURI_GARDEN_AREAS } from "@/lib/constants";
 
 const { Title, Text } = Typography;
@@ -31,7 +33,8 @@ const DATE_TIME_FORMAT = "DD-MM-YYYY hh:mm A";
 const PAGE_COPY = {
   en: {
     title: "Create Meeting",
-    subtitle: "Admin can create all four meeting types and send citizen meets for approval flow.",
+    subtitle:
+      "Admin can create all four meeting types and send citizen meets for approval flow.",
     openMeetingSection: "Open Meeting Section",
     meetingType: "Meeting Type",
     selectMeetingType: "Select meeting type",
@@ -70,7 +73,8 @@ const PAGE_COPY = {
     failedUsers: "Unable to load users",
     failedCreate: "Failed to create meeting",
     successCreate: "Meeting created successfully.",
-    userLookupFailed: "Unable to fetch user details for the provided mobile number",
+    userLookupFailed:
+      "Unable to fetch user details for the provided mobile number",
     fetchingUserDetails: "Fetching user details...",
     cancel: "Cancel",
     createMeeting: "Create Meeting",
@@ -85,7 +89,8 @@ const PAGE_COPY = {
   },
   hi: {
     title: "बैठक बनाएँ",
-    subtitle: "एडमिन चारों प्रकार की बैठक बना सकता है और नागरिक बैठक को अनुमोदन प्रक्रिया में भेज सकता है।",
+    subtitle:
+      "एडमिन चारों प्रकार की बैठक बना सकता है और नागरिक बैठक को अनुमोदन प्रक्रिया में भेज सकता है।",
     openMeetingSection: "बैठक अनुभाग खोलें",
     meetingType: "बैठक प्रकार",
     selectMeetingType: "बैठक प्रकार चुनें",
@@ -124,7 +129,8 @@ const PAGE_COPY = {
     failedUsers: "यूज़र लोड नहीं हो सके",
     failedCreate: "बैठक बनाना विफल रहा",
     successCreate: "बैठक सफलतापूर्वक बना दी गई।",
-    userLookupFailed: "दिए गए मोबाइल नंबर के लिए यूज़र विवरण प्राप्त नहीं हो सके",
+    userLookupFailed:
+      "दिए गए मोबाइल नंबर के लिए यूज़र विवरण प्राप्त नहीं हो सके",
     fetchingUserDetails: "यूज़र विवरण प्राप्त किए जा रहे हैं...",
     cancel: "रद्द करें",
     createMeeting: "बैठक बनाएँ",
@@ -139,7 +145,8 @@ const PAGE_COPY = {
   },
   pa: {
     title: "ਮੀਟਿੰਗ ਬਣਾਓ",
-    subtitle: "ਐਡਮਿਨ ਸਾਰੀਆਂ ਚਾਰ ਕਿਸਮਾਂ ਦੀਆਂ ਮੀਟਿੰਗਾਂ ਬਣਾਕੇ ਨਾਗਰਿਕ ਮੀਟਿੰਗ ਨੂੰ ਮਨਜ਼ੂਰੀ ਪ੍ਰਕਿਰਿਆ ਵਿੱਚ ਭੇਜ ਸਕਦਾ ਹੈ।",
+    subtitle:
+      "ਐਡਮਿਨ ਸਾਰੀਆਂ ਚਾਰ ਕਿਸਮਾਂ ਦੀਆਂ ਮੀਟਿੰਗਾਂ ਬਣਾਕੇ ਨਾਗਰਿਕ ਮੀਟਿੰਗ ਨੂੰ ਮਨਜ਼ੂਰੀ ਪ੍ਰਕਿਰਿਆ ਵਿੱਚ ਭੇਜ ਸਕਦਾ ਹੈ।",
     openMeetingSection: "ਮੀਟਿੰਗ ਭਾਗ ਖੋਲ੍ਹੋ",
     meetingType: "ਮੀਟਿੰਗ ਕਿਸਮ",
     selectMeetingType: "ਮੀਟਿੰਗ ਕਿਸਮ ਚੁਣੋ",
@@ -193,14 +200,28 @@ const PAGE_COPY = {
   },
 } as const;
 
+const MEETING_TYPE_OPTIONS: Array<{ value: MeetingType }> = [
+  { value: MeetingType.CONSTITUENCY_VISIT },
+  { value: MeetingType.DEPARTMENT_VISIT },
+  { value: MeetingType.CITIZEN_MEET },
+  { value: MeetingType.PERSONAL_MEET },
+];
+
+const PRIORITY_OPTIONS: Array<{ value: MeetingPriority }> = [
+  { value: MeetingPriority.LOW },
+  { value: MeetingPriority.MEDIUM },
+  { value: MeetingPriority.HIGH },
+  { value: MeetingPriority.URGENT },
+];
+
 type FormValues = {
   assignedToUserId: string;
-  type: "CONSTITUENCY_VISIT" | "DEPARTMENT_VISIT" | "CITIZEN_MEET" | "PERSONAL_MEET";
+  type: MeetingType;
   purpose: string;
   meetingDateTime?: { toISOString(): string };
   meetingPlace?: string;
   preferredDateTime?: { toISOString(): string };
-  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  priority?: MeetingPriority;
   citizenName?: string;
   citizenMobile?: string;
   citizenArea?: string;
@@ -211,19 +232,14 @@ type FormValues = {
   contactDepartment?: string;
 };
 
-type OfficerLookup = {
-  name: string;
-  designation: string;
-  department: { name: string };
-};
-
 export default function CreateMeetingPage() {
   const router = useRouter();
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   const copy = PAGE_COPY[language];
   const [form] = Form.useForm<FormValues>();
-  const [users, setUsers] = useState<UserLite[]>([]);
-  const [selectedType, setSelectedType] = useState<FormValues["type"]>("CONSTITUENCY_VISIT");
+  const [users, setUsers] = useState<AdminMeetingAssignee[]>([]);
+  const [selectedType, setSelectedType] =
+    useState<FormValues["type"]>(MeetingType.CONSTITUENCY_VISIT);
   const [saving, setSaving] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingLookup, setLoadingLookup] = useState(false);
@@ -232,7 +248,7 @@ export default function CreateMeetingPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState<string>("");
 
-  const reportUsers = users.filter((user) => user.role === "REPORT");
+  const reportUsers = users;
   const mobileRules = [
     { required: true },
     { pattern: /^\d{10}$/, message: copy.invalidMobile },
@@ -266,14 +282,17 @@ export default function CreateMeetingPage() {
 
   const areaOptions = RAJOURI_GARDEN_AREAS.map((area) => ({
     value: area,
-    label: getLocalizedArea(area, t),
+    label: area,
   }));
 
   function normalizeMobile(value: string) {
     return value.replace(/\D/g, "").slice(0, 10);
   }
 
-  async function fetchUserByMobile(mobile: string, target: "citizen" | "contact") {
+  async function fetchUserByMobile(
+    mobile: string,
+    target: "citizen" | "contact",
+  ) {
     if (mobile.length !== 10) {
       if (target === "citizen") {
         setCitizenDetailsLocked(false);
@@ -284,63 +303,65 @@ export default function CreateMeetingPage() {
     }
 
     setLoadingLookup(true);
-    const shouldLookupOfficer = target === "contact" && selectedType === "DEPARTMENT_VISIT";
-    const roleQuery = target === "citizen" ? "&role=CITIZEN" : "";
-    const endpoint = shouldLookupOfficer
-      ? `/api/admin/officers?mobile=${mobile}`
-      : `/api/admin/users?mobile=${mobile}${roleQuery}`;
-    const response = await fetch(endpoint);
-    const result = await response.json();
-    setLoadingLookup(false);
+    const shouldLookupOfficer =
+      target === "contact" && selectedType === MeetingType.DEPARTMENT_VISIT;
 
-    if (response.status === 401) {
-      router.push("/login");
+    if (target === "citizen") {
+      const result = await lookupAdminMeetingCitizenByMobileAction(mobile);
+      setLoadingLookup(false);
+
+      if (!result.ok) {
+        setError(result.error ?? copy.userLookupFailed);
+        return;
+      }
+
+      if (!result.found) {
+        setCitizenDetailsLocked(false);
+        return;
+      }
+
+      form.setFieldsValue({
+        citizenName: result.user.name ?? form.getFieldValue("citizenName"),
+        citizenArea: result.user.address ?? form.getFieldValue("citizenArea"),
+      });
+      setCitizenDetailsLocked(true);
       return;
     }
 
-    if (!response.ok) {
+    const result = await lookupAdminMeetingContactByMobileAction(
+      mobile,
+      shouldLookupOfficer,
+    );
+    setLoadingLookup(false);
+
+    if (!result.ok) {
       setError(result.error ?? copy.userLookupFailed);
       return;
     }
 
-    const matchedOfficer = shouldLookupOfficer ? (result.officer as OfficerLookup | null) : null;
-    const matchedUser = shouldLookupOfficer
-      ? null
-      : (result.user as (UserLite & { address?: string | null }) | null);
-
-    if (!matchedOfficer && !matchedUser) {
-      if (target === "citizen") {
-        setCitizenDetailsLocked(false);
-      } else {
-        if (shouldLookupOfficer) {
-          setError(copy.userLookupFailed);
-        }
-        form.setFieldsValue({
-          contactName: undefined,
-          contactDesignation: undefined,
-          contactDepartment: undefined,
-        });
-        setContactDetailsLocked(false);
+    if (!result.found) {
+      if (shouldLookupOfficer) {
+        setError(copy.userLookupFailed);
       }
+      form.setFieldsValue({
+        contactName: undefined,
+        contactDesignation: undefined,
+        contactDepartment: undefined,
+      });
+      setContactDetailsLocked(false);
       return;
     }
 
-    if (target === "citizen" && matchedUser) {
+    if (shouldLookupOfficer) {
       form.setFieldsValue({
-        citizenName: matchedUser.name ?? form.getFieldValue("citizenName"),
-        citizenArea: matchedUser.address ?? form.getFieldValue("citizenArea"),
-      });
-      setCitizenDetailsLocked(true);
-    } else if (shouldLookupOfficer && matchedOfficer) {
-      form.setFieldsValue({
-        contactName: matchedOfficer.name,
-        contactDesignation: matchedOfficer.designation,
-        contactDepartment: matchedOfficer.department.name,
+        contactName: result.contact.name,
+        contactDesignation: result.contact.designation ?? undefined,
+        contactDepartment: result.contact.department ?? undefined,
       });
       setContactDetailsLocked(true);
-    } else if (matchedUser) {
+    } else {
       form.setFieldsValue({
-        contactName: matchedUser.name ?? form.getFieldValue("contactName"),
+        contactName: result.contact.name,
       });
       setContactDetailsLocked(true);
     }
@@ -349,25 +370,19 @@ export default function CreateMeetingPage() {
   useEffect(() => {
     async function loadUsers() {
       setLoadingUsers(true);
-      const response = await fetch("/api/admin/users?role=REPORT");
-      const result = await response.json();
+      const result = await getAdminMeetingAssigneesAction();
       setLoadingUsers(false);
 
-      if (response.status === 401) {
-        router.push("/login");
-        return;
-      }
-
-      if (!response.ok) {
+      if (!result.ok) {
         setError(result.error ?? copy.failedUsers);
         return;
       }
 
-      setUsers(result.users ?? []);
+      setUsers(result.assignees ?? []);
     }
 
     void loadUsers();
-  }, [copy.failedUsers, router]);
+  }, [copy.failedUsers]);
 
   async function onFinish(values: FormValues) {
     setSaving(true);
@@ -389,19 +404,10 @@ export default function CreateMeetingPage() {
       contactDepartment: values.contactDepartment,
     };
 
-    const response = await fetch("/api/meetings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const result = await response.json();
+    const result = await createAdminMeetingAction(payload);
 
     setSaving(false);
-    if (response.status === 401) {
-      router.push("/login");
-      return;
-    }
-    if (!response.ok) {
+    if (!result.ok) {
       setError(result.error ?? copy.failedCreate);
       return;
     }
@@ -409,28 +415,36 @@ export default function CreateMeetingPage() {
     setMessage(copy.successCreate);
     setError("");
     form.resetFields();
-    setSelectedType("CONSTITUENCY_VISIT");
+    setSelectedType(MeetingType.CONSTITUENCY_VISIT);
     setCitizenDetailsLocked(false);
     setContactDetailsLocked(false);
     setTimeout(() => {
-      router.push("/admin/meeting-section");
+      router.push("/admin");
     }, 600);
   }
 
-  const isCitizenMeet = selectedType === "CITIZEN_MEET";
-  const isDepartmentVisit = selectedType === "DEPARTMENT_VISIT";
-  const showContactFields = selectedType === "DEPARTMENT_VISIT" || selectedType === "PERSONAL_MEET";
+  const isCitizenMeet = selectedType === MeetingType.CITIZEN_MEET;
+  const isDepartmentVisit = selectedType === MeetingType.DEPARTMENT_VISIT;
+  const showContactFields =
+    selectedType === MeetingType.DEPARTMENT_VISIT ||
+    selectedType === MeetingType.PERSONAL_MEET;
 
   return (
     <div>
-      <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+      <div
+        style={{
+          marginBottom: 24,
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
         <div>
           <Title level={3} style={{ margin: 0, color: "#1a3c6e" }}>
             {copy.title}
           </Title>
-          <Text type="secondary">
-            {copy.subtitle}
-          </Text>
+          <Text type="secondary">{copy.subtitle}</Text>
         </div>
         {/* <Link href="/admin/meeting-section">
           <Button style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
@@ -510,10 +524,16 @@ export default function CreateMeetingPage() {
                   <Form.Item
                     label={copy.meetingDateTime}
                     name="meetingDateTime"
-                    rules={[{ required: true, message: copy.selectMeetingDateTime }]}
+                    rules={[
+                      { required: true, message: copy.selectMeetingDateTime },
+                    ]}
                   >
                     <DatePicker
-                      showTime={{ use12Hours: true, format: "hh:mm A", minuteStep: 5 }}
+                      showTime={{
+                        use12Hours: true,
+                        format: "hh:mm A",
+                        minuteStep: 5,
+                      }}
                       needConfirm={false}
                       style={{ width: "100%" }}
                       format={DATE_TIME_FORMAT}
@@ -524,7 +544,9 @@ export default function CreateMeetingPage() {
                   <Form.Item
                     label={copy.meetingPlace}
                     name="meetingPlace"
-                    rules={[{ required: true, message: copy.enterMeetingPlace }]}
+                    rules={[
+                      { required: true, message: copy.enterMeetingPlace },
+                    ]}
                   >
                     <Input placeholder={copy.enterMeetingPlace} />
                   </Form.Item>
@@ -538,10 +560,16 @@ export default function CreateMeetingPage() {
                   <Form.Item
                     label={copy.preferredDateTime}
                     name="preferredDateTime"
-                    rules={[{ required: true, message: copy.selectPreferredDateTime }]}
+                    rules={[
+                      { required: true, message: copy.selectPreferredDateTime },
+                    ]}
                   >
                     <DatePicker
-                      showTime={{ use12Hours: true, format: "hh:mm A", minuteStep: 5 }}
+                      showTime={{
+                        use12Hours: true,
+                        format: "hh:mm A",
+                        minuteStep: 5,
+                      }}
                       style={{ width: "100%" }}
                       format={DATE_TIME_FORMAT}
                     />
@@ -561,7 +589,9 @@ export default function CreateMeetingPage() {
                     label={copy.citizenMobile}
                     name="citizenMobile"
                     rules={mobileRules.map((rule, index) =>
-                      index === 0 ? { ...rule, message: copy.enterCitizenMobile } : rule,
+                      index === 0
+                        ? { ...rule, message: copy.enterCitizenMobile }
+                        : rule,
                     )}
                   >
                     <Input
@@ -586,14 +616,19 @@ export default function CreateMeetingPage() {
                     name="citizenName"
                     rules={[{ required: true, message: copy.enterCitizenName }]}
                   >
-                    <Input placeholder={copy.enterCitizenName} disabled={citizenDetailsLocked} />
+                    <Input
+                      placeholder={copy.enterCitizenName}
+                      disabled={citizenDetailsLocked}
+                    />
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
                   <Form.Item
                     label={copy.citizenArea}
                     name="citizenArea"
-                    rules={[{ required: true, message: copy.selectCitizenArea }]}
+                    rules={[
+                      { required: true, message: copy.selectCitizenArea },
+                    ]}
                   >
                     <Select
                       showSearch
@@ -607,9 +642,14 @@ export default function CreateMeetingPage() {
                   <Form.Item
                     label={copy.citizenDetails}
                     name="citizenDetails"
-                    rules={[{ required: true, message: copy.enterCitizenDetails }]}
+                    rules={[
+                      { required: true, message: copy.enterCitizenDetails },
+                    ]}
                   >
-                    <Input.TextArea rows={4} placeholder={copy.requestDetails} />
+                    <Input.TextArea
+                      rows={4}
+                      placeholder={copy.requestDetails}
+                    />
                   </Form.Item>
                 </Col>
               </>
@@ -622,7 +662,9 @@ export default function CreateMeetingPage() {
                     label={copy.contactMobile}
                     name="contactMobile"
                     rules={mobileRules.map((rule, index) =>
-                      index === 0 ? { ...rule, message: copy.enterContactMobile } : rule,
+                      index === 0
+                        ? { ...rule, message: copy.enterContactMobile }
+                        : rule,
                     )}
                   >
                     <Input
@@ -635,7 +677,7 @@ export default function CreateMeetingPage() {
                         if (sanitized.length === 10) {
                           void fetchUserByMobile(sanitized, "contact");
                         } else {
-                          if (selectedType === "DEPARTMENT_VISIT") {
+                          if (selectedType === MeetingType.DEPARTMENT_VISIT) {
                             form.setFieldsValue({
                               contactName: undefined,
                               contactDesignation: undefined,
@@ -666,7 +708,10 @@ export default function CreateMeetingPage() {
                     name="contactDesignation"
                     rules={[{ required: true, message: copy.enterDesignation }]}
                   >
-                    <Input placeholder={copy.enterDesignation} disabled={isDepartmentVisit} />
+                    <Input
+                      placeholder={copy.enterDesignation}
+                      disabled={isDepartmentVisit}
+                    />
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
@@ -675,7 +720,10 @@ export default function CreateMeetingPage() {
                     name="contactDepartment"
                     rules={[{ required: true, message: copy.enterDepartment }]}
                   >
-                    <Input placeholder={copy.enterDepartment} disabled={isDepartmentVisit} />
+                    <Input
+                      placeholder={copy.enterDepartment}
+                      disabled={isDepartmentVisit}
+                    />
                   </Form.Item>
                 </Col>
               </>
@@ -691,15 +739,27 @@ export default function CreateMeetingPage() {
             />
           )}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
-            <Link href="/admin/meeting-section">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 12,
+              marginTop: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <Link href="/admin">
               <Button>{copy.cancel}</Button>
             </Link>
             <Button
               htmlType="submit"
               type="primary"
               loading={saving}
-              style={{ background: "#1a3c6e", borderColor: "#1a3c6e", fontWeight: 700 }}
+              style={{
+                background: "#1a3c6e",
+                borderColor: "#1a3c6e",
+                fontWeight: 700,
+              }}
             >
               {copy.createMeeting}
             </Button>

@@ -26,7 +26,11 @@ export async function getOfficerAssignmentByTokenAction(
         complaintId: true,
         complaint: {
           select: {
-            category: true,
+            category: {
+              select: {
+                name: true,
+              },
+            },
             subcategory: true,
             description: true,
             status: true,
@@ -77,13 +81,6 @@ export async function getOfficerAssignmentByTokenAction(
     if (!assignment) {
       return { ok: false, error: "Invalid or expired access token" };
     }
-      if (
-        assignment.complaint.status === "RESOLVED" ||
-        assignment.complaint.status === "REJECTED" ||
-        assignment.complaint.status === "AUTO_CLOSED"
-      ) {
-        return { ok: false, error: "This complaint is already completed." };
-      }
 
     const officerMobileKey = `officer_${assignment.officer.id}`;
 
@@ -133,9 +130,6 @@ export async function getOfficerAssignmentByTokenAction(
       },
     });
 
-    console.log("Completed assignments fetched for officer:", assignment.officer.id);
-
-    console.log("Completed assignments for officer:", completedAssignments);
 
     const officerUser = await prisma.user.upsert({
       where: { mobile: officerMobileKey },
@@ -156,7 +150,7 @@ export async function getOfficerAssignmentByTokenAction(
 
     await setAuthSession(officerUser.id, "OFFICER");
 
-    const relevantDepartments = CATEGORY_DEPARTMENT_MAP[assignment.complaint.category] ?? [];
+    const relevantDepartments = CATEGORY_DEPARTMENT_MAP[assignment.complaint.category.name] ?? [];
     const availableOfficers = await prisma.officer.findMany({
       where:
         relevantDepartments.length > 0
@@ -185,8 +179,8 @@ export async function getOfficerAssignmentByTokenAction(
         id: assignment.id,
         complaintId: assignment.complaintId,
         complaint: {
-          category: assignment.complaint.category,
-          subcategory: assignment.complaint.subcategory,
+          category: assignment.complaint.category.name,
+          subcategory: assignment.complaint.subcategory?.name ?? null,
           description: assignment.complaint.description,
           status: assignment.complaint.status,
           plannedCompletionDate:
@@ -212,8 +206,8 @@ export async function getOfficerAssignmentByTokenAction(
         completedAssignments: completedAssignments.map((item) => ({
           id: item.id,
           complaintId: item.complaintId,
-          category: item.complaint.category,
-          subcategory: item.complaint.subcategory,
+          category: item.complaint.category.name,
+          subcategory: item.complaint.subcategory?.name ?? null,
           area: item.complaint.area,
           status: item.complaint.status,
           completedAt: item.updatedAt.toISOString(),

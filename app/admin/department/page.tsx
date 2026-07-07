@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable react-hooks/incompatible-library */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	type PaginationState,
 	type Table as TanstackDataTable,
@@ -19,20 +19,37 @@ import {
 	Card,
 	Drawer,
 	Empty,
-	Form,
-	Input,
+	Modal,
 	Select,
 	Space,
 	Spin,
 	Typography,
+	Input as AntInput,
 } from "antd";
+import { FormProvider, Resolver, useForm } from "react-hook-form";
+import { valibotResolver } from "@hookform/resolvers/valibot";
 import {
 	AdminDepartmentSummary,
 	AdminOfficerDirectorySummary,
 	createAdminDepartmentAction,
+	updateAdminDepartmentAction,
+	deleteAdminDepartmentAction,
 	createAdminOfficerAction,
+	updateAdminOfficerAction,
+	deleteAdminOfficerAction,
 	getAdminDepartmentOfficerDirectoryAction,
 } from "@/actions/admin";
+import { CustomTextInput } from "@/components/inputfields/textinput";
+import { CustomMultiSelect } from "@/components/inputfields/multiselect";
+import {
+	departmentValidationSchema,
+	type departmentValidationForm,
+} from "@/schema/departmentValidationSchema";
+import {
+	officerValidationSchema,
+	type officerValidationForm,
+} from "@/schema/officerValidationSchema";
+import { onFormError } from "@/utils/method";
 
 const { Title, Text } = Typography;
 
@@ -143,15 +160,46 @@ export default function AdminDepartmentPage() {
 	const [isOfficerDrawerOpen, setOfficerDrawerOpen] = useState(false);
 	const [submittingDepartment, setSubmittingDepartment] = useState(false);
 	const [submittingOfficer, setSubmittingOfficer] = useState(false);
+	const [editingDepartment, setEditingDepartment] = useState<AdminDepartmentSummary | null>(null);
+	const [editingOfficer, setEditingOfficer] = useState<AdminOfficerDirectorySummary | null>(null);
+	const [deletingDepartment, setDeletingDepartment] = useState<AdminDepartmentSummary | null>(null);
+	const [deletingOfficer, setDeletingOfficer] = useState<AdminOfficerDirectorySummary | null>(null);
 
-	const [departmentForm] = Form.useForm<{ name: string }>();
-	const [officerForm] = Form.useForm<{
-		name: string;
-		designation: string;
-		email: string;
-		phone: string;
-		departmentId: number;
-	}>();
+	const departmentMethods = useForm<departmentValidationForm>({
+		defaultValues: {
+			name: "",
+		},
+		resolver: valibotResolver(departmentValidationSchema) as Resolver<departmentValidationForm>,
+	});
+
+	const officerMethods = useForm<officerValidationForm>({
+		defaultValues: {
+			name: "",
+			designation: "",
+			email: "",
+			phone: "",
+			departmentId: "",
+		},
+		resolver: valibotResolver(officerValidationSchema) as Resolver<officerValidationForm>,
+	});
+
+	const handleEditDepartment = useCallback((department: AdminDepartmentSummary) => {
+		setEditingDepartment(department);
+		departmentMethods.reset({ name: department.name });
+		setDepartmentDrawerOpen(true);
+	}, [departmentMethods]);
+
+	const handleEditOfficer = useCallback((officer: AdminOfficerDirectorySummary) => {
+		setEditingOfficer(officer);
+		officerMethods.reset({
+			name: officer.name,
+			designation: officer.designation,
+			email: officer.email,
+			phone: officer.phone,
+			departmentId: String(officer.department.id),
+		});
+		setOfficerDrawerOpen(true);
+	}, [officerMethods]);
 
 	const departmentColumns = useMemo(
 		() => [
@@ -173,8 +221,31 @@ export default function AdminDepartmentPage() {
 				cell: (info) => formatDate(info.getValue()),
 				sortingFn: "datetime",
 			}),
+			departmentColumnHelper.display({
+				id: "actions",
+				header: "Actions",
+				cell: (info) => (
+					<Space size="small">
+						<Button
+							size="small"
+							type="link"
+							onClick={() => handleEditDepartment(info.row.original)}
+						>
+							Edit
+						</Button>
+						<Button
+							size="small"
+							type="link"
+							danger
+							onClick={() => setDeletingDepartment(info.row.original)}
+						>
+							Delete
+						</Button>
+					</Space>
+				),
+			}),
 		],
-		[],
+		[handleEditDepartment],
 	);
 
 	const officerColumns = useMemo(
@@ -209,8 +280,31 @@ export default function AdminDepartmentPage() {
 				cell: (info) => formatDate(info.getValue()),
 				sortingFn: "datetime",
 			}),
+			officerColumnHelper.display({
+				id: "actions",
+				header: "Actions",
+				cell: (info) => (
+					<Space size="small">
+						<Button
+							size="small"
+							type="link"
+							onClick={() => handleEditOfficer(info.row.original)}
+						>
+							Edit
+						</Button>
+						<Button
+							size="small"
+							type="link"
+							danger
+							onClick={() => setDeletingOfficer(info.row.original)}
+						>
+							Delete
+						</Button>
+					</Space>
+				),
+			}),
 		],
-		[],
+		[handleEditOfficer],
 	);
 
 	const filteredOfficers = useMemo(() => {
@@ -300,63 +394,140 @@ export default function AdminDepartmentPage() {
 		};
 	}, []);
 
-	async function onCreateDepartment(values: { name: string }) {
+	async function onCreateDepartment(values: departmentValidationForm) {
 		setSubmittingDepartment(true);
 		setErrorMessage(null);
 		setSuccessMessage(null);
 
-		const result = await createAdminDepartmentAction(values);
+		const result = editingDepartment
+			? await updateAdminDepartmentAction({ id: editingDepartment.id, ...values })
+			: await createAdminDepartmentAction(values);
 
 		setSubmittingDepartment(false);
 
 		if (!result.ok) {
-			setErrorMessage(result.error ?? "Unable to create department.");
+			setErrorMessage(result.error ?? `Unable to ${editingDepartment ? "update" : "create"} department.`);
 			return;
 		}
 
-		setDepartments((current) => [...current, result.department]);
-		setSuccessMessage("Department created successfully.");
+		if (editingDepartment) {
+			setDepartments((current) =>
+				current.map((dept) => (dept.id === result.department.id ? result.department : dept)),
+			);
+			setSuccessMessage("Department updated successfully.");
+		} else {
+			setDepartments((current) => [...current, result.department]);
+			setSuccessMessage("Department created successfully.");
+		}
+
 		setDepartmentDrawerOpen(false);
-		departmentForm.resetFields();
+		setEditingDepartment(null);
+		departmentMethods.reset();
 	}
 
-	async function onCreateOfficer(values: {
-		name: string;
-		designation: string;
-		email: string;
-		phone: string;
-		departmentId: number;
-	}) {
+	async function onCreateOfficer(values: officerValidationForm) {
 		setSubmittingOfficer(true);
 		setErrorMessage(null);
 		setSuccessMessage(null);
 
-		const result = await createAdminOfficerAction(values);
+		const result = editingOfficer
+			? await updateAdminOfficerAction({ 
+				id: editingOfficer.id, 
+				name: values.name,
+				designation: values.designation,
+				email: values.email,
+				phone: values.phone,
+				departmentId: Number(values.departmentId),
+			})
+			: await createAdminOfficerAction({
+				name: values.name,
+				designation: values.designation,
+				email: values.email,
+				phone: values.phone,
+				departmentId: Number(values.departmentId),
+			});
 
 		setSubmittingOfficer(false);
 
 		if (!result.ok) {
-			setErrorMessage(result.error ?? "Unable to create officer.");
+			setErrorMessage(result.error ?? `Unable to ${editingOfficer ? "update" : "create"} officer.`);
 			return;
 		}
 
-		setOfficers((current) => [...current, result.officer]);
+		if (editingOfficer) {
+			setOfficers((current) =>
+				current.map((officer) => (officer.id === result.officer.id ? result.officer : officer)),
+			);
+			setSuccessMessage("Officer updated successfully.");
+		} else {
+			setOfficers((current) => [...current, result.officer]);
+			setDepartments((current) =>
+				current.map((department) => {
+					if (department.id !== result.officer.department.id) {
+						return department;
+					}
+
+					return {
+						...department,
+						officersCount: department.officersCount + 1,
+					};
+				}),
+			);
+			setSuccessMessage("Officer created successfully.");
+		}
+
+		setOfficerDrawerOpen(false);
+		setEditingOfficer(null);
+		officerMethods.reset();
+	}
+
+	async function handleDeleteDepartment() {
+		if (!deletingDepartment) return;
+
+		setErrorMessage(null);
+		setSuccessMessage(null);
+
+		const result = await deleteAdminDepartmentAction({ id: deletingDepartment.id });
+
+		if (!result.ok) {
+			setErrorMessage(result.error ?? "Unable to delete department.");
+			setDeletingDepartment(null);
+			return;
+		}
+
+		setDepartments((current) => current.filter((dept) => dept.id !== deletingDepartment.id));
+		setSuccessMessage("Department deleted successfully.");
+		setDeletingDepartment(null);
+	}
+
+	async function handleDeleteOfficer() {
+		if (!deletingOfficer) return;
+
+		setErrorMessage(null);
+		setSuccessMessage(null);
+
+		const result = await deleteAdminOfficerAction({ id: deletingOfficer.id });
+
+		if (!result.ok) {
+			setErrorMessage(result.error ?? "Unable to delete officer.");
+			setDeletingOfficer(null);
+			return;
+		}
+
+		setOfficers((current) => current.filter((officer) => officer.id !== deletingOfficer.id));
 		setDepartments((current) =>
 			current.map((department) => {
-				if (department.id !== result.officer.department.id) {
+				if (department.id !== deletingOfficer.department.id) {
 					return department;
 				}
-
 				return {
 					...department,
-					officersCount: department.officersCount + 1,
+					officersCount: department.officersCount - 1,
 				};
 			}),
 		);
-
-		setSuccessMessage("Officer created successfully.");
-		setOfficerDrawerOpen(false);
-		officerForm.resetFields();
+		setSuccessMessage("Officer deleted successfully.");
+		setDeletingOfficer(null);
 	}
 
 	return (
@@ -392,7 +563,7 @@ export default function AdminDepartmentPage() {
 				<Alert
 					type="error"
 					showIcon
-					message={errorMessage}
+					title={errorMessage}
 					style={{ marginBottom: 16 }}
 					closable
 					onClose={() => setErrorMessage(null)}
@@ -403,7 +574,7 @@ export default function AdminDepartmentPage() {
 				<Alert
 					type="success"
 					showIcon
-					message={successMessage}
+					title={successMessage}
 					style={{ marginBottom: 16 }}
 					closable
 					onClose={() => setSuccessMessage(null)}
@@ -428,7 +599,7 @@ export default function AdminDepartmentPage() {
 						marginBottom: 16,
 					}}
 				>
-					<Input
+					<AntInput
 						placeholder="Search officers by name, email, phone, designation"
 						value={officerSearch}
 						onChange={(event) => setOfficerSearch(event.target.value)}
@@ -506,101 +677,147 @@ export default function AdminDepartmentPage() {
 			</Card>
 
 			<Drawer
-				title="Create Department"
-				open={isDepartmentDrawerOpen}
-				onClose={() => setDepartmentDrawerOpen(false)}
-				size={420}
-				destroyOnHidden
-			>
-				<Form form={departmentForm} layout="vertical" onFinish={onCreateDepartment}>
-					<Form.Item
-						label="Department Name"
-						name="name"
-						rules={[
-							{ required: true, message: "Please enter department name." },
-							{ min: 2, message: "Department name must be at least 2 characters." },
-						]}
-					>
-						<Input placeholder="Enter department name" maxLength={80} />
-					</Form.Item>
+			title={editingDepartment ? "Edit Department" : "Create Department"}
+			open={isDepartmentDrawerOpen}
+			onClose={() => {
+				setDepartmentDrawerOpen(false);
+				setEditingDepartment(null);
+				departmentMethods.reset();
+			}}
+			size={420}
+			destroyOnHidden
+		>
+			<FormProvider {...departmentMethods}>
+				<form onSubmit={departmentMethods.handleSubmit(onCreateDepartment, onFormError)}>
+					<div className="mb-4">
+						<CustomTextInput<departmentValidationForm>
+							name="name"
+							title="Department Name"
+							placeholder="Enter department name"
+							required
+							maxlength={80}
+						/>
+					</div>
 
-					<Button type="primary" htmlType="submit" loading={submittingDepartment} block>
-						Create Department
+					<Button
+						type="primary"
+						htmlType="submit"
+						loading={submittingDepartment}
+						block
+					>
+						{editingDepartment ? "Update Department" : "Create Department"}
 					</Button>
-				</Form>
-			</Drawer>
+				</form>
+			</FormProvider>
+		</Drawer>
 
-			<Drawer
-				title="Create Officer"
+		<Drawer
+				title={editingOfficer ? "Edit Officer" : "Create Officer"}
 				open={isOfficerDrawerOpen}
-				onClose={() => setOfficerDrawerOpen(false)}
-				size={460}
-				destroyOnHidden
-			>
-				<Form form={officerForm} layout="vertical" onFinish={onCreateOfficer}>
-					<Form.Item
-						label="Officer Name"
-						name="name"
-						rules={[
-							{ required: true, message: "Please enter officer name." },
-							{ min: 2, message: "Officer name must be at least 2 characters." },
-						]}
-					>
-						<Input placeholder="Enter officer name" maxLength={80} />
-					</Form.Item>
+				onClose={() => {
+					setOfficerDrawerOpen(false);
+					setEditingOfficer(null);
+				officerMethods.reset();
+			}}
+			size={460}
+			destroyOnHidden
+		>
+			<FormProvider {...officerMethods}>
+				<form onSubmit={officerMethods.handleSubmit(onCreateOfficer, onFormError)}>
+					<div className="mb-4">
+						<CustomTextInput<officerValidationForm>
+							name="name"
+							title="Officer Name"
+							placeholder="Enter officer name"
+							required
+							maxlength={80}
+						/>
+					</div>
 
-					<Form.Item
-						label="Designation"
-						name="designation"
-						rules={[
-							{ required: true, message: "Please enter designation." },
-							{ min: 2, message: "Designation must be at least 2 characters." },
-						]}
-					>
-						<Input placeholder="Enter designation" maxLength={80} />
-					</Form.Item>
+					<div className="mb-4">
+						<CustomTextInput<officerValidationForm>
+							name="designation"
+							title="Designation"
+							placeholder="Enter designation"
+							required
+							maxlength={80}
+						/>
+					</div>
 
-					<Form.Item
-						label="Email"
-						name="email"
-						rules={[
-							{ required: true, message: "Please enter email." },
-							{ type: "email", message: "Please enter a valid email." },
-						]}
-					>
-						<Input placeholder="officer@example.com" maxLength={120} />
-					</Form.Item>
+					<div className="mb-4">
+						<CustomTextInput<officerValidationForm>
+							name="email"
+							title="Email"
+							placeholder="officer@example.com"
+							required
+							maxlength={120}
+						/>
+					</div>
 
-					<Form.Item
-						label="Phone"
-						name="phone"
-						rules={[
-							{ required: true, message: "Please enter phone." },
-							{ min: 8, message: "Phone must be at least 8 characters." },
-						]}
-					>
-						<Input placeholder="Enter phone number" maxLength={20} />
-					</Form.Item>
+					<div className="mb-4">
+						<CustomTextInput<officerValidationForm>
+							name="phone"
+							title="Phone"
+							placeholder="Enter phone number"
+							required
+							maxlength={10}
+						/>
+					</div>
 
-					<Form.Item
-						label="Department"
-						name="departmentId"
-						rules={[{ required: true, message: "Please select department." }]}
-					>
-						<Select
+					<div className="mb-4">
+						<CustomMultiSelect<officerValidationForm>
+							name="departmentId"
+							title="Department"
 							placeholder="Select department"
+							required
 							options={departments.map((department) => ({
 								label: department.name,
-								value: department.id,
+								value: String(department.id),
 							}))}
 						/>
-					</Form.Item>
+					</div>
 
-					<Button type="primary" htmlType="submit" loading={submittingOfficer} block>
-						Create Officer
+					<Button
+						type="primary"
+						htmlType="submit"
+						loading={submittingOfficer}
+						block
+					>
+						{editingOfficer ? "Update Officer" : "Create Officer"}
 					</Button>
-				</Form>
-			</Drawer>
+				</form>
+			</FormProvider>
+		</Drawer>
+
+		<Modal
+			title="Delete Department"
+			open={!!deletingDepartment}
+			onOk={handleDeleteDepartment}
+			onCancel={() => setDeletingDepartment(null)}
+			okText="Delete"
+			okType="danger"
+			cancelText="Cancel"
+		>
+			<p>
+				Are you sure you want to delete the department <strong>{deletingDepartment?.name}</strong>?
+			</p>
+			<p style={{ color: "#ff4d4f", marginBottom: 0 }}>This action cannot be undone.</p>
+		</Modal>
+
+			<Modal
+				title="Delete Officer"
+				open={!!deletingOfficer}
+				onOk={handleDeleteOfficer}
+				onCancel={() => setDeletingOfficer(null)}
+				okText="Delete"
+				okType="danger"
+				cancelText="Cancel"
+			>
+				<p>
+					Are you sure you want to delete the officer <strong>{deletingOfficer?.name}</strong>?
+				</p>
+				<p style={{ color: "#ff4d4f", marginBottom: 0 }}>This action cannot be undone.</p>
+			</Modal>
 		</div>
 	);
 }

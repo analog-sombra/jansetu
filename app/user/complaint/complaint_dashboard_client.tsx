@@ -1,14 +1,17 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
   Card,
   Col,
+  Input,
   message,
   Modal,
+  Rate,
   Row,
   Space,
   Statistic,
@@ -16,8 +19,10 @@ import {
   Tag,
   Tooltip,
   Typography,
+  Upload,
 } from "antd";
 import type { TableColumnsType } from "antd";
+import type { UploadFile } from "antd/es/upload/interface";
 import {
   CopyOutlined,
   DownloadOutlined,
@@ -29,6 +34,8 @@ import {
   ComplaintDashboardItem,
   ComplaintDashboardProfile,
   confirmResolutionAction,
+  createComplaintDisputeAction,
+  createComplaintReviewAction,
 } from "@/actions/user/complaint";
 
 const { Title, Text } = Typography;
@@ -36,13 +43,32 @@ const { Title, Text } = Typography;
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "orange",
   IN_PROGRESS: "blue",
-  WORK_IN_PROGESS: "cyan",
+  WORK_IN_PROGRESS: "cyan",
   QUERY_RAISED: "volcano",
   RESOLVED: "green",
+  CLOSED: "geekblue",
   REJECTED: "red",
   ESCALATED: "purple",
   AUTO_CLOSED: "default",
 };
+
+const DATE_FORMATTER = new Intl.DateTimeFormat("en-IN", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Asia/Kolkata",
+});
+
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("en-IN", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true,
+  timeZone: "Asia/Kolkata",
+});
 
 function getLocalizedCategory(
   category: string,
@@ -82,6 +108,31 @@ export default function ComplaintDashboardClient({
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [sharingComplaint, setSharingComplaint] =
     useState<ComplaintDashboardItem | null>(null);
+  const [resolvingComplaintId, setResolvingComplaintId] = useState<number | null>(
+    null,
+  );
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false);
+  const [disputingComplaint, setDisputingComplaint] =
+    useState<ComplaintDashboardItem | null>(null);
+  const [disputeRemark, setDisputeRemark] = useState("");
+  const [disputeFileList, setDisputeFileList] = useState<UploadFile[]>([]);
+  const [submittingDispute, setSubmittingDispute] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewingComplaint, setReviewingComplaint] =
+    useState<ComplaintDashboardItem | null>(null);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewFileList, setReviewFileList] = useState<UploadFile[]>([]);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [lastUpdatedLabel, setLastUpdatedLabel] = useState("");
+
+  useEffect(() => {
+    setLastUpdatedLabel(DATE_TIME_FORMATTER.format(new Date()));
+  }, []);
+
+  function formatDisplayDate(value: string) {
+    return DATE_FORMATTER.format(new Date(value));
+  }
 
   async function generateCertificateCanvas(
     complaint: ComplaintDashboardItem,
@@ -221,10 +272,13 @@ export default function ComplaintDashboardClient({
   }
 
   async function confirmResolution(complaintId: number, confirmed: boolean) {
+    setResolvingComplaintId(complaintId);
     const result = await confirmResolutionAction(complaintId, confirmed);
+    setResolvingComplaintId(null);
 
     if (!result.ok) {
       setError(result.error ?? "Unable to update complaint status.");
+      void message.error(result.error ?? "Unable to update complaint status.");
       return;
     }
 
@@ -235,6 +289,130 @@ export default function ComplaintDashboardClient({
           : item,
       ),
     );
+
+    void message.success(
+      confirmed
+        ? result.status === "CLOSED"
+          ? "Complaint marked as completed."
+          : "Complaint marked as resolved."
+        : "Complaint has been disputed and escalated.",
+    );
+  }
+
+  function openDisputeModal(complaint: ComplaintDashboardItem) {
+    setDisputingComplaint(complaint);
+    setDisputeRemark("");
+    setDisputeFileList([]);
+    setDisputeModalOpen(true);
+  }
+
+  async function submitDispute() {
+    if (!disputingComplaint) {
+      return;
+    }
+
+    const photo = disputeFileList[0]?.originFileObj;
+
+    if (!(photo instanceof File)) {
+      void message.error("Please upload a dispute photo.");
+      return;
+    }
+
+    if (disputeRemark.trim().length < 10) {
+      void message.error("Please enter at least 10 characters in remark.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("complaintId", String(disputingComplaint.id));
+    formData.append("remark", disputeRemark.trim());
+    formData.append("photo", photo);
+
+    setSubmittingDispute(true);
+    const result = await createComplaintDisputeAction(formData);
+    setSubmittingDispute(false);
+
+    if (!result.ok) {
+      setError(result.error ?? "Unable to create dispute.");
+      void message.error(result.error ?? "Unable to create dispute.");
+      return;
+    }
+
+    setComplaints((current) =>
+      current.map((item) =>
+        item.id === disputingComplaint.id
+          ? { ...item, status: result.status ?? item.status }
+          : item,
+      ),
+    );
+
+    setDisputeModalOpen(false);
+    setDisputingComplaint(null);
+    setDisputeRemark("");
+    setDisputeFileList([]);
+    void message.success("Dispute submitted successfully.");
+  }
+
+  function openReviewModal(complaint: ComplaintDashboardItem) {
+    setReviewingComplaint(complaint);
+    setReviewText("");
+    setReviewRating(5);
+    setReviewFileList([]);
+    setReviewModalOpen(true);
+  }
+
+  async function submitReview() {
+    if (!reviewingComplaint) {
+      return;
+    }
+
+    const photo = reviewFileList[0]?.originFileObj;
+
+    if (!(photo instanceof File)) {
+      void message.error("Please upload a review photo.");
+      return;
+    }
+
+    if (reviewText.trim().length < 10) {
+      void message.error("Please write at least 10 characters in review.");
+      return;
+    }
+
+    if (!Number.isInteger(reviewRating) || reviewRating < 1 || reviewRating > 5) {
+      void message.error("Please select a rating between 1 and 5 stars.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("complaintId", String(reviewingComplaint.id));
+    formData.append("review", reviewText.trim());
+    formData.append("rating", String(reviewRating));
+    formData.append("photo", photo);
+
+    setSubmittingReview(true);
+    const result = await createComplaintReviewAction(formData);
+    setSubmittingReview(false);
+
+    if (!result.ok) {
+      setError(result.error ?? "Unable to submit review.");
+      void message.error(result.error ?? "Unable to submit review.");
+      return;
+    }
+
+    setComplaints((current) =>
+      current.map((item) =>
+        item.id === reviewingComplaint.id
+          ? { ...item, status: result.status ?? item.status }
+          : item,
+      ),
+    );
+
+    setReviewModalOpen(false);
+    setReviewingComplaint(null);
+    setReviewText("");
+    setReviewRating(5);
+    setReviewFileList([]);
+    void message.success("Review submitted and complaint marked as completed.");
   }
 
   const totalComplaints = complaints.length;
@@ -242,7 +420,9 @@ export default function ComplaintDashboardClient({
     (complaint) => complaint.status === "RESOLVED",
   ).length;
   const pendingComplaints = complaints.filter((complaint) =>
-    ["PENDING", "IN_PROGRESS", "WORK_IN_PROGESS"].includes(complaint.status),
+    ["PENDING", "IN_PROGRESS", "WORK_IN_PROGRESS", "QUERY_RAISED"].includes(
+      complaint.status,
+    ),
   ).length;
 
   const columns: TableColumnsType<ComplaintDashboardItem> = [
@@ -313,7 +493,7 @@ export default function ComplaintDashboardClient({
       render: (date: string | null) =>
         date ? (
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {new Date(date).toLocaleDateString("en-IN")}
+            {formatDisplayDate(date)}
           </Text>
         ) : (
           <Text type="secondary" style={{ fontSize: 12 }}>
@@ -328,7 +508,7 @@ export default function ComplaintDashboardClient({
       width: 120,
       render: (date: string) => (
         <Text type="secondary" style={{ fontSize: 12 }}>
-          {new Date(date).toLocaleDateString("en-IN")}
+          {formatDisplayDate(date)}
         </Text>
       ),
       sorter: (left, right) =>
@@ -338,48 +518,113 @@ export default function ComplaintDashboardClient({
       title: t("dashboard.table.action"),
       key: "action",
       width: 260,
-      render: (_, record) =>
-        record.status === "RESOLVED" ? (
+      render: (_, record) => {
+        if (record.status === "QUERY_RAISED") {
+          return (
+            <Space size="small">
+              <Link href={`/user/complaint/${record.id}`}>
+                <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                  View
+                </Button>
+              </Link>
+              <Button
+                size="small"
+                type="primary"
+                loading={resolvingComplaintId === record.id}
+                disabled={resolvingComplaintId === record.id}
+                onClick={() => {
+                  void confirmResolution(record.id, true);
+                }}
+                style={{ background: "#2e7d32", borderColor: "#2e7d32" }}
+              >
+                {t("dashboard.confirm")}
+              </Button>
+              <Button
+                size="small"
+                danger
+                loading={resolvingComplaintId === record.id}
+                disabled={resolvingComplaintId === record.id}
+                onClick={() => {
+                  openDisputeModal(record);
+                }}
+              >
+                {t("dashboard.dispute")}
+              </Button>
+            </Space>
+          );
+        }
+
+        if (record.status === "RESOLVED") {
+          return (
+            <Space size="small">
+              <Link href={`/user/complaint/${record.id}`}>
+                <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                  View
+                </Button>
+              </Link>
+              <Button
+                size="small"
+                type="primary"
+                loading={resolvingComplaintId === record.id}
+                disabled={resolvingComplaintId === record.id}
+                onClick={() => {
+                  openReviewModal(record);
+                }}
+                style={{ background: "#2e7d32", borderColor: "#2e7d32" }}
+              >
+                Complete
+              </Button>
+              <Button
+                size="small"
+                danger
+                onClick={() => {
+                  openDisputeModal(record);
+                }}
+              >
+                {t("dashboard.dispute")}
+              </Button>
+            </Space>
+          );
+        }
+
+        if (record.status === "CLOSED") {
+          return (
+            <Space size="small">
+              <Link href={`/user/complaint/${record.id}`}>
+                <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                  View
+                </Button>
+              </Link>
+              <Button
+                size="small"
+                danger
+                onClick={() => {
+                  openDisputeModal(record);
+                }}
+              >
+                Reopen / Dispute
+              </Button>
+            </Space>
+          );
+        }
+
+        return (
           <Space size="small">
             <Link href={`/user/complaint/${record.id}`}>
               <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
                 View
               </Button>
             </Link>
-            <Button
-              size="small"
-              type="primary"
-              onClick={() => {
-                void confirmResolution(record.id, true);
-              }}
-              style={{ background: "#2e7d32", borderColor: "#2e7d32" }}
-            >
-              {t("dashboard.confirm")}
-            </Button>
-            <Button
-              size="small"
-              danger
-              onClick={() => {
-                void confirmResolution(record.id, false);
-              }}
-            >
-              {t("dashboard.dispute")}
-            </Button>
           </Space>
-        ) : (
-          <Link href={`/user/complaint/${record.id}`}>
-            <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
-              View
-            </Button>
-          </Link>
-        ),
+        );
+      },
     },
     {
       title: "",
       key: "certificate",
       width: 90,
       render: (_, record) =>
-        record.status === "RESOLVED" ? (
+        record.status === "CLOSED" ? (
           <Space size="small">
             <Tooltip title="Download Certificate">
               <Button
@@ -511,7 +756,7 @@ export default function ComplaintDashboardClient({
         }
         extra={
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {t("dashboard.lastUpdated")}: {new Date().toLocaleString("en-IN")}
+            {t("dashboard.lastUpdated")}: {lastUpdatedLabel || "-"}
           </Text>
         }
         style={{ borderRadius: 6 }}
@@ -606,7 +851,7 @@ export default function ComplaintDashboardClient({
             <Alert
               type="success"
               showIcon
-              message={`Complaint #${sharingComplaint.id} resolved!`}
+              title={`Complaint #${sharingComplaint.id} resolved!`}
               description="Share your experience and encourage others to raise their voice."
             />
             <div
@@ -681,6 +926,126 @@ export default function ComplaintDashboardClient({
             </Text>
           </Space>
         )}
+      </Modal>
+
+      <Modal
+        title={
+          disputingComplaint
+            ? `Create Dispute for Complaint #${disputingComplaint.id}`
+            : "Create Dispute"
+        }
+        open={disputeModalOpen}
+        onCancel={() => {
+          if (submittingDispute) return;
+          setDisputeModalOpen(false);
+          setDisputingComplaint(null);
+          setDisputeRemark("");
+          setDisputeFileList([]);
+        }}
+        onOk={() => {
+          void submitDispute();
+        }}
+        okText="Submit Dispute"
+        confirmLoading={submittingDispute}
+      >
+        <Space orientation="vertical" style={{ width: "100%" }} size="middle">
+          <Alert
+            type="warning"
+            showIcon
+            title="Upload proof and explain why you are disputing this resolution."
+          />
+
+          <div>
+            <Text strong>Remark</Text>
+            <Input.TextArea
+              rows={4}
+              value={disputeRemark}
+              onChange={(event) => setDisputeRemark(event.target.value)}
+              placeholder="Enter dispute remark"
+              maxLength={500}
+              style={{ marginTop: 6 }}
+            />
+          </div>
+
+          <div>
+            <Text strong>Photo</Text>
+            <Upload
+              style={{ marginTop: 6 }}
+              accept="image/*"
+              listType="picture"
+              maxCount={1}
+              fileList={disputeFileList}
+              beforeUpload={() => false}
+              onChange={({ fileList }) => setDisputeFileList(fileList)}
+            >
+              <Button>Upload Photo</Button>
+            </Upload>
+          </div>
+        </Space>
+      </Modal>
+
+      <Modal
+        title={
+          reviewingComplaint
+            ? `Complete Complaint #${reviewingComplaint.id} with Review`
+            : "Complete with Review"
+        }
+        open={reviewModalOpen}
+        onCancel={() => {
+          if (submittingReview) return;
+          setReviewModalOpen(false);
+          setReviewingComplaint(null);
+          setReviewText("");
+          setReviewRating(5);
+          setReviewFileList([]);
+        }}
+        onOk={() => {
+          void submitReview();
+        }}
+        okText="Submit Review"
+        confirmLoading={submittingReview}
+      >
+        <Space orientation="vertical" style={{ width: "100%" }} size="middle">
+          <Alert
+            type="success"
+            showIcon
+            title="Rate and review this resolved complaint before marking it completed."
+          />
+
+          <div>
+            <Text strong>Rating</Text>
+            <div style={{ marginTop: 8 }}>
+              <Rate value={reviewRating} onChange={setReviewRating} allowClear={false} />
+            </div>
+          </div>
+
+          <div>
+            <Text strong>Review</Text>
+            <Input.TextArea
+              rows={4}
+              value={reviewText}
+              onChange={(event) => setReviewText(event.target.value)}
+              placeholder="Write your review"
+              maxLength={500}
+              style={{ marginTop: 6 }}
+            />
+          </div>
+
+          <div>
+            <Text strong>Photo</Text>
+            <Upload
+              style={{ marginTop: 6 }}
+              accept="image/*"
+              listType="picture"
+              maxCount={1}
+              fileList={reviewFileList}
+              beforeUpload={() => false}
+              onChange={({ fileList }) => setReviewFileList(fileList)}
+            >
+              <Button>Upload Photo</Button>
+            </Upload>
+          </div>
+        </Space>
       </Modal>
     </div>
   );

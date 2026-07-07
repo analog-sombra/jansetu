@@ -41,6 +41,12 @@ const REPORT_NAV_LINKS = [
   { href: "/report/demo", labelKey: "nav.mlaReport" },
 ];
 
+const MLA_PA_NAV_LINKS = [
+  { href: "/mla-pa/complaint", labelKey: "nav.mlaPaComplaint" },
+  { href: "/mla-pa/meeting-section", labelKey: "nav.mlaPaMeetingSection" },
+  { href: "/mla-pa/create-meeting", labelKey: "nav.mlaPaCreateMeeting" },
+];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -56,6 +62,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   function getNavLinks() {
     if (pathname.startsWith("/admin")) {
       return ADMIN_NAV_LINKS;
+    }
+
+    if (pathname.startsWith("/mla-pa")) {
+      return MLA_PA_NAV_LINKS;
     }
 
     if (pathname.startsWith("/camp")) {

@@ -18,8 +18,16 @@ export async function getCampComplaintsDashboardAction(): Promise<CampComplaints
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
-        category: true,
-        subcategory: true,
+        category: {
+          select: {
+            name: true,
+          },
+        },
+        subcategory: {
+          select: {
+            name: true,
+          },
+        },
         affectedCitizensCount: true,
         status: true,
         area: true,
@@ -39,8 +47,8 @@ export async function getCampComplaintsDashboardAction(): Promise<CampComplaints
         id: complaint.id,
         citizenName: complaint.user.name ?? "Citizen",
         citizenMobile: complaint.user.mobile,
-        category: complaint.category,
-        subcategory: complaint.subcategory,
+        category: complaint.category.name,
+        subcategory: complaint.subcategory.name,
         affectedCitizensCount: complaint.affectedCitizensCount,
         status: complaint.status,
         area: complaint.area ?? "",

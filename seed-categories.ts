@@ -10,8 +10,6 @@ const COMPLAINT_CATEGORIES = [
   "Other",
 ] as const;
 
-
-
 const SUBCATEGORIES: Record<string, string[]> = {
   Road: [
     "Pothole",
@@ -79,14 +77,20 @@ async function seedCategoriesAndSubcategories() {
     // Check if categories already exist
     const existingCount = await prisma.category.count();
     if (existingCount > 0 && !forceReseed) {
-      console.log(`⚠️  Found ${existingCount} existing categories. Skipping seed.`);
+      console.log(
+        `⚠️  Found ${existingCount} existing categories. Skipping seed.`,
+      );
       console.log("💡 To re-seed, run: pnpm seed:categories --force");
-      console.log("⚠️  Warning: This will delete all existing categories and subcategories!");
+      console.log(
+        "⚠️  Warning: This will delete all existing categories and subcategories!",
+      );
       return;
     }
 
     if (existingCount > 0 && forceReseed) {
-      console.log(`🗑️  Deleting ${existingCount} existing categories and their subcategories...`);
+      console.log(
+        `🗑️  Deleting ${existingCount} existing categories and their subcategories...`,
+      );
       await prisma.subcategory.deleteMany({});
       await prisma.category.deleteMany({});
       console.log("✅ Existing data cleared.");
@@ -102,6 +106,7 @@ async function seedCategoriesAndSubcategories() {
       const category = await prisma.category.create({
         data: {
           name: categoryName,
+          departmentId: 1,
         },
       });
       totalCategories++;

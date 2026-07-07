@@ -1,4 +1,5 @@
 import {
+  custom,
   InferInput,
   maxLength,
   minLength,
@@ -11,15 +12,19 @@ import {
 } from "valibot";
 
 const complaintValidationSchema = object({
-  category: pipe(
-    string(),
-    trim(),
-    minLength(1, "Please select a category"),
+  categoryId: custom(
+    (v): boolean => {
+      const num = typeof v === "string" ? Number(v) : (v as number);
+      return !isNaN(num) && num > 0;
+    },
+    "Please select a category",
   ),
-  subcategory: pipe(
-    string(),
-    trim(),
-    minLength(1, "Please select a sub-category"),
+  subcategoryId: custom(
+    (v): boolean => {
+      const num = typeof v === "string" ? Number(v) : (v as number);
+      return !isNaN(num) && num > 0;
+    },
+    "Please select a sub-category",
   ),
   description: pipe(
     string(),

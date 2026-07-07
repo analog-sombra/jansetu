@@ -27,7 +27,11 @@ export { assignAdminComplaintOfficerAction } from "./assignAdminComplaintOfficer
 export { raiseAdminComplaintQueryAction } from "./raiseAdminComplaintQueryAction";
 export { getAdminDepartmentOfficerDirectoryAction } from "./getAdminDepartmentOfficerDirectoryAction";
 export { createAdminDepartmentAction } from "./createAdminDepartmentAction";
+export { updateAdminDepartmentAction } from "./updateAdminDepartmentAction";
+export { deleteAdminDepartmentAction } from "./deleteAdminDepartmentAction";
 export { createAdminOfficerAction } from "./createAdminOfficerAction";
+export { updateAdminOfficerAction } from "./updateAdminOfficerAction";
+export { deleteAdminOfficerAction } from "./deleteAdminOfficerAction";
 export { getAdminCategorySubcategoryDirectoryAction } from "./getAdminCategorySubcategoryDirectoryAction";
 export { createAdminCategoryAction } from "./createAdminCategoryAction";
 export { createAdminSubcategoryAction } from "./createAdminSubcategoryAction";
@@ -36,3 +40,12 @@ export { deleteAdminCategoryAction } from "./deleteAdminCategoryAction";
 export { updateAdminSubcategoryAction } from "./updateAdminSubcategoryAction";
 export { deleteAdminSubcategoryAction } from "./deleteAdminSubcategoryAction";
 export { getComplaintClusterPrecisionImpactAction } from "./getComplaintClusterPrecisionImpactAction";
+export {
+  getAdminMeetingAssigneesAction,
+  getAdminMeetingsDashboardAction,
+  lookupAdminMeetingCitizenByMobileAction,
+  lookupAdminMeetingContactByMobileAction,
+  createAdminMeetingAction,
+  approveAdminMeetingAction,
+  rejectAdminMeetingAction,
+} from "./meeting";

@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable react-hooks/incompatible-library */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	type PaginationState,
 	type Table as TanstackDataTable,
@@ -19,25 +19,39 @@ import {
 	Card,
 	Drawer,
 	Empty,
-	Form,
-	Input,
 	Modal,
 	Select,
 	Space,
 	Spin,
 	Typography,
+	Input as AntInput,
 } from "antd";
+import { FormProvider, Resolver, useForm } from "react-hook-form";
+import { valibotResolver } from "@hookform/resolvers/valibot";
 import {
 	AdminCategorySummary,
+	AdminDepartmentSummary,
 	AdminSubcategoryDirectorySummary,
 	createAdminCategoryAction,
 	createAdminSubcategoryAction,
 	deleteAdminCategoryAction,
 	deleteAdminSubcategoryAction,
 	getAdminCategorySubcategoryDirectoryAction,
+	getAdminDepartmentOfficerDirectoryAction,
 	updateAdminCategoryAction,
 	updateAdminSubcategoryAction,
 } from "@/actions/admin";
+import { CustomTextInput } from "@/components/inputfields/textinput";
+import { CustomMultiSelect } from "@/components/inputfields/multiselect";
+import {
+	categoryValidationSchema,
+	type categoryValidationForm,
+} from "@/schema/categoryValidationSchema";
+import {
+	subcategoryValidationSchema,
+	type subcategoryValidationForm,
+} from "@/schema/subcategoryValidationSchema";
+import { onFormError } from "@/utils/method";
 
 const { Title, Text } = Typography;
 
@@ -133,6 +147,7 @@ export default function AdminCategoryPage() {
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
 	const [categories, setCategories] = useState<AdminCategorySummary[]>([]);
+	const [departments, setDepartments] = useState<AdminDepartmentSummary[]>([]);
 	const [subcategories, setSubcategories] = useState<AdminSubcategoryDirectorySummary[]>([]);
 
 	const [categorySorting, setCategorySorting] = useState<SortingState>([]);
@@ -153,11 +168,39 @@ export default function AdminCategoryPage() {
 	const [deletingCategory, setDeletingCategory] = useState<AdminCategorySummary | null>(null);
 	const [deletingSubcategory, setDeletingSubcategory] = useState<AdminSubcategoryDirectorySummary | null>(null);
 
-	const [categoryForm] = Form.useForm<{ name: string }>();
-	const [subcategoryForm] = Form.useForm<{
-		name: string;
-		categoryId: number;
-	}>();
+	const categoryMethods = useForm<categoryValidationForm>({
+		defaultValues: {
+			name: "",
+			departmentId: "",
+		},
+		resolver: valibotResolver(categoryValidationSchema) as Resolver<categoryValidationForm>,
+	});
+
+	const subcategoryMethods = useForm<subcategoryValidationForm>({
+		defaultValues: {
+			name: "",
+			categoryId: "",
+		},
+		resolver: valibotResolver(subcategoryValidationSchema) as Resolver<subcategoryValidationForm>,
+	});
+
+	const handleEditCategory = useCallback((category: AdminCategorySummary) => {
+		setEditingCategory(category);
+		categoryMethods.reset({
+			name: category.name,
+			departmentId: String(category.department.id),
+		});
+		setCategoryDrawerOpen(true);
+	}, [categoryMethods]);
+
+	const handleEditSubcategory = useCallback((subcategory: AdminSubcategoryDirectorySummary) => {
+		setEditingSubcategory(subcategory);
+		subcategoryMethods.reset({
+			name: subcategory.name,
+			categoryId: String(subcategory.category.id),
+		});
+		setSubcategoryDrawerOpen(true);
+	}, [subcategoryMethods]);
 
 	const categoryColumns = useMemo(
 		() => [
@@ -203,7 +246,7 @@ export default function AdminCategoryPage() {
 				),
 			}),
 		],
-		[],
+		[handleEditCategory],
 	);
 
 	const subcategoryColumns = useMemo(
@@ -251,7 +294,7 @@ export default function AdminCategoryPage() {
 				),
 			}),
 		],
-		[],
+		[handleEditSubcategory],
 	);
 
 	const filteredSubcategories = useMemo(() => {
@@ -313,20 +356,30 @@ export default function AdminCategoryPage() {
 		let disposed = false;
 
 		async function loadData() {
-			const result = await getAdminCategorySubcategoryDirectoryAction();
+			const [categoryResult, departmentResult] = await Promise.all([
+				getAdminCategorySubcategoryDirectoryAction(),
+				getAdminDepartmentOfficerDirectoryAction(),
+			]);
 
 			if (disposed) {
 				return;
 			}
 
-			if (!result.ok) {
-				setErrorMessage(result.error ?? "Unable to load directory data.");
+			if (!categoryResult.ok) {
+				setErrorMessage(categoryResult.error ?? "Unable to load directory data.");
 				setLoading(false);
 				return;
 			}
 
-			setCategories(result.categories);
-			setSubcategories(result.subcategories);
+			if (!departmentResult.ok) {
+				setErrorMessage(departmentResult.error ?? "Unable to load departments.");
+				setLoading(false);
+				return;
+			}
+
+			setCategories(categoryResult.categories);
+			setSubcategories(categoryResult.subcategories);
+			setDepartments(departmentResult.departments);
 			setErrorMessage(null);
 			setLoading(false);
 		}
@@ -338,29 +391,21 @@ export default function AdminCategoryPage() {
 		};
 	}, []);
 
-	function handleEditCategory(category: AdminCategorySummary) {
-		setEditingCategory(category);
-		categoryForm.setFieldsValue({ name: category.name });
-		setCategoryDrawerOpen(true);
-	}
-
-	function handleEditSubcategory(subcategory: AdminSubcategoryDirectorySummary) {
-		setEditingSubcategory(subcategory);
-		subcategoryForm.setFieldsValue({
-			name: subcategory.name,
-			categoryId: subcategory.category.id,
-		});
-		setSubcategoryDrawerOpen(true);
-	}
-
-	async function onSubmitCategory(values: { name: string }) {
+	async function onSubmitCategory(values: categoryValidationForm) {
 		setSubmittingCategory(true);
 		setErrorMessage(null);
 		setSuccessMessage(null);
 
 		const result = editingCategory
-			? await updateAdminCategoryAction({ id: editingCategory.id, ...values })
-			: await createAdminCategoryAction(values);
+			? await updateAdminCategoryAction({
+				id: editingCategory.id,
+				name: values.name,
+				departmentId: Number(values.departmentId),
+			})
+			: await createAdminCategoryAction({
+				name: values.name,
+				departmentId: Number(values.departmentId),
+			});
 
 		setSubmittingCategory(false);
 
@@ -381,20 +426,24 @@ export default function AdminCategoryPage() {
 
 		setCategoryDrawerOpen(false);
 		setEditingCategory(null);
-		categoryForm.resetFields();
+		categoryMethods.reset();
 	}
 
-	async function onSubmitSubcategory(values: {
-		name: string;
-		categoryId: number;
-	}) {
+	async function onSubmitSubcategory(values: subcategoryValidationForm) {
 		setSubmittingSubcategory(true);
 		setErrorMessage(null);
 		setSuccessMessage(null);
 
 		const result = editingSubcategory
-			? await updateAdminSubcategoryAction({ id: editingSubcategory.id, ...values })
-			: await createAdminSubcategoryAction(values);
+			? await updateAdminSubcategoryAction({
+				id: editingSubcategory.id,
+				name: values.name,
+				categoryId: Number(values.categoryId),
+			})
+			: await createAdminSubcategoryAction({
+				name: values.name,
+				categoryId: Number(values.categoryId),
+			});
 
 		setSubmittingSubcategory(false);
 
@@ -445,7 +494,7 @@ export default function AdminCategoryPage() {
 
 		setSubcategoryDrawerOpen(false);
 		setEditingSubcategory(null);
-		subcategoryForm.resetFields();
+		subcategoryMethods.reset();
 	}
 
 	async function handleDeleteCategory() {
@@ -531,7 +580,7 @@ export default function AdminCategoryPage() {
 				<Alert
 					type="error"
 					showIcon
-					message={errorMessage}
+					title={errorMessage}
 					style={{ marginBottom: 16 }}
 					closable
 					onClose={() => setErrorMessage(null)}
@@ -542,7 +591,7 @@ export default function AdminCategoryPage() {
 				<Alert
 					type="success"
 					showIcon
-					message={successMessage}
+					title={successMessage}
 					style={{ marginBottom: 16 }}
 					closable
 					onClose={() => setSuccessMessage(null)}
@@ -567,7 +616,7 @@ export default function AdminCategoryPage() {
 						marginBottom: 16,
 					}}
 				>
-					<Input
+					<AntInput
 						placeholder="Search subcategories by name or category"
 						value={subcategorySearch}
 						onChange={(event) => setSubcategorySearch(event.target.value)}
@@ -650,71 +699,95 @@ export default function AdminCategoryPage() {
 				onClose={() => {
 					setCategoryDrawerOpen(false);
 					setEditingCategory(null);
-					categoryForm.resetFields();
-				}}
-				size={420}
-				destroyOnClose
-			>
-				<Form form={categoryForm} layout="vertical" onFinish={onSubmitCategory}>
-					<Form.Item
-						label="Category Name"
-						name="name"
-						rules={[
-							{ required: true, message: "Please enter category name." },
-							{ min: 2, message: "Category name must be at least 2 characters." },
-						]}
-					>
-						<Input placeholder="Enter category name" maxLength={80} />
-					</Form.Item>
+				categoryMethods.reset();
+			}}
+			size={420}
+			destroyOnClose
+		>
+			<FormProvider {...categoryMethods}>
+				<form onSubmit={categoryMethods.handleSubmit(onSubmitCategory, onFormError)}>
+					<div className="mb-4">
+						<CustomTextInput<categoryValidationForm>
+							name="name"
+							title="Category Name"
+							placeholder="Enter category name"
+							required
+							maxlength={80}
+						/>
+					</div>
 
-					<Button type="primary" htmlType="submit" loading={submittingCategory} block>
-						{editingCategory ? "Update Category" : "Create Category"}
-					</Button>
-				</Form>
-			</Drawer>
-
-			<Drawer
-				title={editingSubcategory ? "Edit Subcategory" : "Create Subcategory"}
-				open={isSubcategoryDrawerOpen}
-				onClose={() => {
-					setSubcategoryDrawerOpen(false);
-					setEditingSubcategory(null);
-					subcategoryForm.resetFields();
-				}}
-				size={460}
-				destroyOnClose
-			>
-				<Form form={subcategoryForm} layout="vertical" onFinish={onSubmitSubcategory}>
-					<Form.Item
-						label="Subcategory Name"
-						name="name"
-						rules={[
-							{ required: true, message: "Please enter subcategory name." },
-							{ min: 2, message: "Subcategory name must be at least 2 characters." },
-						]}
-					>
-						<Input placeholder="Enter subcategory name" maxLength={80} />
-					</Form.Item>
-
-					<Form.Item
-						label="Category"
-						name="categoryId"
-						rules={[{ required: true, message: "Please select category." }]}
-					>
-						<Select
-							placeholder="Select category"
-							options={categories.map((category) => ({
-								label: category.name,
-								value: category.id,
+					<div className="mb-4">
+						<CustomMultiSelect<categoryValidationForm>
+							name="departmentId"
+							title="Department"
+							placeholder="Select department"
+							required
+							options={departments.map((dept) => ({
+								label: dept.name,
+								value: String(dept.id),
 							}))}
 						/>
-					</Form.Item>
+					</div>
 
-					<Button type="primary" htmlType="submit" loading={submittingSubcategory} block>
+					<Button
+						type="primary"
+						htmlType="submit"
+						loading={submittingCategory}
+						block
+					>
+						{editingCategory ? "Update Category" : "Create Category"}
+					</Button>
+				</form>
+			</FormProvider>
+		</Drawer>
+
+		<Drawer
+			title={editingSubcategory ? "Edit Subcategory" : "Create Subcategory"}
+			open={isSubcategoryDrawerOpen}
+			onClose={() => {
+				setSubcategoryDrawerOpen(false);
+				setEditingSubcategory(null);
+				subcategoryMethods.reset();
+			}}
+			size={460}
+			destroyOnClose
+		>
+			<FormProvider {...subcategoryMethods}>
+				<form onSubmit={subcategoryMethods.handleSubmit(onSubmitSubcategory, onFormError)}>
+					<div className="mb-4">
+						<CustomTextInput<subcategoryValidationForm>
+							name="name"
+							title="Subcategory Name"
+							placeholder="Enter subcategory name"
+							required
+							maxlength={80}
+						/>
+					</div>
+
+					<div className="mb-4">
+						<CustomMultiSelect<subcategoryValidationForm>
+							name="categoryId"
+							title="Category"
+							placeholder="Select category"
+							required
+							options={categories.map((category) => ({
+								label: category.name,
+								value: String(category.id),
+							}))}
+						/>
+					</div>
+
+					<Button
+						type="primary"
+						htmlType="submit"
+						loading={submittingSubcategory}
+						block
+					>
 						{editingSubcategory ? "Update Subcategory" : "Create Subcategory"}
 					</Button>
-				</Form>
-			</Drawer>
+				</form>
+			</FormProvider>
+		</Drawer>
 
 			<Modal
 				title="Delete Category"

@@ -113,7 +113,7 @@ export default function CampUsersClient({
               name: values.name,
               address: values.address,
               aadhaar: values.aadhaar ?? null,
-              voterId: values.voterId,
+              voterId: values.voterId || null,
             }
           : user,
       ),
@@ -268,7 +268,6 @@ export default function CampUsersClient({
                   name="voterId"
                   title={t("register.voterIdLabel")}
                   placeholder={t("register.voterIdPlaceholder")}
-                  required
                   maxlength={30}
                 />
               </div>

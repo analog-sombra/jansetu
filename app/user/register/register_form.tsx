@@ -137,7 +137,6 @@ export default function RegisterForm() {
                   name="voterId"
                   title={t("register.voterIdLabel")}
                   placeholder={t("register.voterIdPlaceholder")}
-                  required
                   maxlength={30}
                 />
               </div>

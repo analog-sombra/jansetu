@@ -12,3 +12,4 @@ export type {
 export { getOfficerAssignmentByTokenAction } from "./getOfficerAssignmentByTokenAction";
 export { submitOfficerResponseAction } from "./submitOfficerResponseAction";
 export { assignOfficerByTokenAction } from "./assignOfficerByTokenAction";
+export { uploadOfficerProofAction } from "./uploadOfficerProofAction";

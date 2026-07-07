@@ -14,11 +14,18 @@ datasource db {
 enum UserRole {
   SYSTEM
   ADMIN
+
   MLA
   MLA_SECRETARY
+
+  MLA_PA
+  CAMP_HEAD
+
   OFFICER
+
   CAMP_DEO
   CAMP_FIELD_OFFICER
+
   CITIZEN
 }
 
@@ -29,6 +36,7 @@ enum ComplaintStatus {
   QUERY_RAISED
   RESOLVED
   REJECTED
+  CLOSED
   ESCALATED
   AUTO_CLOSED
 }
@@ -87,29 +95,49 @@ enum MeetingPriority {
   URGENT
 }
 
+enum MlaPaMeetingType {
+  INVITATION
+  CONSTITUENCY_VISIT
+  DEPARTMENT_VISIT
+  CITIZEN_MEET
+  PERSONAL_MEET
+}
+
+enum InvitationSubtype {
+  MARRIAGE
+  BIRTHDAY
+  FUNERAL
+  OTHER
+}
+
 model User {
-  id                 String                              @id @default(cuid())
-  name               String?
-  mobile             String                              @unique
-  role               UserRole                            @default(CITIZEN)
-  address            String?
-  aadhaar            String?
-  voterId            String?
-  pan                String?
-  partySupporter     String?
-  pollingBooth       String?
-  locality           String?
-  isPartOfParty      Boolean?                            @default(false)
-  firstLoginComplete Boolean                             @default(false)
-  complaints         Complaint[]
-  complaintsCreated  Complaint[]                         @relation("ComplaintCreatedBy")
-  auditLogs          AuditLog[]
-  notifications      Notification[]
-  meetingsCreated    Meeting[]                           @relation("MeetingCreatedBy")
-  meetingsAssigned   Meeting[]                           @relation("MeetingAssignedTo")
-  officerAssignments ComplaintOfficerAssignmentHistory[] @relation("OfficerAssignedBy")
-  createdAt          DateTime                            @default(now())
-  updatedAt          DateTime                            @updatedAt
+  id                   String                              @id @default(cuid())
+  name                 String?
+  mobile               String                              @unique
+  role                 UserRole                            @default(CITIZEN)
+  address              String?
+  aadhaar              String?
+  voterId              String?
+  pan                  String?
+  partySupporter       String?
+  pollingBooth         String?
+  locality             String?
+  isPartOfParty        Boolean?                            @default(false)
+  firstLoginComplete   Boolean                             @default(false)
+  complaints           Complaint[]
+  complaintsCreated    Complaint[]                         @relation("ComplaintCreatedBy")
+  auditLogs            AuditLog[]
+  notifications        Notification[]
+  meetingsCreated      Meeting[]                           @relation("MeetingCreatedBy")
+  meetingsAssigned     Meeting[]                           @relation("MeetingAssignedTo")
+  reviews              Review[]
+  disputes             Dispute[]
+  officerAssignments   ComplaintOfficerAssignmentHistory[] @relation("OfficerAssignedBy")
+  mlaPaMeetingsCreated MlaPaMeeting[]                      @relation("MlaPaMeetingCreatedBy")
+  mlaPaMeetingsForMla  MlaPaMeeting[]                      @relation("MlaPaMeetingMla")
+  mlaPaMeetingsForCamp MlaPaMeeting[]                      @relation("MlaPaMeetingCampHead")
+  createdAt            DateTime                            @default(now())
+  updatedAt            DateTime                            @updatedAt
 }
 
 model OtpCode {
@@ -130,8 +158,10 @@ model Complaint {
   user                  User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdByUserId       String?
   createdByUser         User?                               @relation("ComplaintCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  category              String
-  subcategory           String?
+  categoryId            Int
+  category              Category                            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  subcategoryId         Int
+  subcategory           Subcategory                         @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
   description           String                              @db.LongText
   status                ComplaintStatus                     @default(PENDING)
   plannedCompletionDate DateTime?
@@ -142,14 +172,47 @@ model Complaint {
   assignments           Assignment[]
   officerAssignments    ComplaintOfficerAssignmentHistory[]
   auditLogs             AuditLog[]
+  reviews               Review[]
+  disputes              Dispute[]
   affectedCitizensCount Int                                 @default(1)
   createdAt             DateTime                            @default(now())
   updatedAt             DateTime                            @updatedAt
   complaintClusters     ComplaintCluster[]
 
-  @@index([category, subcategory, createdAt])
+  @@index([categoryId, subcategoryId, createdAt])
   @@index([lat, lng])
   @@index([createdByUserId, createdAt])
+}
+
+model Review {
+  id          Int       @id @default(autoincrement())
+  complaintId Int
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating      Int
+  review      String    @db.LongText
+  photoUrl    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([complaintId, userId])
+  @@index([complaintId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Dispute {
+  id          Int       @id @default(autoincrement())
+  complaintId Int
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  remark      String    @db.LongText
+  imageUrl    String
+  createdAt   DateTime  @default(now())
+
+  @@index([complaintId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model ComplaintCluster {
@@ -183,11 +246,12 @@ model ComplaintMedia {
 }
 
 model Department {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  officers  Officer[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  officers   Officer[]
+  categories Category[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 }
 
 model Officer {
@@ -319,19 +383,60 @@ model Meeting {
   @@index([meetingDateTime])
 }
 
+model MlaPaMeeting {
+  id                     Int                           @id @default(autoincrement())
+  createdByUserId        String
+  createdByUser          User                          @relation("MlaPaMeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  mlaUserId              String
+  mlaUser                User                          @relation("MlaPaMeetingMla", fields: [mlaUserId], references: [id], onDelete: Restrict)
+  campHeadUserId         String
+  campHeadUser           User                          @relation("MlaPaMeetingCampHead", fields: [campHeadUserId], references: [id], onDelete: Restrict)
+  type                   MlaPaMeetingType
+  invitationSubtype      InvitationSubtype?
+  invitationOtherPurpose String?                       @db.LongText
+  purpose                String                        @db.LongText
+  scheduledAt            DateTime
+  meetingPlace           String
+  completedAt            DateTime?
+  createdAt              DateTime                      @default(now())
+  updatedAt              DateTime                      @updatedAt
+  invitationDetail       MlaPaMeetingInvitationDetail?
+
+  @@index([createdByUserId, createdAt])
+  @@index([mlaUserId, scheduledAt])
+  @@index([campHeadUserId, scheduledAt])
+  @@index([type, invitationSubtype])
+}
+
+model MlaPaMeetingInvitationDetail {
+  id                Int          @id @default(autoincrement())
+  meetingId         Int          @unique
+  meeting           MlaPaMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  giftToCarry       String?      @db.LongText
+  selfDraftedLetter String?      @db.LongText
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
 model Category {
   id            Int           @id @default(autoincrement())
   name          String
+  departmentId  Int
+  department    Department    @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   subcategories Subcategory[]
+  complaints    Complaint[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  @@index([departmentId])
 }
 
 model Subcategory {
-  id         Int      @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   name       String
   categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  complaints Complaint[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 }

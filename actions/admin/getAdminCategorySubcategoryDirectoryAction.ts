@@ -18,6 +18,12 @@ export async function getAdminCategorySubcategoryDirectoryAction(): Promise<Admi
           id: true,
           name: true,
           createdAt: true,
+          department: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           _count: {
             select: {
               subcategories: true,
@@ -48,6 +54,7 @@ export async function getAdminCategorySubcategoryDirectoryAction(): Promise<Admi
         name: category.name,
         subcategoriesCount: category._count.subcategories,
         createdAt: category.createdAt.toISOString(),
+        department: category.department,
       })),
       subcategories: subcategories.map((subcategory) => ({
         id: subcategory.id,

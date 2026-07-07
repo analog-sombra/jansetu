@@ -1,15 +1,27 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireAdminUser } from "./_shared";
+import { getAuthenticatedUser } from "@/lib/auth/session";
+import { isAdminRole } from "./_shared";
+import { isMlaPaRouteRole } from "@/actions/mla-pa/_shared";
 import { AdminComplaintDetailResult } from "./types";
 
 export async function getAdminComplaintDetailAction(
   complaintIdInput: number,
 ): Promise<AdminComplaintDetailResult> {
-  const auth = await requireAdminUser();
-  if (!auth.ok) {
-    return auth;
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return { ok: false, error: "Please login again to continue." } as const;
+  }
+
+  const isAuthorized = isAdminRole(user.role) || isMlaPaRouteRole(user.role);
+
+  if (!isAuthorized) {
+    return {
+      ok: false,
+      error: "You are not authorized for this section.",
+    } as const;
   }
 
   const complaintId = Number(complaintIdInput);
@@ -23,7 +35,17 @@ export async function getAdminComplaintDetailAction(
         where: { id: complaintId },
         select: {
           id: true,
-          category: true,
+          category: {
+            select: {
+              name: true,
+              department: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
           subcategory: true,
           description: true,
           affectedCitizensCount: true,
@@ -53,13 +75,14 @@ export async function getAdminComplaintDetailAction(
               id: true,
               status: true,
               dueDate: true,
+              token: true,
               officer: {
                 select: {
                   id: true,
                   name: true,
                   designation: true,
                   department: {
-                    select: { name: true },
+                    select: { name: true, id: true },
                   },
                 },
               },
@@ -78,7 +101,7 @@ export async function getAdminComplaintDetailAction(
                           name: true,
                           designation: true,
                           department: {
-                            select: { name: true },
+                            select: { name: true, id: true },
                           },
                         },
                       },
@@ -101,7 +124,7 @@ export async function getAdminComplaintDetailAction(
                   name: true,
                   designation: true,
                   department: {
-                    select: { name: true },
+                    select: { name: true, id: true },
                   },
                 },
               },
@@ -130,7 +153,7 @@ export async function getAdminComplaintDetailAction(
           name: true,
           designation: true,
           department: {
-            select: { name: true },
+            select: { id: true, name: true },
           },
         },
       }),
@@ -149,7 +172,11 @@ export async function getAdminComplaintDetailAction(
           complaint: {
             select: {
               id: true,
-              category: true,
+              category: {
+                select: {
+                  name: true,
+                },
+              },
               subcategory: true,
               status: true,
               area: true,
@@ -165,16 +192,18 @@ export async function getAdminComplaintDetailAction(
         },
       });
 
-      const clusterComplaintList = clusterComplaints.map((entry) => ({
-        id: entry.complaint.id,
-        category: entry.complaint.category,
-        subcategory: entry.complaint.subcategory,
-        status: entry.complaint.status,
-        area: entry.complaint.area,
-        affectedCitizensCount: entry.complaint.affectedCitizensCount,
-        createdAt: entry.complaint.createdAt.toISOString(),
-        isCurrentComplaint: entry.complaint.id === complaint.id,
-      }));
+      const clusterComplaintList = clusterComplaints
+        .filter((entry) => entry.complaint !== null)
+        .map((entry) => ({
+          id: entry.complaint.id,
+          category: entry.complaint.category.name,
+          subcategory: entry.complaint.subcategory?.name ?? null,
+          status: entry.complaint.status,
+          area: entry.complaint.area,
+          affectedCitizensCount: entry.complaint.affectedCitizensCount,
+          createdAt: entry.complaint.createdAt.toISOString(),
+          isCurrentComplaint: entry.complaint.id === complaint.id,
+        }));
 
       const totalAffectedCitizensCount = clusterComplaintList.reduce(
         (sum, item) => sum + item.affectedCitizensCount,
@@ -196,12 +225,13 @@ export async function getAdminComplaintDetailAction(
       complaint: {
         id: complaint.id,
         user: complaint.user,
-        category: complaint.category,
-        subcategory: complaint.subcategory,
+        category: complaint.category.name,
+        subcategory: complaint.subcategory?.name ?? null,
         description: complaint.description,
         affectedCitizensCount: complaint.affectedCitizensCount,
         status: complaint.status,
-        plannedCompletionDate: complaint.plannedCompletionDate?.toISOString() ?? null,
+        plannedCompletionDate:
+          complaint.plannedCompletionDate?.toISOString() ?? null,
         lat: complaint.lat,
         lng: complaint.lng,
         area: complaint.area,
@@ -211,6 +241,7 @@ export async function getAdminComplaintDetailAction(
           status: assignment.status,
           dueDate: assignment.dueDate.toISOString(),
           officer: assignment.officer,
+          token: assignment.token,
           responses: assignment.responses.map((response) => ({
             id: response.id,
             type: response.type,
@@ -227,11 +258,14 @@ export async function getAdminComplaintDetailAction(
           officer: entry.officer,
           assignedByName: entry.assignedByUser?.name ?? null,
         })),
+        categoryDepartment: complaint.category.department,
         cluster,
       },
       officers,
     };
-  } catch {
+  } catch (e) {
+    console.error("Error fetching complaint details:", e);
+
     return { ok: false, error: "Unable to fetch complaint details." };
   }
 }

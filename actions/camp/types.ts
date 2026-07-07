@@ -9,8 +9,8 @@ export type CampCitizenInput = {
 };
 
 export type CampComplaintInput = {
-  category: string;
-  subcategory: string;
+  categoryId: number;
+  subcategoryId: number;
   description: string;
   affectedCitizensCount: string;
   area?: string;
@@ -168,7 +168,7 @@ export type UpdateCampCitizenProfileInput = {
   name: string;
   address: string;
   aadhaar?: string;
-  voterId: string;
+  voterId?: string;
 };
 
 export type UpdateCampCitizenProfileResult =

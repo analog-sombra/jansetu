@@ -33,8 +33,8 @@ export async function createCampComplaintAction(
   const citizenAadhaar = payload.citizen.aadhaar?.trim() || null;
   const citizenVoterId = payload.citizen.voterId.trim();
 
-  const category = payload.complaint.category.trim();
-  const subcategory = payload.complaint.subcategory.trim();
+  const categoryId = Number(payload.complaint.categoryId);
+  const subcategoryId = Number(payload.complaint.subcategoryId);
   const description = payload.complaint.description.trim();
   const affectedCitizensCount = Number(payload.complaint.affectedCitizensCount);
   const area = payload.complaint.area?.trim() || null;
@@ -84,12 +84,31 @@ export async function createCampComplaintAction(
             select: { id: true },
           });
 
+      // Fetch category and subcategory names for cluster attachment
+      const category = await tx.category.findUnique({
+        where: { id: categoryId },
+        select: { name: true },
+      });
+
+      if (!category) {
+        throw new Error("Category not found");
+      }
+
+      const subcategory = await tx.subcategory.findUnique({
+        where: { id: subcategoryId },
+        select: { name: true },
+      });
+
+      if (!subcategory) {
+        throw new Error("Subcategory not found");
+      }
+
       const complaint = await tx.complaint.create({
         data: {
           userId: citizen.id,
           createdByUserId: auth.user.id,
-          category,
-          subcategory,
+          categoryId,
+          subcategoryId,
           description,
           affectedCitizensCount,
           area,
@@ -101,8 +120,10 @@ export async function createCampComplaintAction(
 
       const clusterId = await attachComplaintToCluster(tx, {
         complaintId: complaint.id,
-        category,
-        subcategory,
+        categoryId,
+        categoryName: category.name,
+        subcategoryId,
+        subcategoryName: subcategory.name,
         area,
         lat,
         lng,

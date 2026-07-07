@@ -30,16 +30,11 @@ const STATUS_COLORS: Record<string, string> = {
   WORK_IN_PROGRESS: "cyan",
   QUERY_RAISED: "volcano",
   RESOLVED: "green",
+  CLOSED: "geekblue",
   REJECTED: "red",
   ESCALATED: "purple",
   AUTO_CLOSED: "default",
 };
-
-function isComplaintClosed(status: string) {
-  return (
-    status === "RESOLVED" || status === "REJECTED" || status === "AUTO_CLOSED"
-  );
-}
 
 export default function OfficerComplaintDetailPage() {
   const params = useParams<{ token: string; id: string }>();
@@ -100,69 +95,97 @@ export default function OfficerComplaintDetailPage() {
       return null;
     }
 
-    const closed = isComplaintClosed(complaint.status);
-    const hasAssignment = complaint.assignments.length > 0;
-    const hasOfficerResponse = allResponses.length > 0;
+    const statusToStep: Record<string, number> = {
+      PENDING: 0,
+      IN_PROGRESS: 1,
+      WORK_IN_PROGRESS: 2,
+      QUERY_RAISED: 3,
+      RESOLVED: 4,
+      CLOSED: 5,
+      AUTO_CLOSED: 5,
+      REJECTED: 5,
+      ESCALATED: 6,
+    };
 
-    let currentStep = 0;
-    let helperText = "Complaint has been filed successfully.";
+    const stepTitles = [
+      "Filed",
+      "Assigned",
+      "Work In Progress",
+      "Query Raised",
+      "Resolved",
+      "Closed",
+      "Escalated / Reopened",
+    ];
 
-    if (!hasAssignment) {
-      currentStep = 1;
-      helperText = "Waiting for officer assignment from admin team.";
-    } else if (!closed) {
-      currentStep = 2;
-      helperText = hasOfficerResponse
-        ? `Officer has responded. Current status: ${complaint.status.replaceAll("_", " ")}.`
-        : `Assigned to officer. Current status: ${complaint.status.replaceAll("_", " ")}.`;
-    } else {
-      currentStep = 3;
-      helperText = `Complaint closed with status: ${complaint.status.replaceAll("_", " ")}.`;
+    const currentStep = statusToStep[complaint.status] ?? 0;
+
+    let helperText = `Current status: ${complaint.status.replaceAll("_", " ")}.`;
+    if (complaint.status === "PENDING") {
+      helperText = "Complaint is filed and waiting for officer assignment.";
+    } else if (complaint.status === "IN_PROGRESS") {
+      helperText = "Officer has been assigned to this complaint.";
+    } else if (complaint.status === "WORK_IN_PROGRESS") {
+      helperText = "Officer is working on this complaint.";
+    } else if (complaint.status === "QUERY_RAISED") {
+      helperText = "Officer raised a query and is awaiting citizen response.";
+    } else if (complaint.status === "RESOLVED") {
+      helperText = "Officer resolved this complaint. Citizen completion is pending.";
+    } else if (complaint.status === "CLOSED") {
+      helperText = "Citizen marked this complaint as completed.";
+    } else if (complaint.status === "AUTO_CLOSED") {
+      helperText = "Admin auto-closed this complaint.";
+    } else if (complaint.status === "REJECTED") {
+      helperText = "Officer rejected this complaint.";
+    } else if (complaint.status === "ESCALATED") {
+      helperText = "Citizen disputed/reopened this complaint and it is escalated.";
     }
+
+    const items = stepTitles.map((title, index) => {
+      if (complaint.status === "REJECTED" && index === 5) {
+        return {
+          title,
+          description: "Rejected",
+          status: "error" as const,
+        };
+      }
+
+      if (complaint.status === "ESCALATED" && index === 6) {
+        return {
+          title,
+          description: "Reopened by citizen dispute",
+          status: "process" as const,
+        };
+      }
+
+      if (index < currentStep) {
+        return {
+          title,
+          description: "Completed",
+          status: "finish" as const,
+        };
+      }
+
+      if (index === currentStep) {
+        return {
+          title,
+          description: complaint.status.replaceAll("_", " "),
+          status: "process" as const,
+        };
+      }
+
+      return {
+        title,
+        description: "Pending",
+        status: "wait" as const,
+      };
+    });
 
     return {
       currentStep,
       helperText,
-      items: [
-        {
-          title: "Filed",
-          description: "Complaint submitted",
-          status: "finish" as const,
-        },
-        {
-          title: "Assigned",
-          description: hasAssignment ? "Officer assigned" : "Awaiting assignment",
-          status: hasAssignment
-            ? ("finish" as const)
-            : currentStep === 1
-              ? ("process" as const)
-              : ("wait" as const),
-        },
-        {
-          title: "Officer Action",
-          description: hasAssignment
-            ? hasOfficerResponse
-              ? "Officer updates received"
-              : "Waiting for officer update"
-            : "Blocked until assignment",
-          status: closed
-            ? ("finish" as const)
-            : currentStep === 2
-              ? ("process" as const)
-              : ("wait" as const),
-        },
-        {
-          title: "Completed",
-          description: closed ? complaint.status.replaceAll("_", " ") : "Not completed yet",
-          status: closed
-            ? complaint.status === "REJECTED"
-              ? ("error" as const)
-              : ("finish" as const)
-            : ("wait" as const),
-        },
-      ],
+      items,
     };
-  }, [allResponses.length, complaint]);
+  }, [complaint]);
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>

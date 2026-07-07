@@ -1,16 +1,28 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireAdminUser } from "./_shared";
+import { getAuthenticatedUser } from "@/lib/auth/session";
+import { isAdminRole } from "./_shared";
+import { isMlaPaRouteRole } from "@/actions/mla-pa/_shared";
 import { AdminQueryResult } from "./types";
 
 export async function raiseAdminComplaintQueryAction(payload: {
   complaintId: number;
   message: string;
 }): Promise<AdminQueryResult> {
-  const auth = await requireAdminUser();
-  if (!auth.ok) {
-    return auth;
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return { ok: false, error: "Please login again to continue." } as const;
+  }
+
+  const isAuthorized = isAdminRole(user.role) || isMlaPaRouteRole(user.role);
+
+  if (!isAuthorized) {
+    return {
+      ok: false,
+      error: "You are not authorized for this section.",
+    } as const;
   }
 
   const complaintId = Number(payload.complaintId);
@@ -65,7 +77,7 @@ export async function raiseAdminComplaintQueryAction(payload: {
 
       await tx.auditLog.create({
         data: {
-          actorUserId: auth.user.id,
+          actorUserId: user.id,
           complaintId: complaint.id,
           action: "RAISE_QUERY",
           meta: { message },

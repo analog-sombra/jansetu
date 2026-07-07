@@ -30,11 +30,12 @@ const registerValidationSchema = object({
       regex(/^(|\d{12})$/, "Aadhaar must be exactly 12 digits"),
     ),
   ),
-  voterId: pipe(
-    string(),
-    trim(),
-    minLength(3, "Voter ID must be at least 3 characters"),
-    maxLength(30, "Voter ID must be at most 30 characters"),
+  voterId: optional(
+    pipe(
+      string(),
+      trim(),
+      regex(/^(|.{3,30})$/, "Voter ID must be between 3 and 30 characters if provided"),
+    ),
   ),
 });
 

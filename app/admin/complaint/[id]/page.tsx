@@ -27,7 +27,6 @@ import {
   type AdminOfficerSummary,
 } from "@/actions/admin";
 import { useLanguage } from "@/components/provider/language_provider";
-import { CATEGORY_DEPARTMENT_MAP } from "@/lib/constants";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "#f59e0b",
@@ -35,6 +34,7 @@ const STATUS_COLORS: Record<string, string> = {
   WORK_IN_PROGRESS: "#06b6d4",
   QUERY_RAISED: "#ea580c",
   RESOLVED: "#16a34a",
+  CLOSED: "#0f766e",
   REJECTED: "#dc2626",
   ESCALATED: "#7c3aed",
   AUTO_CLOSED: "#6b7280",
@@ -54,12 +54,6 @@ function formatLabel(value: string) {
 function makeWhatsAppLink(message: string) {
   const phone = "9773356997";
   return `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`;
-}
-
-function isComplaintClosed(status: string) {
-  return (
-    status === "RESOLVED" || status === "REJECTED" || status === "AUTO_CLOSED"
-  );
 }
 
 export default function AdminComplaintDetailPage() {
@@ -107,6 +101,14 @@ export default function AdminComplaintDetailPage() {
       return;
     }
 
+    const tokens = result.complaint.assignments;
+
+    if (tokens.length > 0) {
+      setAssignedOfficerToken(tokens[0].token);
+    } else {
+      setAssignedOfficerToken("");
+    }
+
     setComplaint(result.complaint);
     setOfficers(result.officers);
     setLoading(false);
@@ -149,14 +151,13 @@ export default function AdminComplaintDetailPage() {
       return [];
     }
 
-    const relevantDepartments =
-      CATEGORY_DEPARTMENT_MAP[complaint.category] ?? [];
-    if (relevantDepartments.length === 0) {
+    // Use the category's department from the database
+    if (!complaint.categoryDepartment) {
       return [];
     }
 
-    return officers.filter((officer) =>
-      relevantDepartments.includes(officer.department.name),
+    return officers.filter(
+      (officer) => officer.department.id === complaint.categoryDepartment?.id,
     );
   }, [complaint, officers]);
 
@@ -165,85 +166,101 @@ export default function AdminComplaintDetailPage() {
       return null;
     }
 
-    const closed = isComplaintClosed(complaint.status);
-    const hasAssignment = Boolean(currentAssignment);
-    const hasOfficerResponse = officerResponses.length > 0;
+    const statusToStep: Record<string, number> = {
+      PENDING: 0,
+      IN_PROGRESS: 1,
+      WORK_IN_PROGRESS: 2,
+      QUERY_RAISED: 3,
+      RESOLVED: 4,
+      CLOSED: 5,
+      AUTO_CLOSED: 5,
+      REJECTED: 5,
+      ESCALATED: 6,
+    };
 
-    let currentStep = 0;
-    let currentStepLabel = t("adminDetail.workflowFiled");
-    let helperText = t("adminDetail.workflowFiledHelp");
+    const stepTitles = [
+      "Filed",
+      "Assigned",
+      "Work In Progress",
+      "Query Raised",
+      "Resolved",
+      "Closed",
+      "Escalated / Reopened",
+    ];
 
-    if (!hasAssignment) {
-      currentStep = 1;
-      currentStepLabel = t("adminDetail.workflowAssigned");
-      helperText = t("adminDetail.workflowAssignedHelp");
-    } else if (!closed) {
-      currentStep = 2;
-      currentStepLabel = t("adminDetail.workflowOfficerAction");
-      helperText = hasOfficerResponse
-        ? `${t("adminDetail.workflowOfficerActionHelp")} ${t("adminDetail.status")}: ${formatLabel(complaint.status)}.`
-        : `${t("adminDetail.workflowOfficerWaitingHelp")} ${t("adminDetail.status")}: ${formatLabel(complaint.status)}.`;
-    } else {
-      currentStep = 3;
-      currentStepLabel = t("adminDetail.workflowCompleted");
+    const currentStep = statusToStep[complaint.status] ?? 0;
+    const currentStepLabel = stepTitles[currentStep] ?? "Filed";
 
-      if (complaint.status === "REJECTED") {
-        helperText = t("adminDetail.workflowCompletedRejectedHelp");
-      } else if (complaint.status === "AUTO_CLOSED") {
-        helperText = t("adminDetail.workflowCompletedAutoClosedHelp");
-      } else {
-        helperText = t("adminDetail.workflowCompletedResolvedHelp");
-      }
+    let helperText = `${t("adminDetail.status")}: ${formatLabel(complaint.status)}.`;
+    if (complaint.status === "PENDING") {
+      helperText = "Complaint is filed and waiting for officer assignment.";
+    } else if (complaint.status === "IN_PROGRESS") {
+      helperText = "Officer has been assigned to this complaint.";
+    } else if (complaint.status === "WORK_IN_PROGRESS") {
+      helperText = "Officer is working on the complaint and needs more time.";
+    } else if (complaint.status === "QUERY_RAISED") {
+      helperText = "Officer raised a query and is awaiting clarification.";
+    } else if (complaint.status === "RESOLVED") {
+      helperText =
+        "Officer resolved the complaint. Citizen completion is pending.";
+    } else if (complaint.status === "CLOSED") {
+      helperText = "Citizen marked this complaint as completed.";
+    } else if (complaint.status === "AUTO_CLOSED") {
+      helperText = "Admin auto-closed this complaint.";
+    } else if (complaint.status === "REJECTED") {
+      helperText = "Officer rejected this complaint.";
+    } else if (complaint.status === "ESCALATED") {
+      helperText =
+        "Citizen disputed/reopened this complaint and it is escalated.";
     }
+
+    const items = stepTitles.map((title, index) => {
+      if (complaint.status === "REJECTED" && index === 5) {
+        return {
+          title,
+          description: "Rejected",
+          status: "error" as const,
+        };
+      }
+
+      if (complaint.status === "ESCALATED" && index === 6) {
+        return {
+          title,
+          description: "Reopened by citizen dispute",
+          status: "process" as const,
+        };
+      }
+
+      if (index < currentStep) {
+        return {
+          title,
+          description: "Completed",
+          status: "finish" as const,
+        };
+      }
+
+      if (index === currentStep) {
+        return {
+          title,
+          description: formatLabel(complaint.status),
+          status: "process" as const,
+        };
+      }
+
+      return {
+        title,
+        description: "Pending",
+        status: "wait" as const,
+      };
+    });
 
     return {
       currentStep,
       currentStepLabel,
       helperText,
-      items: [
-        {
-          title: t("adminDetail.workflowFiled"),
-          description: t("adminDetail.workflowFiledDesc"),
-          status: "finish" as const,
-        },
-        {
-          title: t("adminDetail.workflowAssigned"),
-          description: hasAssignment
-            ? t("adminDetail.workflowAssignedDoneDesc")
-            : t("adminDetail.workflowAssignedPendingDesc"),
-          status: hasAssignment
-            ? ("finish" as const)
-            : currentStep === 1
-              ? ("process" as const)
-              : ("wait" as const),
-        },
-        {
-          title: t("adminDetail.workflowOfficerAction"),
-          description: hasAssignment
-            ? hasOfficerResponse
-              ? t("adminDetail.workflowOfficerActionDoneDesc")
-              : t("adminDetail.workflowOfficerActionPendingDesc")
-            : t("adminDetail.workflowOfficerActionLockedDesc"),
-          status: closed
-            ? ("finish" as const)
-            : currentStep === 2
-              ? ("process" as const)
-              : ("wait" as const),
-        },
-        {
-          title: t("adminDetail.workflowCompleted"),
-          description: closed
-            ? `${t("adminDetail.status")}: ${formatLabel(complaint.status)}`
-            : t("adminDetail.workflowCompletedPendingDesc"),
-          status: closed
-            ? complaint.status === "REJECTED"
-              ? ("error" as const)
-              : ("finish" as const)
-            : ("wait" as const),
-        },
-      ],
+      items,
     };
-  }, [complaint, currentAssignment, officerResponses, t]);
+  }, [complaint, t]);
 
   async function assignOfficer() {
     if (!complaint || !officerId) {
@@ -299,7 +316,7 @@ export default function AdminComplaintDetailPage() {
       "",
       `${t("adminDetail.whatsapp.link")}: ${window.location.origin}/officer/${assignedOfficerToken}`,
     ].join("\n");
-      // `${t("adminDetail.assignmentToken")}: ${assignedOfficerToken}`,
+    // `${t("adminDetail.assignmentToken")}: ${assignedOfficerToken}`,
 
     window.open(makeWhatsAppLink(message), "_blank", "noopener,noreferrer");
   }
@@ -545,7 +562,9 @@ export default function AdminComplaintDetailPage() {
                   size="small"
                   style={{ borderRadius: 6, borderLeft: "3px solid #1a3c6e" }}
                 >
-                  <div style={{ fontSize: 12, color: "#6b7280" }}>Department</div>
+                  <div style={{ fontSize: 12, color: "#6b7280" }}>
+                    Department
+                  </div>
                   <div style={{ fontWeight: 700, color: "#1a3c6e" }}>
                     {complaint.cluster.departmentName}
                   </div>
@@ -553,12 +572,16 @@ export default function AdminComplaintDetailPage() {
                     Cluster Complaint Count: {complaint.cluster.complaintCount}
                   </div>
                   <div style={{ marginTop: 2, fontSize: 12, color: "#6b7280" }}>
-                    Cluster Total Affected Citizens: {complaint.cluster.totalAffectedCitizensCount}
+                    Cluster Total Affected Citizens:{" "}
+                    {complaint.cluster.totalAffectedCitizensCount}
                   </div>
-                  
 
                   <Divider style={{ margin: "12px 0" }} />
-                  <Space direction="vertical" size="small" style={{ width: "100%" }}>
+                  <Space
+                    orientation="vertical"
+                    size="small"
+                    style={{ width: "100%" }}
+                  >
                     {complaint.cluster.complaints.map((item) => (
                       <Card
                         key={item.id}
@@ -585,7 +608,13 @@ export default function AdminComplaintDetailPage() {
                           }}
                         >
                           <div>
-                            <div style={{ color: "#1a3c6e", fontWeight: 700, fontSize: 12 }}>
+                            <div
+                              style={{
+                                color: "#1a3c6e",
+                                fontWeight: 700,
+                                fontSize: 12,
+                              }}
+                            >
                               Complaint #{item.id}
                               {item.isCurrentComplaint && (
                                 <span
@@ -606,21 +635,47 @@ export default function AdminComplaintDetailPage() {
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: "#6b7280",
+                                marginTop: 2,
+                              }}
+                            >
                               {item.category}
                               {item.subcategory ? ` / ${item.subcategory}` : ""}
                             </div>
-                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: "#6b7280",
+                                marginTop: 2,
+                              }}
+                            >
                               Status: {formatLabel(item.status)}
                               {item.area ? ` | Area: ${item.area}` : ""}
                             </div>
-                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
-                              Affected Citizens (Cluster Total): {complaint.cluster?.totalAffectedCitizensCount ?? complaint.affectedCitizensCount}
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: "#6b7280",
+                                marginTop: 2,
+                              }}
+                            >
+                              Affected Citizens (Cluster Total):{" "}
+                              {complaint.cluster?.totalAffectedCitizensCount ??
+                                complaint.affectedCitizensCount}
                             </div>
                           </div>
 
                           <Link href={`/admin/complaint/${item.id}`}>
-                            <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+                            <Button
+                              size="small"
+                              style={{
+                                borderColor: "#1a3c6e",
+                                color: "#1a3c6e",
+                              }}
+                            >
                               View
                             </Button>
                           </Link>

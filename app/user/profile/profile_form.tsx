@@ -21,7 +21,7 @@ type UserProfileFormProps = {
     name: string;
     address: string;
     aadhaar: string;
-    voterId: string;
+    voterId?: string;
     mobile: string;
   };
 };
@@ -81,7 +81,7 @@ export default function UserProfileForm({ profile }: UserProfileFormProps) {
       name: values.name,
       address: values.address,
       aadhaar: values.aadhaar ?? "",
-      voterId: values.voterId,
+      voterId: values.voterId || undefined,
     }));
     setDrawerOpen(false);
   }
@@ -127,30 +127,66 @@ export default function UserProfileForm({ profile }: UserProfileFormProps) {
           />
         )}
 
+        <div className="">
+          <div className="rounded-full bg-gray-300 h-20 w-20 flex items-center justify-center text-[26px] text-white mx-auto">
+            {currentProfile.name
+              ? currentProfile.name.charAt(0).toUpperCase()
+              : "?"}
+          </div>
+          <div className="text-center mt-auto my-4">
+            <p className="text-lg text-[#2f3b4d]">
+              {currentProfile.name || "-"}
+            </p>
+            <p className="text-sm text-[#2f3b4d]">
+              {currentProfile.mobile || "-"}
+            </p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">{t("register.nameLabel")}</p>
-            <p className="text-sm text-[#2f3b4d]">{currentProfile.name || "-"}</p>
+          {/* <div>
+            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">
+              {t("register.nameLabel")}
+            </p>
+            <p className="text-sm text-[#2f3b4d]">
+              {currentProfile.name || "-"}
+            </p>
           </div>
 
           <div>
-            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">{t("profile.contactLabel")}</p>
-            <p className="text-sm text-[#2f3b4d]">{currentProfile.mobile || "-"}</p>
+            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">
+              {t("profile.contactLabel")}
+            </p>
+            <p className="text-sm text-[#2f3b4d]">
+              {currentProfile.mobile || "-"}
+            </p>
+          </div> */}
+
+          <div>
+            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">
+              {t("register.aadhaarLabel")}
+            </p>
+            <p className="text-sm text-[#2f3b4d]">
+              {currentProfile.aadhaar || "-"}
+            </p>
           </div>
 
           <div>
-            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">{t("register.aadhaarLabel")}</p>
-            <p className="text-sm text-[#2f3b4d]">{currentProfile.aadhaar || "-"}</p>
-          </div>
-
-          <div>
-            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">{t("register.voterIdLabel")}</p>
-            <p className="text-sm text-[#2f3b4d]">{currentProfile.voterId || "-"}</p>
+            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">
+              {t("register.voterIdLabel")}
+            </p>
+            <p className="text-sm text-[#2f3b4d]">
+              {currentProfile.voterId || "-"}
+            </p>
           </div>
 
           <div className="sm:col-span-2">
-            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">{t("register.addressLabel")}</p>
-            <p className="text-sm text-[#2f3b4d]">{currentProfile.address || "-"}</p>
+            <p className="mb-1 text-sm font-semibold text-[#1a3c6e]">
+              {t("register.addressLabel")}
+            </p>
+            <p className="text-sm text-[#2f3b4d]">
+              {currentProfile.address || "-"}
+            </p>
           </div>
         </div>
 
@@ -197,7 +233,6 @@ export default function UserProfileForm({ profile }: UserProfileFormProps) {
                     name="voterId"
                     title={t("register.voterIdLabel")}
                     placeholder={t("register.voterIdPlaceholder")}
-                    required
                     maxlength={30}
                   />
                 </div>
@@ -213,9 +248,17 @@ export default function UserProfileForm({ profile }: UserProfileFormProps) {
                 </div>
 
                 <div className="mb-3">
-                  <label className="text-sm font-normal">{t("profile.contactLabel")}</label>
-                  <Input value={currentProfile.mobile} disabled className="w-full" />
-                  <p className="text-xs text-red-500">{t("profile.contactLocked")}</p>
+                  <label className="text-sm font-normal">
+                    {t("profile.contactLabel")}
+                  </label>
+                  <Input
+                    value={currentProfile.mobile}
+                    disabled
+                    className="w-full"
+                  />
+                  <p className="text-xs text-red-500">
+                    {t("profile.contactLocked")}
+                  </p>
                 </div>
               </div>
 
@@ -234,8 +277,7 @@ export default function UserProfileForm({ profile }: UserProfileFormProps) {
                 >
                   {t("profile.saveButton")}
                 </button>
-            </div>
-
+              </div>
             </form>
           </FormProvider>
         </Drawer>

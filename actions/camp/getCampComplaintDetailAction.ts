@@ -25,7 +25,11 @@ export async function getCampComplaintDetailAction(
       },
       select: {
         id: true,
-        category: true,
+        category: {
+          select: {
+            name: true,
+          },
+        },
         subcategory: true,
         description: true,
         affectedCitizensCount: true,
@@ -134,8 +138,8 @@ export async function getCampComplaintDetailAction(
           aadhaar: complaint.user.aadhaar ?? "",
           voterId: complaint.user.voterId ?? "",
         },
-        category: complaint.category,
-        subcategory: complaint.subcategory,
+        category: complaint.category.name,
+        subcategory: complaint.subcategory?.name ?? null,
         description: complaint.description,
         affectedCitizensCount: complaint.affectedCitizensCount,
         status: complaint.status,

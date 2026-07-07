@@ -1,13 +1,25 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireAdminUser } from "./_shared";
+import { getAuthenticatedUser } from "@/lib/auth/session";
+import { isAdminRole } from "./_shared";
+import { isMlaPaRouteRole } from "@/actions/mla-pa/_shared";
 import { AdminComplaintsDashboardResult } from "./types";
 
 export async function getAdminComplaintsDashboardAction(): Promise<AdminComplaintsDashboardResult> {
-  const auth = await requireAdminUser();
-  if (!auth.ok) {
-    return auth;
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return { ok: false, error: "Please login again to continue." } as const;
+  }
+
+  const isAuthorized = isAdminRole(user.role) || isMlaPaRouteRole(user.role);
+
+  if (!isAuthorized) {
+    return {
+      ok: false,
+      error: "You are not authorized for this section.",
+    } as const;
   }
 
   try {
@@ -15,10 +27,19 @@ export async function getAdminComplaintsDashboardAction(): Promise<AdminComplain
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
-        category: true,
-        subcategory: true,
+        category: {
+          select: {
+            name: true,
+          },
+        },
+        subcategory: {
+          select: {
+            name: true,
+          },
+        },
         status: true,
         area: true,
+        affectedCitizensCount: true,
         createdAt: true,
         user: {
           select: {
@@ -35,10 +56,11 @@ export async function getAdminComplaintsDashboardAction(): Promise<AdminComplain
         id: complaint.id,
         citizenName: complaint.user.name ?? "Citizen",
         citizenMobile: complaint.user.mobile,
-        category: complaint.category,
-        subcategory: complaint.subcategory,
+        category: complaint.category.name,
+        subcategory: complaint.subcategory.name,
         status: complaint.status,
         area: complaint.area ?? "",
+        affectedCitizensCount: complaint.affectedCitizensCount,
         createdAt: complaint.createdAt.toISOString(),
       })),
     };

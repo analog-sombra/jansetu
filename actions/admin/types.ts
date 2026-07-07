@@ -6,6 +6,7 @@ export type AdminComplaintSummary = {
   subcategory: string | null;
   status: string;
   area: string;
+  affectedCitizensCount: number;
   createdAt: string;
 };
 
@@ -14,6 +15,7 @@ export type AdminOfficerSummary = {
   name: string;
   designation: string;
   department: {
+    id: number;
     name: string;
   };
 };
@@ -51,6 +53,7 @@ export type AdminComplaintAssignmentSummary = {
   id: number;
   status: string;
   dueDate: string;
+  token: string;
   officer: AdminOfficerSummary;
   responses: AdminComplaintResponseSummary[];
 };
@@ -82,6 +85,10 @@ export type AdminComplaintDetail = {
   media: Array<{ id: number; fileUrl: string; type: string }>;
   assignments: AdminComplaintAssignmentSummary[];
   officerAssignmentHistory: AdminOfficerAssignmentHistorySummary[];
+  categoryDepartment: {
+    id: number;
+    name: string;
+  } | null;
   cluster: {
     clusterId: string;
     departmentName: string;
@@ -186,6 +193,10 @@ export type AdminCategorySummary = {
   name: string;
   subcategoriesCount: number;
   createdAt: string;
+  department: {
+    id: number;
+    name: string;
+  };
 };
 
 export type AdminSubcategoryDirectorySummary = {

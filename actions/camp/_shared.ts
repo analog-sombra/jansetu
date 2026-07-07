@@ -40,16 +40,16 @@ export function validateCitizenInput(citizen: CampCitizenInput): string | null {
 }
 
 export async function validateComplaintInput(complaint: CampComplaintInput): Promise<string | null> {
-  const category = complaint.category.trim();
-  const subcategory = complaint.subcategory.trim();
+  const categoryId = Number(complaint.categoryId);
+  const subcategoryId = Number(complaint.subcategoryId);
   const description = complaint.description.trim();
   const affectedCitizensCount = Number(complaint.affectedCitizensCount);
   const lat = Number(complaint.lat);
   const lng = Number(complaint.lng);
 
   // Validate category exists in database
-  const categoryRecord = await prisma.category.findFirst({
-    where: { name: category },
+  const categoryRecord = await prisma.category.findUnique({
+    where: { id: categoryId },
     select: { id: true },
   });
 
@@ -58,14 +58,12 @@ export async function validateComplaintInput(complaint: CampComplaintInput): Pro
   }
 
   // Validate subcategory exists and belongs to the category
-  const subcategoryRecord = await prisma.subcategory.findFirst({
-    where: {
-      name: subcategory,
-      categoryId: categoryRecord.id,
-    },
+  const subcategoryRecord = await prisma.subcategory.findUnique({
+    where: { id: subcategoryId },
+    select: { id: true, categoryId: true },
   });
 
-  if (!subcategoryRecord) {
+  if (!subcategoryRecord || subcategoryRecord.categoryId !== categoryId) {
     return "Please select a valid sub-category.";
   }
 

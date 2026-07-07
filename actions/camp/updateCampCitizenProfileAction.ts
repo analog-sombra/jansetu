@@ -14,8 +14,8 @@ export async function updateCampCitizenProfileAction(
 
   const name = payload.name.trim();
   const address = payload.address.trim();
-  const voterId = payload.voterId.trim();
-  const aadhaar = payload.aadhaar?.trim() || "";
+  const voterId = payload.voterId?.trim() || null;
+  const aadhaar = payload.aadhaar?.trim() || null;
 
   if (!payload.userId.trim()) {
     return { ok: false, error: "Invalid citizen selected." };
@@ -27,10 +27,6 @@ export async function updateCampCitizenProfileAction(
 
   if (address.length < 10) {
     return { ok: false, error: "Address must be at least 10 characters." };
-  }
-
-  if (voterId.length < 3) {
-    return { ok: false, error: "Voter ID must be at least 3 characters." };
   }
 
   if (aadhaar && !/^\d{12}$/.test(aadhaar)) {
@@ -62,7 +58,7 @@ export async function updateCampCitizenProfileAction(
       data: {
         name,
         address,
-        aadhaar: aadhaar || null,
+        aadhaar,
         voterId,
       },
     });

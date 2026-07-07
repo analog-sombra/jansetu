@@ -2,16 +2,28 @@
 
 import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
-import { requireAdminUser } from "./_shared";
+import { getAuthenticatedUser } from "@/lib/auth/session";
+import { isAdminRole } from "./_shared";
+import { isMlaPaRouteRole } from "@/actions/mla-pa/_shared";
 import { AdminAssignmentResult } from "./types";
 
 export async function assignAdminComplaintOfficerAction(payload: {
   complaintId: number;
   officerId: number;
 }): Promise<AdminAssignmentResult> {
-  const auth = await requireAdminUser();
-  if (!auth.ok) {
-    return auth;
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return { ok: false, error: "Please login again to continue." } as const;
+  }
+
+  const isAuthorized = isAdminRole(user.role) || isMlaPaRouteRole(user.role);
+
+  if (!isAuthorized) {
+    return {
+      ok: false,
+      error: "You are not authorized for this section.",
+    } as const;
   }
 
   const complaintId = Number(payload.complaintId);
@@ -75,7 +87,7 @@ export async function assignAdminComplaintOfficerAction(payload: {
           complaintId: complaint.id,
           officerId: officer.id,
           assignmentId: createdAssignment.id,
-          assignedByUserId: auth.user.id,
+          assignedByUserId: user.id,
           isCurrent: true,
         },
       });
@@ -87,7 +99,7 @@ export async function assignAdminComplaintOfficerAction(payload: {
 
       await tx.auditLog.create({
         data: {
-          actorUserId: auth.user.id,
+          actorUserId: user.id,
           complaintId: complaint.id,
           action: "ASSIGN_OFFICER",
           meta: {

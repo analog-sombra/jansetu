@@ -1,4 +1,5 @@
 import {
+  custom,
   InferInput,
   maxLength,
   minLength,
@@ -30,11 +31,19 @@ export const campComplaintValidationSchema = object({
   voterId: optional(
     pipe(string(), trim(), maxLength(30, "Voter ID must be at most 30 characters")),
   ),
-  category: pipe(string(), trim(), minLength(1, "Please select a category")),
-  subcategory: pipe(
-    string(),
-    trim(),
-    minLength(1, "Please select a sub-category"),
+  categoryId: custom(
+    (v): boolean => {
+      const num = typeof v === "string" ? Number(v) : (v as number);
+      return !isNaN(num) && num > 0;
+    },
+    "Please select a category",
+  ),
+  subcategoryId: custom(
+    (v): boolean => {
+      const num = typeof v === "string" ? Number(v) : (v as number);
+      return !isNaN(num) && num > 0;
+    },
+    "Please select a sub-category",
   ),
   description: pipe(
     string(),

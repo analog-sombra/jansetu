@@ -9,8 +9,8 @@ import { getAuthenticatedUser } from "@/lib/auth/session";
 import { attachComplaintToCluster } from "@/lib/complaintCluster";
 
 type AddComplaintActionInput = {
-  category: string;
-  subcategory: string;
+  categoryId: number;
+  subcategoryId: number;
   description: string;
   area?: string;
   lat: string;
@@ -157,7 +157,19 @@ type GetMyComplaintsActionResult = {
 
 type ConfirmResolutionActionResult = {
   ok: boolean;
-  status?: "RESOLVED" | "ESCALATED";
+  status?: "RESOLVED" | "CLOSED" | "ESCALATED";
+  error?: string;
+};
+
+type CreateComplaintDisputeActionResult = {
+  ok: boolean;
+  status?: "ESCALATED";
+  error?: string;
+};
+
+type CreateComplaintReviewActionResult = {
+  ok: boolean;
+  status?: "CLOSED";
   error?: string;
 };
 
@@ -184,17 +196,17 @@ export async function addComplaintAction(
     return { ok: false, error: "Please complete your profile first." };
   }
 
-  const category = payload.category.trim();
-  const subcategory = payload.subcategory.trim();
+  const categoryId = Number(payload.categoryId);
+  const subcategoryId = Number(payload.subcategoryId);
   const description = payload.description.trim();
   const area = payload.area?.trim() || null;
   const lat = Number(payload.lat);
   const lng = Number(payload.lng);
 
   // Validate category exists in database
-  const categoryRecord = await prisma.category.findFirst({
-    where: { name: category },
-    select: { id: true },
+  const categoryRecord = await prisma.category.findUnique({
+    where: { id: categoryId },
+    select: { id: true, name: true },
   });
 
   if (!categoryRecord) {
@@ -202,14 +214,12 @@ export async function addComplaintAction(
   }
 
   // Validate subcategory exists and belongs to the category
-  const subcategoryRecord = await prisma.subcategory.findFirst({
-    where: {
-      name: subcategory,
-      categoryId: categoryRecord.id,
-    },
+  const subcategoryRecord = await prisma.subcategory.findUnique({
+    where: { id: subcategoryId },
+    select: { id: true, name: true, categoryId: true },
   });
 
-  if (!subcategoryRecord) {
+  if (!subcategoryRecord || subcategoryRecord.categoryId !== categoryId) {
     return { ok: false, error: "Please select a valid sub-category." };
   }
 
@@ -234,8 +244,8 @@ export async function addComplaintAction(
         data: {
           userId: user.id,
           createdByUserId: user.id,
-          category,
-          subcategory,
+          categoryId,
+          subcategoryId,
           description,
           area,
           lat,
@@ -248,8 +258,10 @@ export async function addComplaintAction(
 
       const clusterId = await attachComplaintToCluster(tx, {
         complaintId: createdComplaint.id,
-        category,
-        subcategory,
+        categoryId,
+        categoryName: categoryRecord.name,
+        subcategoryId,
+        subcategoryName: subcategoryRecord.name,
         area,
         lat,
         lng,
@@ -384,7 +396,11 @@ export async function getMyComplaintsAction(): Promise<GetMyComplaintsActionResu
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
-        category: true,
+        category: {
+          select: {
+            name: true,
+          },
+        },
         description: true,
         status: true,
         plannedCompletionDate: true,
@@ -421,7 +437,7 @@ export async function getMyComplaintsAction(): Promise<GetMyComplaintsActionResu
       ok: true,
       complaints: complaints.map((complaint) => ({
         id: complaint.id,
-        category: complaint.category,
+        category: complaint.category.name,
         description: complaint.description,
         status: complaint.status,
         plannedCompletionDate: complaint.plannedCompletionDate
@@ -461,6 +477,10 @@ export async function getMyComplaintsAction(): Promise<GetMyComplaintsActionResu
   }
 }
 
+export async function getCertificateDashboardAction(): Promise<GetMyComplaintsActionResult> {
+  return getMyComplaintsAction();
+}
+
 export async function getMyComplaintDetailAction(
   complaintIdInput: number,
 ): Promise<GetMyComplaintDetailActionResult> {
@@ -483,8 +503,16 @@ export async function getMyComplaintDetailAction(
       },
       select: {
         id: true,
-        category: true,
-        subcategory: true,
+        category: {
+          select: {
+            name: true,
+          },
+        },
+        subcategory: {
+          select: {
+            name: true,
+          },
+        },
         description: true,
         status: true,
         plannedCompletionDate: true,
@@ -587,8 +615,8 @@ export async function getMyComplaintDetailAction(
       ok: true,
       complaint: {
         id: complaint.id,
-        category: complaint.category,
-        subcategory: complaint.subcategory,
+        category: complaint.category.name,
+        subcategory: complaint.subcategory.name,
         description: complaint.description,
         status: complaint.status,
         plannedCompletionDate: complaint.plannedCompletionDate
@@ -643,14 +671,40 @@ export async function confirmResolutionAction(
         id: complaintId,
         userId: user.id,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        status: true,
+      },
     });
 
     if (!complaint) {
       return { ok: false, error: "Complaint not found." };
     }
 
-    const nextStatus = confirmed ? "RESOLVED" : "ESCALATED";
+    const canConfirm = ["QUERY_RAISED", "RESOLVED"].includes(complaint.status);
+    const canDispute = ["QUERY_RAISED", "RESOLVED", "CLOSED"].includes(
+      complaint.status,
+    );
+
+    if (confirmed && !canConfirm) {
+      return {
+        ok: false,
+        error: "This complaint cannot be marked as completed in current status.",
+      };
+    }
+
+    if (!confirmed && !canDispute) {
+      return {
+        ok: false,
+        error: "This complaint cannot be disputed in current status.",
+      };
+    }
+
+    const nextStatus = confirmed
+      ? complaint.status === "QUERY_RAISED"
+        ? "RESOLVED"
+        : "CLOSED"
+      : "ESCALATED";
 
     await prisma.complaint.update({
       where: { id: complaintId },
@@ -665,5 +719,232 @@ export async function confirmResolutionAction(
     };
   } catch {
     return { ok: false, error: "Unable to update complaint status." };
+  }
+}
+
+export async function createComplaintDisputeAction(
+  formData: FormData,
+): Promise<CreateComplaintDisputeActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return { ok: false, error: "Please login again to continue." };
+  }
+
+  const complaintId = Number(formData.get("complaintId"));
+  const remark = String(formData.get("remark") ?? "").trim();
+  const photo = formData.get("photo");
+
+  if (!Number.isInteger(complaintId) || complaintId <= 0) {
+    return { ok: false, error: "Invalid complaint selected." };
+  }
+
+  if (remark.length < 10) {
+    return { ok: false, error: "Please provide at least 10 characters in remark." };
+  }
+
+  if (!(photo instanceof File)) {
+    return { ok: false, error: "Please upload a dispute photo." };
+  }
+
+  if (!photo.type.startsWith("image/") || photo.size > MAX_FILE_SIZE_BYTES) {
+    return { ok: false, error: "Only images up to 2 MB are allowed." };
+  }
+
+  try {
+    const complaint = await prisma.complaint.findFirst({
+      where: {
+        id: complaintId,
+        userId: user.id,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!complaint) {
+      return { ok: false, error: "Complaint not found." };
+    }
+
+    if (!["QUERY_RAISED", "RESOLVED", "CLOSED"].includes(complaint.status)) {
+      return {
+        ok: false,
+        error: "Dispute can only be raised for query raised, resolved, or closed complaints.",
+      };
+    }
+
+    const targetDir = path.join(
+      process.cwd(),
+      "public",
+      "uploads",
+      "disputes",
+      String(complaintId),
+    );
+
+    await mkdir(targetDir, { recursive: true });
+
+    const extension = getFileExtension(photo);
+    const filename = `${Date.now()}-${randomUUID()}.${extension}`;
+    const filePath = path.join(targetDir, filename);
+    const buffer = Buffer.from(await photo.arrayBuffer());
+
+    await writeFile(filePath, buffer);
+
+    const imageUrl = `/uploads/disputes/${complaintId}/${filename}`;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.dispute.create({
+        data: {
+          complaintId,
+          userId: user.id,
+          remark,
+          imageUrl,
+        },
+      });
+
+      await tx.complaint.update({
+        where: { id: complaintId },
+        data: { status: "ESCALATED" },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorUserId: user.id,
+          complaintId,
+          action: "CITIZEN_DISPUTE_CREATED",
+          meta: {
+            remark,
+            imageUrl,
+          },
+        },
+      });
+    });
+
+    return { ok: true, status: "ESCALATED" };
+  } catch {
+    return { ok: false, error: "Unable to create dispute. Please try again." };
+  }
+}
+
+export async function createComplaintReviewAction(
+  formData: FormData,
+): Promise<CreateComplaintReviewActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return { ok: false, error: "Please login again to continue." };
+  }
+
+  const complaintId = Number(formData.get("complaintId"));
+  const reviewText = String(formData.get("review") ?? "").trim();
+  const rating = Number(formData.get("rating"));
+  const photo = formData.get("photo");
+
+  if (!Number.isInteger(complaintId) || complaintId <= 0) {
+    return { ok: false, error: "Invalid complaint selected." };
+  }
+
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return { ok: false, error: "Please provide a valid rating between 1 and 5." };
+  }
+
+  if (reviewText.length < 10) {
+    return { ok: false, error: "Please provide at least 10 characters in review." };
+  }
+
+  if (!(photo instanceof File)) {
+    return { ok: false, error: "Please upload a review photo." };
+  }
+
+  if (!photo.type.startsWith("image/") || photo.size > MAX_FILE_SIZE_BYTES) {
+    return { ok: false, error: "Only images up to 2 MB are allowed." };
+  }
+
+  try {
+    const complaint = await prisma.complaint.findFirst({
+      where: {
+        id: complaintId,
+        userId: user.id,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!complaint) {
+      return { ok: false, error: "Complaint not found." };
+    }
+
+    if (complaint.status !== "RESOLVED") {
+      return { ok: false, error: "Only resolved complaints can be completed with review." };
+    }
+
+    const existingReview = await prisma.review.findUnique({
+      where: {
+        complaintId_userId: {
+          complaintId,
+          userId: user.id,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (existingReview) {
+      return { ok: false, error: "Review already submitted for this complaint." };
+    }
+
+    const targetDir = path.join(
+      process.cwd(),
+      "public",
+      "uploads",
+      "reviews",
+      String(complaintId),
+    );
+
+    await mkdir(targetDir, { recursive: true });
+
+    const extension = getFileExtension(photo);
+    const filename = `${Date.now()}-${randomUUID()}.${extension}`;
+    const filePath = path.join(targetDir, filename);
+    const buffer = Buffer.from(await photo.arrayBuffer());
+
+    await writeFile(filePath, buffer);
+
+    const photoUrl = `/uploads/reviews/${complaintId}/${filename}`;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.review.create({
+        data: {
+          complaintId,
+          userId: user.id,
+          rating,
+          review: reviewText,
+          photoUrl,
+        },
+      });
+
+      await tx.complaint.update({
+        where: { id: complaintId },
+        data: { status: "CLOSED" },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorUserId: user.id,
+          complaintId,
+          action: "CITIZEN_REVIEW_CREATED",
+          meta: {
+            rating,
+            hasPhoto: true,
+          },
+        },
+      });
+    });
+
+    return { ok: true, status: "CLOSED" };
+  } catch {
+    return { ok: false, error: "Unable to submit review. Please try again." };
   }
 }

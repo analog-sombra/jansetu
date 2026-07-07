@@ -59,8 +59,16 @@ export async function getOfficerComplaintDetailAction(
       },
       select: {
         id: true,
-        category: true,
-        subcategory: true,
+        category: {
+          select: {
+            name: true,
+          },
+        },
+        subcategory: {
+          select: {
+            name: true,
+          },
+        },
         description: true,
         affectedCitizensCount: true,
         status: true,
@@ -173,8 +181,8 @@ export async function getOfficerComplaintDetailAction(
           aadhaar: complaint.user.aadhaar ?? "",
           voterId: complaint.user.voterId ?? "",
         },
-        category: complaint.category,
-        subcategory: complaint.subcategory,
+        category: complaint.category.name,
+        subcategory: complaint.subcategory.name,
         description: complaint.description,
         affectedCitizensCount: complaint.affectedCitizensCount,
         status: complaint.status,

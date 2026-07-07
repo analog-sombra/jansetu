@@ -5,8 +5,10 @@ export const CLUSTER_BUCKET_SIZE_METERS = 500;
 
 type ComplaintClusterInput = {
   complaintId: number;
-  category: string;
-  subcategory: string | null;
+  categoryId: number;
+  categoryName: string;
+  subcategoryId: number;
+  subcategoryName: string;
   area: string | null;
   lat: number;
   lng: number;
@@ -66,13 +68,13 @@ export async function attachComplaintToCluster(
   tx: Prisma.TransactionClient,
   input: ComplaintClusterInput,
 ): Promise<string> {
-  const departmentName = getDepartmentName(input.category);
+  const departmentName = getDepartmentName(input.categoryName);
   const { latBucket, lngBucket } = get500mBuckets(input.lat, input.lng);
   const areaKey = normalizePart(input.area);
   const clusterId = [
     normalizePart(departmentName),
-    normalizePart(input.category),
-    normalizePart(input.subcategory),
+    normalizePart(input.categoryName),
+    normalizePart(input.subcategoryName),
     areaKey,
     `${latBucket}:${lngBucket}`,
   ].join("|");
@@ -82,8 +84,8 @@ export async function attachComplaintToCluster(
       complaintId: input.complaintId,
       clusterId,
       departmentName,
-      category: input.category,
-      subcategory: input.subcategory,
+      category: input.categoryName,
+      subcategory: input.subcategoryName,
       areaKey,
       latBucket,
       lngBucket,

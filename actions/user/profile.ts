@@ -7,7 +7,7 @@ type CompleteProfileActionInput = {
   name: string;
   address: string;
   aadhaar?: string;
-  voterId: string;
+  voterId?: string;
 };
 
 type CompleteProfileActionResult = {
@@ -19,7 +19,7 @@ type UpdateProfileActionInput = {
   name: string;
   address: string;
   aadhaar?: string;
-  voterId: string;
+  voterId?: string;
 };
 
 export async function completeProfileAction(
@@ -28,7 +28,7 @@ export async function completeProfileAction(
   const user = await getAuthenticatedUser();
   const name = profile.name.trim();
   const address = profile.address.trim();
-  const voterId = profile.voterId.trim();
+  const voterId = profile.voterId?.trim() || null;
   const aadhaar = profile.aadhaar?.trim() || null;
 
   if (!user) {
@@ -41,10 +41,6 @@ export async function completeProfileAction(
 
   if (address.length < 10) {
     return { ok: false, error: "Address must be at least 10 characters." };
-  }
-
-  if (!voterId) {
-    return { ok: false, error: "Voter ID is required." };
   }
 
   if (aadhaar && !/^\d{12}$/.test(aadhaar)) {
@@ -75,7 +71,7 @@ export async function updateProfileAction(
   const user = await getAuthenticatedUser();
   const name = profile.name.trim();
   const address = profile.address.trim();
-  const voterId = profile.voterId.trim();
+  const voterId = profile.voterId?.trim() || null;
   const aadhaar = profile.aadhaar?.trim() || null;
 
   if (!user) {
@@ -88,10 +84,6 @@ export async function updateProfileAction(
 
   if (address.length < 10) {
     return { ok: false, error: "Address must be at least 10 characters." };
-  }
-
-  if (!voterId) {
-    return { ok: false, error: "Voter ID is required." };
   }
 
   if (aadhaar && !/^\d{12}$/.test(aadhaar)) {

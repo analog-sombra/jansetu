@@ -107,8 +107,8 @@ export default function CampNewComplaintForm() {
       address: "",
       aadhaar: "",
       voterId: "",
-      category: "",
-      subcategory: "",
+      categoryId: "0",
+      subcategoryId: "0",
       description: "",
       affectedCitizensCount: "1",
       area: "",
@@ -129,10 +129,11 @@ export default function CampNewComplaintForm() {
     formState: { errors },
   } = methods;
 
-  const selectedCategory =
-    useWatch({ control: methods.control, name: "category" }) || "";
-  const selectedSubcategory =
-    useWatch({ control: methods.control, name: "subcategory" }) || "";
+  const selectedCategoryIdRaw = useWatch({ control: methods.control, name: "categoryId" });
+  const selectedSubcategoryIdRaw = useWatch({ control: methods.control, name: "subcategoryId" });
+  
+  const selectedCategoryId: string = String(selectedCategoryIdRaw || "0");
+  const selectedSubcategoryId: string = String(selectedSubcategoryIdRaw || "0");
 
   // Load categories on mount
   useEffect(() => {
@@ -148,9 +149,9 @@ export default function CampNewComplaintForm() {
           // Set default category and subcategory
           if (result.categories.length > 0) {
             const firstCategory = result.categories[0];
-            setValue("category", firstCategory.name);
+            setValue("categoryId", String(firstCategory.id));
             if (firstCategory.subcategories.length > 0) {
-              setValue("subcategory", firstCategory.subcategories[0].name);
+              setValue("subcategoryId", String(firstCategory.subcategories[0].id));
             }
           }
         }
@@ -169,19 +170,19 @@ export default function CampNewComplaintForm() {
   }, [setValue]);
 
   // Find the selected category object
-  const selectedCategoryObj = categories.find(
-    (cat) => cat.name === selectedCategory
+  const selectedCategoryObj: CategoryWithSubcategories | undefined = categories.find(
+    (cat) => cat.id === Number(selectedCategoryId)
   );
 
   const categoryOptions: OptionValue[] = categories.map((category) => ({
-    value: category.name,
+    value: String(category.id),
     label: category.name,
   }));
 
   const subcategoryOptions: OptionValue[] = (
     selectedCategoryObj?.subcategories ?? []
   ).map((subcategory) => ({
-    value: subcategory.name,
+    value: String(subcategory.id),
     label: subcategory.name,
   }));
 
@@ -193,13 +194,14 @@ export default function CampNewComplaintForm() {
   useEffect(() => {
     if (!selectedCategoryObj) return;
     
-    const allowedSubcategories = selectedCategoryObj.subcategories.map(s => s.name);
-    if (!allowedSubcategories.includes(selectedSubcategory)) {
-      setValue("subcategory", allowedSubcategories[0] ?? "", {
+    const allowedSubcategoryIds = selectedCategoryObj.subcategories.map((s: { id: number; name: string }) => String(s.id));
+    const currentSubcategoryId = String(selectedSubcategoryId || "0");
+    if (!allowedSubcategoryIds.includes(currentSubcategoryId)) {
+      setValue("subcategoryId", allowedSubcategoryIds[0] ?? "0", {
         shouldValidate: true,
       });
     }
-  }, [selectedCategory, selectedSubcategory, selectedCategoryObj, setValue]);
+  }, [selectedCategoryId, selectedSubcategoryId, selectedCategoryObj, setValue]);
 
   function pickLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -295,8 +297,8 @@ export default function CampNewComplaintForm() {
         voterId: values.voterId ?? "",
       },
       complaint: {
-        category: values.category,
-        subcategory: values.subcategory,
+        categoryId: Number(values.categoryId),
+        subcategoryId: Number(values.subcategoryId),
         description: values.description,
         affectedCitizensCount: values.affectedCitizensCount,
         area: values.area,
@@ -356,8 +358,8 @@ export default function CampNewComplaintForm() {
       address: "",
       aadhaar: "",
       voterId: "",
-      category: firstCategory?.name ?? "",
-      subcategory: firstCategory?.subcategories[0]?.name ?? "",
+      categoryId: String(firstCategory?.id ?? 0),
+      subcategoryId: String(firstCategory?.subcategories[0]?.id ?? 0),
       description: "",
       affectedCitizensCount: "1",
       area: "",
@@ -544,7 +546,7 @@ export default function CampNewComplaintForm() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <CustomMultiSelect<campComplaintValidationForm>
-                  name="category"
+                  name="categoryId"
                   title={t("newComplaint.category")}
                   placeholder={t("newComplaint.validation.category")}
                   required
@@ -554,7 +556,7 @@ export default function CampNewComplaintForm() {
 
               <div>
                 <CustomMultiSelect<campComplaintValidationForm>
-                  name="subcategory"
+                  name="subcategoryId"
                   title={t("newComplaint.subcategory")}
                   placeholder={t("newComplaint.validation.subcategory")}
                   required

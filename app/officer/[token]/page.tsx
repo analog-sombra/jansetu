@@ -19,14 +19,16 @@ import {
   Col,
   DatePicker,
   Divider,
-  Empty,
   Form,
   Image,
   Input,
   Row,
   Select,
   Skeleton,
+  Upload,
 } from "antd";
+import { InboxOutlined } from "@ant-design/icons";
+import type { UploadFile } from "antd";
 import dayjs from "dayjs";
 import { useLanguage } from "@/components/provider/language_provider";
 import {
@@ -34,6 +36,7 @@ import {
   getOfficerAssignmentByTokenAction,
   type OfficerCompletedAssignmentSummary,
   submitOfficerResponseAction,
+  uploadOfficerProofAction,
   type OfficerAssignmentDetail,
   type SubmitOfficerResponseInput,
 } from "@/actions/officer";
@@ -74,6 +77,10 @@ function formatDateTime(value: string) {
   return new Date(value).toLocaleString("en-IN");
 }
 
+function isComplaintClosed(status: string) {
+  return ["RESOLVED", "REJECTED", "AUTO_CLOSED", "COMPLETED"].includes(status);
+}
+
 export default function OfficerTokenPage() {
   const params = useParams<{ token: string }>();
   const token = params.token ?? "";
@@ -92,10 +99,14 @@ export default function OfficerTokenPage() {
     type: "error" | "success" | "info" | "warning";
     text: string;
   } | null>(null);
-  const [completedAssignmentsSorting, setCompletedAssignmentsSorting] =
+  const [notCompletedAssignmentsSorting, setNotCompletedAssignmentsSorting] =
     useState<SortingState>([]);
+  const [proofFile, setProofFile] = useState<UploadFile[]>([]);
 
   const responseType = Form.useWatch("type", form);
+  const complaintIsClosed = assignment
+    ? isComplaintClosed(assignment.complaint.status)
+    : false;
 
   async function loadAssignment() {
 
@@ -214,11 +225,17 @@ export default function OfficerTokenPage() {
     [t, token],
   );
 
-  const completedAssignmentsTable = useReactTable({
-    data: assignment?.completedAssignments ?? [],
+  const notCompletedAssignments = useMemo(() => {
+    return (assignment?.completedAssignments ?? []).filter(
+      (assignment) => !isComplaintClosed(assignment.status),
+    );
+  }, [assignment?.completedAssignments]);
+
+  const notCompletedAssignmentsTable = useReactTable({
+    data: notCompletedAssignments,
     columns: completedAssignmentsColumns,
-    state: { sorting: completedAssignmentsSorting },
-    onSortingChange: setCompletedAssignmentsSorting,
+    state: { sorting: notCompletedAssignmentsSorting },
+    onSortingChange: setNotCompletedAssignmentsSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
@@ -231,11 +248,38 @@ export default function OfficerTokenPage() {
     setSubmitting(true);
     setAlert(null);
 
+    let proofUrl: string | undefined;
+
+    // Handle proof file upload if present
+    if (proofFile.length > 0 && proofFile[0].originFileObj) {
+      const file = proofFile[0].originFileObj as File;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("assignmentId", String(assignment.id));
+
+      try {
+        const uploadResult = await uploadOfficerProofAction(formData);
+
+        if (!uploadResult.ok) {
+          throw new Error(uploadResult.error);
+        }
+
+        proofUrl = uploadResult.fileUrl;
+      } catch (err) {
+        setSubmitting(false);
+        setAlert({
+          type: "error",
+          text: `File upload failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+        });
+        return;
+      }
+    }
+
     const result = await submitOfficerResponseAction({
       token,
       type: values.type,
       message: values.message,
-      proofUrl: values.proofUrl,
+      proofUrl,
       plannedCompletionDate: values.plannedCompletionDate
         ?.startOf("day")
         .toISOString(),
@@ -253,6 +297,7 @@ export default function OfficerTokenPage() {
 
     setAlert({ type: "success", text: t("officer.success.respond") });
     form.resetFields(["type", "message", "plannedCompletionDate", "proofUrl"]);
+    setProofFile([]);
 
     await loadAssignment();
   }
@@ -554,70 +599,262 @@ export default function OfficerTokenPage() {
 
             <Divider>{t("officer.completedTitle")}</Divider>
 
-            {assignment.completedAssignments.length === 0 ? (
-              <Empty description={t("officer.completedEmpty")} />
-            ) : (
-              <div style={{ overflowX: "auto" }}>
+            
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          {complaintIsClosed ? (
+            <Card title={t("officer.completedEmpty")}>
+              <Alert
+                type="info"
+                showIcon
+                title={`Complaint is ${formatLabel(assignment.complaint.status)} and is now read-only.`}
+                description="Officer reassignment and response submission are disabled for completed complaints."
+              />
+            </Card>
+          ) : (
+            <>
+              <Card title={t("adminDetail.assignOfficer")} style={{ marginBottom: 16 }}>
+                <Form layout="vertical" requiredMark={false}>
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      padding: 10,
+                      background: "#f7f9fc",
+                      borderLeft: "3px solid #1a3c6e",
+                      borderRadius: 4,
+                    }}
+                  >
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      {t("adminDetail.currentAssignedOfficer")}
+                    </div>
+                    <div style={{ color: "#1a3c6e", fontWeight: 700, marginTop: 2 }}>
+                      {assignment.officer.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                      {assignment.officer.department.name}
+                    </div>
+                  </div>
+
+                  <Form.Item
+                    label={t("adminDetail.changeOfficer")}
+                    style={{ marginBottom: 12 }}
+                  >
+                    <Select
+                      placeholder={t("adminDetail.selectOfficerReassignPlaceholder")}
+                      value={officerId || undefined}
+                      onChange={(val) => setOfficerId(val)}
+                      size="large"
+                      style={{ width: "100%" }}
+                      options={assignment.availableOfficers.map((officer) => ({
+                        value: String(officer.id),
+                        label: `${officer.name} (${officer.designation}) - ${officer.department.name}`,
+                      }))}
+                      notFoundContent={
+                        <div style={{ fontSize: 12, color: "#6b7280" }}>
+                          {t("adminDetail.noOfficers")}
+                        </div>
+                      }
+                    />
+                  </Form.Item>
+
+                  <Button
+                    type="primary"
+                    block
+                    disabled={!officerId}
+                    loading={assigning}
+                    onClick={assignOfficer}
+                    style={{
+                      background: "#1a3c6e",
+                      borderColor: "#1a3c6e",
+                      fontWeight: 700,
+                      color: "#fff",
+                    }}
+                  >
+                    {t("adminDetail.assignOfficer")}
+                  </Button>
+
+                  {assignedOfficerToken && (
+                    <div style={{ marginTop: 12, fontSize: 12, color: "#6b7280" }}>
+                      {t("adminDetail.assignmentToken")}: {assignedOfficerToken}
+                    </div>
+                  )}
+                </Form>
+              </Card>
+
+              <Card title={t("officer.submitResponse")}>
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={onFinish}
+                  initialValues={{ type: "RESOLVED" }}
+                >
+                  <Form.Item
+                    name="type"
+                    label={t("officer.responseType")}
+                    rules={[
+                      {
+                        required: true,
+                        message: t("officer.validation.responseType"),
+                      },
+                    ]}
+                  >
+                    <Select
+                      options={[
+                        {
+                          value: "RESOLVED",
+                          label: `✅ ${t("officer.type.resolved")}`,
+                        },
+                        { value: "QUERY", label: `❓ ${t("officer.type.query")}` },
+                        {
+                          value: "REJECTED",
+                          label: `❌ ${t("officer.type.rejected")}`,
+                        },
+                        {
+                          value: "WORK_IN_PROGESS",
+                          label: `🛠️ ${t("officer.type.workInProgess")}`,
+                        },
+                      ]}
+                    />
+                  </Form.Item>
+
+                  {responseType === "WORK_IN_PROGESS" && (
+                    <Form.Item
+                      name="plannedCompletionDate"
+                      label={t("officer.targetDate")}
+                      rules={[
+                        {
+                          required: true,
+                          message: t("officer.validation.targetDate"),
+                        },
+                      ]}
+                    >
+                      <DatePicker
+                        style={{ width: "100%" }}
+                        placeholder={t("officer.targetDatePlaceholder")}
+                      />
+                    </Form.Item>
+                  )}
+
+                  <Form.Item
+                    name="message"
+                    label={t("officer.responseDetails")}
+                    rules={[
+                      { required: true, message: t("officer.validation.details") },
+                      { min: 10, message: t("officer.validation.detailsMin") },
+                    ]}
+                  >
+                    <Input.TextArea
+                      rows={4}
+                      placeholder={t("officer.responsePlaceholder")}
+                      maxLength={500}
+                    />
+                  </Form.Item>
+
+                  <Form.Item name="proofUrl" label={t("officer.proofOptional")}>
+                    <Upload
+                      maxCount={1}
+                      accept="image/*"
+                      disabled={submitting}
+                      fileList={proofFile}
+                      beforeUpload={() => false}
+                      onChange={({ fileList }) => {
+                        if (fileList.length > 0 && fileList[0].size! > 2 * 1024 * 1024) {
+                          setAlert({
+                            type: "error",
+                            text: "File must be 2 MB or smaller",
+                          });
+                          return;
+                        }
+                        setProofFile(fileList);
+                      }}
+                      listType="picture"
+                    >
+                      <div style={{ padding: "20px", border: "1px dashed #d9d9d9", borderRadius: "6px" }}>
+                        <p style={{ marginBottom: 8 }}>
+                          <InboxOutlined style={{ fontSize: 24, color: "#1a3c6e" }} />
+                        </p>
+                        <p>Click or drag image to this area</p>
+                        <p style={{ fontSize: 12, color: "#666" }}>Single image, max 2 MB</p>
+                      </div>
+                    </Upload>
+                  </Form.Item>
+
+                  <Button
+                    type="primary"
+                    block
+                    htmlType="submit"
+                    loading={submitting}
+                  >
+                    {t("officer.submitButton")}
+                  </Button>
+                </Form>
+              </Card>
+            </>
+          )}
+        </Col>
+      </Row>
+
+      {notCompletedAssignments.length > 0 && (
+        <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
+          <Col xs={24}>
+            <Card title={t("officer.notCompletedComplaints")}>
+              <div className="overflow-x-auto">
                 <table
                   style={{
                     width: "100%",
                     borderCollapse: "collapse",
-                    minWidth: 760,
                   }}
                 >
                   <thead>
-                    {completedAssignmentsTable.getHeaderGroups().map((headerGroup) => (
-                      <tr
-                        key={headerGroup.id}
-                        style={{ borderBottom: "1px solid #e5e7eb" }}
-                      >
-                        {headerGroup.headers.map((header) => {
-                          const sortingState = header.column.getIsSorted();
-                          const sortingLabel =
-                            sortingState === "asc"
-                              ? " ▲"
-                              : sortingState === "desc"
-                                ? " ▼"
-                                : "";
-
-                          return (
-                            <th
-                              key={header.id}
-                              style={{
-                                textAlign: "left",
-                                fontSize: 13,
-                                color: "#4b5563",
-                                fontWeight: 700,
-                                padding: "12px 10px",
-                                whiteSpace: "nowrap",
-                                cursor: header.column.getCanSort() ? "pointer" : "default",
-                              }}
-                              onClick={header.column.getToggleSortingHandler()}
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext(),
-                                  )}
-                              {sortingLabel}
-                            </th>
-                          );
-                        })}
+                    {notCompletedAssignmentsTable.getHeaderGroups().map((headerGroup) => (
+                      <tr key={headerGroup.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                        {headerGroup.headers.map((header) => (
+                          <th
+                            key={header.id}
+                            onClick={header.column.getToggleSortingHandler()}
+                            style={{
+                              textAlign: "left",
+                              padding: "12px",
+                              fontWeight: 600,
+                              cursor: header.column.getCanSort()
+                                ? "pointer"
+                                : "default",
+                              backgroundColor: "#f9fafb",
+                              userSelect: "none",
+                            }}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {header.column.getCanSort() && (
+                              <span style={{ marginLeft: 8 }}>
+                                {header.column.getIsSorted() === "asc"
+                                  ? " ↑"
+                                  : header.column.getIsSorted() === "desc"
+                                    ? " ↓"
+                                    : " ↕"}
+                              </span>
+                            )}
+                          </th>
+                        ))}
                       </tr>
                     ))}
                   </thead>
                   <tbody>
-                    {completedAssignmentsTable.getRowModel().rows.map((row) => (
-                      <tr key={row.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    {notCompletedAssignmentsTable.getRowModel().rows.map((row, index) => (
+                      <tr
+                        key={row.id}
+                        style={{
+                          borderBottom: "1px solid #e5e7eb",
+                          backgroundColor: index % 2 === 0 ? "#fff" : "#f9fafb",
+                        }}
+                      >
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
                             style={{
-                              padding: "12px 10px",
-                              fontSize: 13,
-                              color: "#111827",
-                              verticalAlign: "top",
+                              padding: "12px",
+                              fontSize: 14,
                             }}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -628,164 +865,10 @@ export default function OfficerTokenPage() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={8}>
-          <Card title={t("adminDetail.assignOfficer")} style={{ marginBottom: 16 }}>
-            <Form layout="vertical" requiredMark={false}>
-              <div
-                style={{
-                  marginBottom: 12,
-                  padding: 10,
-                  background: "#f7f9fc",
-                  borderLeft: "3px solid #1a3c6e",
-                  borderRadius: 4,
-                }}
-              >
-                <div style={{ fontSize: 12, color: "#6b7280" }}>
-                  {t("adminDetail.currentAssignedOfficer")}
-                </div>
-                <div style={{ color: "#1a3c6e", fontWeight: 700, marginTop: 2 }}>
-                  {assignment.officer.name}
-                </div>
-                <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                  {assignment.officer.department.name}
-                </div>
-              </div>
-
-              <Form.Item
-                label={t("adminDetail.changeOfficer")}
-                style={{ marginBottom: 12 }}
-              >
-                <Select
-                  placeholder={t("adminDetail.selectOfficerReassignPlaceholder")}
-                  value={officerId || undefined}
-                  onChange={(val) => setOfficerId(val)}
-                  size="large"
-                  style={{ width: "100%" }}
-                  options={assignment.availableOfficers.map((officer) => ({
-                    value: String(officer.id),
-                    label: `${officer.name} (${officer.designation}) - ${officer.department.name}`,
-                  }))}
-                  notFoundContent={
-                    <div style={{ fontSize: 12, color: "#6b7280" }}>
-                      {t("adminDetail.noOfficers")}
-                    </div>
-                  }
-                />
-              </Form.Item>
-
-              <Button
-                type="primary"
-                block
-                disabled={!officerId}
-                loading={assigning}
-                onClick={assignOfficer}
-                style={{
-                  background: "#1a3c6e",
-                  borderColor: "#1a3c6e",
-                  fontWeight: 700,
-                  color: "#fff",
-                }}
-              >
-                {t("adminDetail.assignOfficer")}
-              </Button>
-
-              {assignedOfficerToken && (
-                <div style={{ marginTop: 12, fontSize: 12, color: "#6b7280" }}>
-                  {t("adminDetail.assignmentToken")}: {assignedOfficerToken}
-                </div>
-              )}
-            </Form>
-          </Card>
-
-          <Card title={t("officer.submitResponse")}>
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={onFinish}
-              initialValues={{ type: "RESOLVED" }}
-            >
-              <Form.Item
-                name="type"
-                label={t("officer.responseType")}
-                rules={[
-                  {
-                    required: true,
-                    message: t("officer.validation.responseType"),
-                  },
-                ]}
-              >
-                <Select
-                  options={[
-                    {
-                      value: "RESOLVED",
-                      label: `✅ ${t("officer.type.resolved")}`,
-                    },
-                    { value: "QUERY", label: `❓ ${t("officer.type.query")}` },
-                    {
-                      value: "REJECTED",
-                      label: `❌ ${t("officer.type.rejected")}`,
-                    },
-                    {
-                      value: "WORK_IN_PROGESS",
-                      label: `🛠️ ${t("officer.type.workInProgess")}`,
-                    },
-                  ]}
-                />
-              </Form.Item>
-
-              {responseType === "WORK_IN_PROGESS" && (
-                <Form.Item
-                  name="plannedCompletionDate"
-                  label={t("officer.targetDate")}
-                  rules={[
-                    {
-                      required: true,
-                      message: t("officer.validation.targetDate"),
-                    },
-                  ]}
-                >
-                  <DatePicker
-                    style={{ width: "100%" }}
-                    placeholder={t("officer.targetDatePlaceholder")}
-                  />
-                </Form.Item>
-              )}
-
-              <Form.Item
-                name="message"
-                label={t("officer.responseDetails")}
-                rules={[
-                  { required: true, message: t("officer.validation.details") },
-                  { min: 10, message: t("officer.validation.detailsMin") },
-                ]}
-              >
-                <Input.TextArea
-                  rows={4}
-                  placeholder={t("officer.responsePlaceholder")}
-                  maxLength={500}
-                />
-              </Form.Item>
-
-              <Form.Item name="proofUrl" label={t("officer.proofOptional")}>
-                <Input placeholder="https://..." />
-              </Form.Item>
-
-              <Button
-                type="primary"
-                block
-                htmlType="submit"
-                loading={submitting}
-              >
-                {t("officer.submitButton")}
-              </Button>
-            </Form>
-          </Card>
-        </Col>
-      </Row>
+            </Card>
+          </Col>
+        </Row>
+      )}
     </div>
   );
 }

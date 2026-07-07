@@ -8,6 +8,7 @@ import { AdminCategoryCreateResult } from "./types";
 export async function updateAdminCategoryAction(payload: {
   id: number;
   name: string;
+  departmentId: number;
 }): Promise<AdminCategoryCreateResult> {
   const auth = await requireAdminUser();
   if (!auth.ok) {
@@ -16,6 +17,7 @@ export async function updateAdminCategoryAction(payload: {
 
   const id = Number(payload.id);
   const name = payload.name.trim();
+  const departmentId = Number(payload.departmentId);
 
   if (!Number.isInteger(id) || id <= 0) {
     return { ok: false, error: "Invalid category ID." };
@@ -25,14 +27,24 @@ export async function updateAdminCategoryAction(payload: {
     return { ok: false, error: "Category name must be at least 2 characters." };
   }
 
+  if (!Number.isInteger(departmentId) || departmentId <= 0) {
+    return { ok: false, error: "Invalid department ID." };
+  }
+
   try {
     const category = await prisma.category.update({
       where: { id },
-      data: { name },
+      data: { name, departmentId },
       select: {
         id: true,
         name: true,
         createdAt: true,
+        department: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         _count: {
           select: {
             subcategories: true,
@@ -48,6 +60,10 @@ export async function updateAdminCategoryAction(payload: {
         name: category.name,
         subcategoriesCount: category._count.subcategories,
         createdAt: category.createdAt.toISOString(),
+        department: {
+          id: category.department.id,
+          name: category.department.name,
+        },
       },
     };
   } catch (error: unknown) {
@@ -62,7 +78,7 @@ export async function updateAdminCategoryAction(payload: {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
-      return { ok: false, error: "Category not found." };
+      return { ok: false, error: "Category or department not found." };
     }
 
     return { ok: false, error: "Unable to update category." };

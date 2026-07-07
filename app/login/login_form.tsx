@@ -94,6 +94,12 @@ export default function LoginForm() {
       return;
     }
 
+
+    if (result.role === "MLA_PA" || result.role === "CAMP_HEAD") {
+      router.push("/mla-pa");
+      return;
+    }
+
     if (!result.firstLoginComplete) {
       router.push("/user/register");
       return;
