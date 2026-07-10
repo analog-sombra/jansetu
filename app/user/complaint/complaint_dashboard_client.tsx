@@ -216,7 +216,7 @@ export default function ComplaintDashboardClient({
     ctx.fillStyle = "#333";
     const restText =
       `has acted as a responsible citizen by bringing attention to and successfully getting a ${issueType} issue resolved` +
-      ` in ${location} through the Jan Setu grievance portal.` +
+      ` in ${location} through the Seva me Sirsa grievance portal.` +
       ` We sincerely appreciate the awareness and civic responsibility demonstrated towards community development.`;
     wrapText(restText, centerX, 412, 960, 26);
 
@@ -253,7 +253,7 @@ export default function ComplaintDashboardClient({
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = `JanSetu-Certificate-${complaint.id}.png`;
+        anchor.download = `SevaMeSirsa-Certificate-${complaint.id}.png`;
         anchor.click();
         URL.revokeObjectURL(url);
       }, "image/png");
@@ -268,7 +268,7 @@ export default function ComplaintDashboardClient({
   }
 
   function buildShareText(complaint: ComplaintDashboardItem) {
-    return `My grievance #${complaint.id} (${complaint.category.replaceAll("_", " ")}) filed on Jan Setu has been successfully RESOLVED!\n#JanSetu #GrievanceRedressal #YourVoiceOurCommitment`;
+    return `My grievance #${complaint.id} (${complaint.category.replaceAll("_", " ")}) filed on Seva me Sirsa has been successfully RESOLVED!\n#SevaMeSirsa #GrievanceRedressal #YourVoiceOurCommitment`;
   }
 
   async function confirmResolution(complaintId: number, confirmed: boolean) {

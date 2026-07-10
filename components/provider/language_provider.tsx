@@ -12,8 +12,8 @@ import hi from "@/messages/hi.json";
 import pa from "@/messages/pa.json";
 
 type Language = "en" | "hi" | "pa";
-const LANGUAGE_STORAGE_KEY = "jansetu_language";
-const LANGUAGE_CHANGE_EVENT = "jansetu-language-change";
+const LANGUAGE_STORAGE_KEY = "sevamesirsa_language";
+const LANGUAGE_CHANGE_EVENT = "sevamesirsa-language-change";
 
 type LanguageContextType = {
   language: Language;

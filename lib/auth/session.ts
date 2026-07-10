@@ -2,8 +2,8 @@ import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
-export const AUTH_USER_ID_COOKIE = "jansetu_user_id";
-export const AUTH_USER_ROLE_COOKIE = "jansetu_user_role";
+export const AUTH_USER_ID_COOKIE = "sevamesirsa_user_id";
+export const AUTH_USER_ROLE_COOKIE = "sevamesirsa_user_role";
 
 type AuthSession = {
   userId: string;

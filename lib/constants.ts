@@ -1,4 +1,4 @@
-export const AUTH_COOKIE = "jansetu_session";
+export const AUTH_COOKIE = "sevamesirsa_session";
 
 
 
