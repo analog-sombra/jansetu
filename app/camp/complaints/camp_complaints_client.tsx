@@ -40,6 +40,21 @@ export default function CampComplaintsClient({
       sorter: (left, right) => left.id - right.id,
     },
     {
+      title: t("dashboard.table.action"),
+      key: "action",
+      width: 120,
+      render: (_, record) => (
+        <Link href={`/camp/complaints/${record.id}`}>
+          <Button
+            size="small"
+            style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+          >
+            View
+          </Button>
+        </Link>
+      ),
+    },
+    {
       title: t("camp.user.name"),
       dataIndex: "citizenName",
       key: "citizenName",
@@ -98,19 +113,8 @@ export default function CampComplaintsClient({
       width: 130,
       render: (date: string) => new Date(date).toLocaleDateString("en-IN"),
       sorter: (left, right) =>
-        new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
-    },
-    {
-      title: t("dashboard.table.action"),
-      key: "action",
-      width: 120,
-      render: (_, record) => (
-        <Link href={`/camp/complaints/${record.id}`}>
-          <Button size="small" style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
-            View
-          </Button>
-        </Link>
-      ),
+        new Date(left.createdAt).getTime() -
+        new Date(right.createdAt).getTime(),
     },
   ];
 
@@ -134,14 +138,22 @@ export default function CampComplaintsClient({
         </div>
 
         <Link href="/camp/new">
-          <Button type="primary" style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}>
+          <Button
+            type="primary"
+            style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}
+          >
             {t("camp.new.nav")}
           </Button>
         </Link>
       </div>
 
       {initialError && (
-        <Alert type="error" title={initialError} showIcon style={{ marginBottom: 16 }} />
+        <Alert
+          type="error"
+          title={initialError}
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
       )}
 
       <Card>

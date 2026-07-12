@@ -25,6 +25,8 @@ export { getAdminComplaintsDashboardAction } from "./getAdminComplaintsDashboard
 export { getAdminComplaintDetailAction } from "./getAdminComplaintDetailAction";
 export { assignAdminComplaintOfficerAction } from "./assignAdminComplaintOfficerAction";
 export { raiseAdminComplaintQueryAction } from "./raiseAdminComplaintQueryAction";
+export { rejectComplaintAction } from "./rejectComplaintAction";
+export type { RejectComplaintResult } from "./rejectComplaintAction";
 export { getAdminDepartmentOfficerDirectoryAction } from "./getAdminDepartmentOfficerDirectoryAction";
 export { createAdminDepartmentAction } from "./createAdminDepartmentAction";
 export { updateAdminDepartmentAction } from "./updateAdminDepartmentAction";

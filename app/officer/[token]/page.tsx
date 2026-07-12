@@ -17,20 +17,22 @@ import {
   Button,
   Card,
   Col,
-  DatePicker,
   Divider,
-  Form,
   Image,
-  Input,
   Row,
-  Select,
   Skeleton,
   Upload,
 } from "antd";
 import { InboxOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd";
 import dayjs from "dayjs";
+import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
+import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useLanguage } from "@/components/provider/language_provider";
+import { CustomTextInput } from "@/components/inputfields/textinput";
+import { CustomTextAreaInput } from "@/components/inputfields/textareainput";
+import { CustomMultiSelect } from "@/components/inputfields/multiselect";
+import { CustomDateSelect } from "@/components/inputfields/dateselect";
 import {
   assignOfficerByTokenAction,
   getOfficerAssignmentByTokenAction,
@@ -40,6 +42,12 @@ import {
   type OfficerAssignmentDetail,
   type SubmitOfficerResponseInput,
 } from "@/actions/officer";
+import {
+  officerResponseValidationSchema,
+  type officerResponseValidationForm,
+} from "@/schema/officerResponseValidationSchema";
+import { onFormError } from "@/utils/method";
+import { OptionValue } from "@/model/main";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "#f59e0b",
@@ -62,12 +70,7 @@ const RESPONSE_COLORS: Record<string, string> = {
 const completedAssignmentColumnHelper =
   createColumnHelper<OfficerCompletedAssignmentSummary>();
 
-type FormValues = {
-  type: SubmitOfficerResponseInput["type"];
-  message: string;
-  plannedCompletionDate?: dayjs.Dayjs;
-  proofUrl?: string;
-};
+type FormValues = officerResponseValidationForm;
 
 function formatLabel(value: string) {
   return value.replaceAll("_", " ");
@@ -85,7 +88,17 @@ export default function OfficerTokenPage() {
   const params = useParams<{ token: string }>();
   const token = params.token ?? "";
   const { t } = useLanguage();
-  const [form] = Form.useForm<FormValues>();
+
+  const methods = useForm<FormValues>({
+    defaultValues: {
+      type: "RESOLVED",
+      message: "",
+      plannedCompletionDate: "",
+    },
+    resolver: valibotResolver(officerResponseValidationSchema) as Resolver<FormValues>,
+  });
+
+  const { handleSubmit, reset: resetForm, watch } = methods;
 
   const [assignment, setAssignment] = useState<OfficerAssignmentDetail | null>(
     null,
@@ -103,7 +116,7 @@ export default function OfficerTokenPage() {
     useState<SortingState>([]);
   const [proofFile, setProofFile] = useState<UploadFile[]>([]);
 
-  const responseType = Form.useWatch("type", form);
+  const responseType = watch("type");
   const complaintIsClosed = assignment
     ? isComplaintClosed(assignment.complaint.status)
     : false;
@@ -214,7 +227,7 @@ export default function OfficerTokenPage() {
         id: "action",
         header: t("officer.completedTableAction"),
         cell: (info) => (
-          <Link href={`/officer/${token}/${info.row.original.complaintId}`}>
+          <Link href={`/officer/${info.row.original.token}`}>
             <Button size="small" type="link" style={{ paddingInline: 0 }}>
               {t("admin.table.view")}
             </Button>
@@ -275,14 +288,17 @@ export default function OfficerTokenPage() {
       }
     }
 
+    let plannedCompletionDate: string | undefined;
+    if (values.plannedCompletionDate && values.type === "WORK_IN_PROGESS") {
+      plannedCompletionDate = values.plannedCompletionDate;
+    }
+
     const result = await submitOfficerResponseAction({
       token,
-      type: values.type,
+      type: values.type as SubmitOfficerResponseInput["type"],
       message: values.message,
       proofUrl,
-      plannedCompletionDate: values.plannedCompletionDate
-        ?.startOf("day")
-        .toISOString(),
+      plannedCompletionDate,
     });
 
     setSubmitting(false);
@@ -296,7 +312,11 @@ export default function OfficerTokenPage() {
     }
 
     setAlert({ type: "success", text: t("officer.success.respond") });
-    form.resetFields(["type", "message", "plannedCompletionDate", "proofUrl"]);
+    resetForm({
+      type: "RESOLVED",
+      message: "",
+      plannedCompletionDate: "",
+    });
     setProofFile([]);
 
     await loadAssignment();
@@ -616,7 +636,7 @@ export default function OfficerTokenPage() {
           ) : (
             <>
               <Card title={t("adminDetail.assignOfficer")} style={{ marginBottom: 16 }}>
-                <Form layout="vertical" requiredMark={false}>
+                <div>
                   <div
                     style={{
                       marginBottom: 12,
@@ -637,27 +657,26 @@ export default function OfficerTokenPage() {
                     </div>
                   </div>
 
-                  <Form.Item
-                    label={t("adminDetail.changeOfficer")}
-                    style={{ marginBottom: 12 }}
-                  >
-                    <Select
-                      placeholder={t("adminDetail.selectOfficerReassignPlaceholder")}
-                      value={officerId || undefined}
-                      onChange={(val) => setOfficerId(val)}
-                      size="large"
-                      style={{ width: "100%" }}
-                      options={assignment.availableOfficers.map((officer) => ({
-                        value: String(officer.id),
-                        label: `${officer.name} (${officer.designation}) - ${officer.department.name}`,
-                      }))}
-                      notFoundContent={
-                        <div style={{ fontSize: 12, color: "#6b7280" }}>
-                          {t("adminDetail.noOfficers")}
-                        </div>
-                      }
-                    />
-                  </Form.Item>
+                  <div style={{ marginBottom: 12 }}>
+                    <label htmlFor="officerId" className="text-sm font-normal">
+                      {t("adminDetail.changeOfficer")}
+                    </label>
+                    <select
+                      id="officerId"
+                      value={officerId || ""}
+                      onChange={(e) => setOfficerId(e.target.value)}
+                      className="w-full mt-2 p-2 border border-gray-300 rounded"
+                    >
+                      <option value="">
+                        {t("adminDetail.selectOfficerReassignPlaceholder")}
+                      </option>
+                      {assignment.availableOfficers.map((officer) => (
+                        <option key={officer.id} value={String(officer.id)}>
+                          {officer.name} ({officer.designation}) - {officer.department.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
                   <Button
                     type="primary"
@@ -680,116 +699,102 @@ export default function OfficerTokenPage() {
                       {t("adminDetail.assignmentToken")}: {assignedOfficerToken}
                     </div>
                   )}
-                </Form>
+                </div>
               </Card>
 
               <Card title={t("officer.submitResponse")}>
-                <Form
-                  form={form}
-                  layout="vertical"
-                  onFinish={onFinish}
-                  initialValues={{ type: "RESOLVED" }}
-                >
-                  <Form.Item
-                    name="type"
-                    label={t("officer.responseType")}
-                    rules={[
-                      {
-                        required: true,
-                        message: t("officer.validation.responseType"),
-                      },
-                    ]}
-                  >
-                    <Select
-                      options={[
-                        {
-                          value: "RESOLVED",
-                          label: `✅ ${t("officer.type.resolved")}`,
-                        },
-                        { value: "QUERY", label: `❓ ${t("officer.type.query")}` },
-                        {
-                          value: "REJECTED",
-                          label: `❌ ${t("officer.type.rejected")}`,
-                        },
-                        {
-                          value: "WORK_IN_PROGESS",
-                          label: `🛠️ ${t("officer.type.workInProgess")}`,
-                        },
-                      ]}
-                    />
-                  </Form.Item>
-
-                  {responseType === "WORK_IN_PROGESS" && (
-                    <Form.Item
-                      name="plannedCompletionDate"
-                      label={t("officer.targetDate")}
-                      rules={[
-                        {
-                          required: true,
-                          message: t("officer.validation.targetDate"),
-                        },
-                      ]}
-                    >
-                      <DatePicker
-                        style={{ width: "100%" }}
-                        placeholder={t("officer.targetDatePlaceholder")}
+                <FormProvider {...methods}>
+                  <form onSubmit={handleSubmit(onFinish, onFormError)}>
+                    <div className="mb-4">
+                      <CustomMultiSelect<FormValues>
+                        name="type"
+                        title={t("officer.responseType")}
+                        placeholder={t("officer.responseType")}
+                        required
+                        options={[
+                          {
+                            value: "RESOLVED",
+                            label: `✅ ${t("officer.type.resolved")}`,
+                          },
+                          {
+                            value: "QUERY",
+                            label: `❓ ${t("officer.type.query")}`,
+                          },
+                          {
+                            value: "REJECTED",
+                            label: `❌ ${t("officer.type.rejected")}`,
+                          },
+                          {
+                            value: "WORK_IN_PROGESS",
+                            label: `🛠️ ${t("officer.type.workInProgess")}`,
+                          },
+                        ]}
                       />
-                    </Form.Item>
-                  )}
+                    </div>
 
-                  <Form.Item
-                    name="message"
-                    label={t("officer.responseDetails")}
-                    rules={[
-                      { required: true, message: t("officer.validation.details") },
-                      { min: 10, message: t("officer.validation.detailsMin") },
-                    ]}
-                  >
-                    <Input.TextArea
-                      rows={4}
-                      placeholder={t("officer.responsePlaceholder")}
-                      maxLength={500}
-                    />
-                  </Form.Item>
-
-                  <Form.Item name="proofUrl" label={t("officer.proofOptional")}>
-                    <Upload
-                      maxCount={1}
-                      accept="image/*"
-                      disabled={submitting}
-                      fileList={proofFile}
-                      beforeUpload={() => false}
-                      onChange={({ fileList }) => {
-                        if (fileList.length > 0 && fileList[0].size! > 2 * 1024 * 1024) {
-                          setAlert({
-                            type: "error",
-                            text: "File must be 2 MB or smaller",
-                          });
-                          return;
-                        }
-                        setProofFile(fileList);
-                      }}
-                      listType="picture"
-                    >
-                      <div style={{ padding: "20px", border: "1px dashed #d9d9d9", borderRadius: "6px" }}>
-                        <p style={{ marginBottom: 8 }}>
-                          <InboxOutlined style={{ fontSize: 24, color: "#1a3c6e" }} />
-                        </p>
-                        <p>Click or drag image to this area</p>
-                        <p style={{ fontSize: 12, color: "#666" }}>Single image, max 2 MB</p>
+                    {responseType === "WORK_IN_PROGESS" && (
+                      <div className="mb-4">
+                        <CustomDateSelect<FormValues>
+                          name="plannedCompletionDate"
+                          title={t("officer.targetDate")}
+                          placeholder={t("officer.targetDatePlaceholder")}
+                          required
+                        />
                       </div>
-                    </Upload>
-                  </Form.Item>
+                    )}
 
-                  <Button
-                    type="primary"
-                    block
-                    htmlType="submit"
-                    loading={submitting}
-                  >
-                    {t("officer.submitButton")}
-                  </Button>
-                </Form>
+                    <div className="mb-4">
+                      <CustomTextAreaInput<FormValues>
+                        name="message"
+                        title={t("officer.responseDetails")}
+                        placeholder={t("officer.responsePlaceholder")}
+                        required
+                        maxlength={500}
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="text-sm font-normal">
+                        {t("officer.proofOptional")}
+                      </label>
+                      <Upload
+                        maxCount={1}
+                        accept="image/*"
+                        disabled={submitting}
+                        fileList={proofFile}
+                        beforeUpload={() => false}
+                        onChange={({ fileList }) => {
+                          if (fileList.length > 0 && fileList[0].size! > 2 * 1024 * 1024) {
+                            setAlert({
+                              type: "error",
+                              text: "File must be 2 MB or smaller",
+                            });
+                            return;
+                          }
+                          setProofFile(fileList);
+                        }}
+                        listType="picture"
+                      >
+                        <div style={{ padding: "20px", border: "1px dashed #d9d9d9", borderRadius: "6px" }}>
+                          <p style={{ marginBottom: 8 }}>
+                            <InboxOutlined style={{ fontSize: 24, color: "#1a3c6e" }} />
+                          </p>
+                          <p>Click or drag image to this area</p>
+                          <p style={{ fontSize: 12, color: "#666" }}>Single image, max 2 MB</p>
+                        </div>
+                      </Upload>
+                    </div>
+
+                    <Button
+                      type="primary"
+                      block
+                      htmlType="submit"
+                      loading={submitting}
+                    >
+                      {t("officer.submitButton")}
+                    </Button>
+                  </form>
+                </FormProvider>
               </Card>
             </>
           )}

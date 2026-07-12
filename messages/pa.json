@@ -393,6 +393,7 @@
   "officer.submitButton": "ਪ੍ਰਤਿਕ੍ਰਿਯਾ ਜਮਾ ਕਰੇਂ",
   "officer.completedTitle": "ਤੁਹਾਨੂੰ ਦਿੱਤੀਆਂ ਪੂਰੀਆਂ ਸ਼ਿਕਾਯਤਾਂ",
   "officer.completedEmpty": "ਇਸ ਅਧਿਕਾਰੀ ਲਈ ਅਜੇ ਕੋਈ ਪੂਰੀ ਸ਼ਿਕਾਯਤ ਨਹੀਂ ਮਿਲੀ।",
+  "officer.notCompletedComplaints": "ਤੁਹਾਨੂੰ ਸੌਂਪੀਆਂ ਗਈਆਂ ਲੰਬਿਤ ਸ਼ਿਕਾਯਤਾਂ",
   "officer.completedTableComplaint": "ਸ਼ਿਕਾਯਤ",
   "officer.completedTableCategory": "ਸ਼੍ਰੇਣੀ",
   "officer.completedTableSubcategory": "ਉਪ-ਸ਼੍ਰੇਣੀ",

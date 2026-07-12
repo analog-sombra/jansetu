@@ -370,7 +370,7 @@ export default function AddComplaintForm() {
                     name="area"
                     title={t("newComplaint.area")}
                     placeholder={t("newComplaint.areaPlaceholder")}
-                    required={false}
+                    required
                     options={areaOptions}
                   />
                 </div>

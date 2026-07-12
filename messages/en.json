@@ -405,6 +405,7 @@
   "officer.submitButton": "Submit Response",
   "officer.completedTitle": "Completed Complaints Assigned To You",
   "officer.completedEmpty": "No completed complaints found for this officer yet.",
+  "officer.notCompletedComplaints": "Pending Complaints Assigned To You",
   "officer.completedTableComplaint": "Complaint",
   "officer.completedTableCategory": "Category",
   "officer.completedTableSubcategory": "Subcategory",

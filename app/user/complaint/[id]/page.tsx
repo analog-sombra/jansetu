@@ -391,7 +391,7 @@ export default function UserComplaintDetailPage() {
               </Card>
             )}
 
-            <Card
+            {/* <Card
               title={
                 <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
                   Officer Updates
@@ -474,7 +474,7 @@ export default function UserComplaintDetailPage() {
                   ))}
                 </Space>
               )}
-            </Card>
+            </Card> */}
           </Col>
         </Row>
       )}

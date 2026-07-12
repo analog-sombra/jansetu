@@ -8,6 +8,7 @@ export type OfficerAssignmentResponse = {
 
 export type OfficerCompletedAssignmentSummary = {
   id: number;
+  token: string;
   complaintId: number;
   category: string;
   subcategory: string | null;

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button, Card, Col, Row, Typography, Space } from "antd";
 import { useLanguage } from "@/components/provider/language_provider";
+import Image from "next/image";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -145,6 +146,29 @@ export default function HomePage() {
             </Link>
           </Space>
         </div>
+
+        <div
+          className="md:block hidden"
+          style={{
+            position: "absolute",
+            right: 0,
+            bottom: 0,
+            width: "clamp(20%, 10vw, 50%)",
+            height: "90%",
+            boxSizing: "border-box",
+            margin: "20px",
+          }}
+        >
+          <Image
+            fill
+            alt="profile"
+            src="/image/profile.jpeg"
+            style={{
+              objectFit: "cover",
+              objectPosition: "center",
+            }}
+          />
+        </div>
       </div>
 
       {/* Key Features */}
@@ -244,31 +268,6 @@ export default function HomePage() {
           </Col>
         ))}
       </Row>
-
-      {/* Officer Info */}
-      {/* <Card
-        size="small"
-        style={{
-          background: "#f7f9fc",
-          borderLeft: "4px solid #1a3c6e",
-          borderRadius: 6,
-        }}
-      >
-        <Row align="middle" gutter={12} wrap={false}>
-          <Col flex="none">
-            <span style={{ fontSize: 20 }}>🔗</span>
-          </Col>
-          <Col flex="auto">
-            <Text strong>{t("home.officerAccessLabel")}: </Text>
-            <Text type="secondary">
-              {t("home.officerAccessDesc")}{" "}
-            </Text>
-            <Text code style={{ fontSize: 12 }}>
-              /officer/&lt;secure-token&gt;
-            </Text>
-          </Col>
-        </Row>
-      </Card> */}
     </div>
   );
 }

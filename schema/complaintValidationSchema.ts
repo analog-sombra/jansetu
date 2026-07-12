@@ -32,12 +32,11 @@ const complaintValidationSchema = object({
     minLength(20, "Description must be at least 20 characters"),
     maxLength(1000, "Description must be at most 1000 characters"),
   ),
-  area: optional(
-    pipe(
-      string(),
-      trim(),
-      maxLength(100, "Area must be at most 100 characters"),
-    ),
+  area: pipe(
+    string(),
+    trim(),
+    minLength(1, "Area is required"),
+    maxLength(100, "Area must be at most 100 characters"),
   ),
   lat: pipe(
     string(),

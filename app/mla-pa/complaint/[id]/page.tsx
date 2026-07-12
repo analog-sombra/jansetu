@@ -22,6 +22,7 @@ import {
   assignAdminComplaintOfficerAction,
   getAdminComplaintDetailAction,
   raiseAdminComplaintQueryAction,
+  rejectComplaintAction,
   type AdminComplaintDetail,
   type AdminOfficerSummary,
 } from "@/actions/admin";
@@ -33,6 +34,10 @@ import {
   adminQueryValidationSchema,
   type adminQueryValidationForm,
 } from "@/schema/adminQueryValidationSchema";
+import {
+  rejectComplaintValidationSchema,
+  type rejectComplaintValidationForm,
+} from "@/schema/rejectComplaintValidationSchema";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "#f59e0b",
@@ -71,6 +76,7 @@ export default function AdminComplaintDetailPage() {
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [querying, setQuerying] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
   const [assignedOfficerToken, setAssignedOfficerToken] = useState("");
   const [alert, setAlert] = useState<{
     type: "error" | "success" | "warning" | "info";
@@ -95,6 +101,16 @@ export default function AdminComplaintDetailPage() {
     resolver: valibotResolver(
       adminQueryValidationSchema,
     ) as Resolver<adminQueryValidationForm>,
+  });
+
+  // Form setup for rejection
+  const rejectMethods = useForm<rejectComplaintValidationForm>({
+    defaultValues: {
+      message: "",
+    },
+    resolver: valibotResolver(
+      rejectComplaintValidationSchema,
+    ) as Resolver<rejectComplaintValidationForm>,
   });
 
   async function loadData() {
@@ -344,6 +360,35 @@ export default function AdminComplaintDetailPage() {
 
     queryMethods.reset();
     setAlert({ type: "success", text: t("adminDetail.success.query") });
+
+    await loadData();
+  }
+
+  async function rejectComplaint(values: rejectComplaintValidationForm) {
+    if (!complaint) {
+      return;
+    }
+
+    setRejecting(true);
+    setAlert(null);
+
+    const result = await rejectComplaintAction({
+      complaintId: complaint.id,
+      message: values.message,
+    });
+
+    setRejecting(false);
+
+    if (!result.ok) {
+      setAlert({
+        type: "error",
+        text: result.error ?? "Failed to reject complaint",
+      });
+      return;
+    }
+
+    rejectMethods.reset();
+    setAlert({ type: "success", text: "Complaint rejected successfully" });
 
     await loadData();
   }
@@ -1138,6 +1183,49 @@ export default function AdminComplaintDetailPage() {
                 </form>
               </FormProvider>
             </Card>
+
+            <Card
+              title={
+                <span style={{ color: "#dc2626", fontWeight: 700 }}>
+                  Reject Complaint
+                </span>
+              }
+              style={{ borderRadius: 6, borderTop: "3px solid #dc2626" }}
+              size="small"
+            >
+              <FormProvider {...rejectMethods}>
+                <form
+                  onSubmit={rejectMethods.handleSubmit(
+                    (values) => rejectComplaint(values),
+                    onFormError,
+                  )}
+                >
+                  <CustomTextAreaInput<rejectComplaintValidationForm>
+                    name="message"
+                    title="Rejection Reason"
+                    placeholder="Explain why the complaint is being rejected..."
+                    required={true}
+                    maxlength={500}
+                  />
+                  <Button
+                    block
+                    htmlType="submit"
+                    loading={rejecting}
+                    disabled={rejecting || complaint?.status === "REJECTED"}
+                    style={{
+                      background: "#dc2626",
+                      borderColor: "#dc2626",
+                      color: "#fff",
+                      fontWeight: 700,
+                      marginTop: 12,
+                    }}
+                  >
+                    Reject Complaint
+                  </Button>
+                </form>
+              </FormProvider>
+            </Card>
+
             {workflowState && (
               <Card
                 title={

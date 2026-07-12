@@ -116,6 +116,7 @@ export async function getOfficerAssignmentByTokenAction(
       },
       select: {
         id: true,
+        token: true,
         complaintId: true,
         status: true,
         updatedAt: true,
@@ -205,6 +206,7 @@ export async function getOfficerAssignmentByTokenAction(
         })),
         completedAssignments: completedAssignments.map((item) => ({
           id: item.id,
+          token: item.token,
           complaintId: item.complaintId,
           category: item.complaint.category.name,
           subcategory: item.complaint.subcategory?.name ?? null,

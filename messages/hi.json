@@ -405,6 +405,7 @@
   "officer.submitButton": "प्रतिक्रिया जमा करें",
   "officer.completedTitle": "आपको दी गई पूर्ण शिकायतें",
   "officer.completedEmpty": "इस अधिकारी के लिए अभी कोई पूर्ण शिकायत नहीं मिली।",
+  "officer.notCompletedComplaints": "आपको सौंपी गई लंबित शिकायतें",
   "officer.completedTableComplaint": "शिकायत",
   "officer.completedTableCategory": "श्रेणी",
   "officer.completedTableSubcategory": "उप-श्रेणी",
