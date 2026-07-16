@@ -22,7 +22,8 @@ function parseRole(role: string | undefined): UserRole | null {
 
 export async function setAuthSession(userId: string, role: UserRole) {
   const cookieStore = await cookies();
-  const secure = process.env.NODE_ENV === "production";
+  // const secure = process.env.NODE_ENV === "production";
+  const secure = false;
 
   cookieStore.set(AUTH_USER_ID_COOKIE, userId, {
     httpOnly: true,
