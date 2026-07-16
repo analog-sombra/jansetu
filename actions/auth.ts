@@ -61,7 +61,7 @@ export async function sendOtpAction(
 
     return {
       ok: true,
-      otp: process.env.NODE_ENV === "production" ? undefined : otp,
+      otp: otp,
     };
   } catch {
     return { ok: false, error: "Failed to send OTP. Please try again." };
