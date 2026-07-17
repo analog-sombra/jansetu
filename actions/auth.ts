@@ -63,8 +63,8 @@ export async function sendOtpAction(
       ok: true,
       otp: otp,
     };
-  } catch {
-    return { ok: false, error: "Failed to send OTP. Please try again." };
+  } catch (e) {
+    return { ok: false, error: `Failed to send OTP. Please try again. ${e}` };
   }
 }
 

@@ -25,11 +25,9 @@ import {
 } from "antd";
 import { InboxOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd";
-import dayjs from "dayjs";
 import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useLanguage } from "@/components/provider/language_provider";
-import { CustomTextInput } from "@/components/inputfields/textinput";
 import { CustomTextAreaInput } from "@/components/inputfields/textareainput";
 import { CustomMultiSelect } from "@/components/inputfields/multiselect";
 import { CustomDateSelect } from "@/components/inputfields/dateselect";
@@ -47,7 +45,6 @@ import {
   type officerResponseValidationForm,
 } from "@/schema/officerResponseValidationSchema";
 import { onFormError } from "@/utils/method";
-import { OptionValue } from "@/model/main";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "#f59e0b",
