@@ -316,6 +316,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 />
               }
             >
+              <Link href="/business-info">
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: 11,
+                    cursor: "pointer",
+                  }}
+                >
+                  {t("shell.footerAboutBusiness")}
+                </Text>
+              </Link>
               {[
                 "shell.footerPrivacy",
                 "shell.footerDisclaimer",

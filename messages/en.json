@@ -25,8 +25,9 @@
   "nav.reportDemo": "Report 2",
   "shell.brand": "SEVA ME SIRSA",
   "shell.subtitle": "CONSTITUENCY GRIEVANCE REDRESSAL PORTAL",
-  "shell.footerLine": "Seva me Sirsa — Constituency Grievance Redressal Portal.",
+  "shell.footerLine": "Owned by Seva me Sirsa.",
   "shell.footerOwned": "Project developed by Smart Technologies· © 2026-27",
+  "shell.footerAboutBusiness": "Business Information",
   "shell.footerPrivacy": "Privacy Policy",
   "shell.footerDisclaimer": "Disclaimer",
   "shell.footerTerms": "Terms of Use",
@@ -533,5 +534,39 @@
   "meetingSection.modal.approveCta": "Approve Meeting",
   "meetingSection.modal.noDetails": "No details available.",
   "meetingSection.rejection.prompt": "Rejection remarks",
-  "meetingSection.rejection.default": "Not feasible at requested schedule"
+  "meetingSection.rejection.default": "Not feasible at requested schedule",
+
+  "business.pageTitle": "ABOUT SEVA ME SIRSA",
+  "business.pageSubtitle": "Empowering Citizens, Building Trust",
+  "business.pageDescription": "Seva me Sirsa is a digital platform designed to strengthen the connection between citizens and their elected representatives. We provide a transparent, efficient, and accountable mechanism for grievance redressal at the constituency level.",
+  "business.backHome": "← Back to Home",
+
+  "business.mission.title": "Our Mission",
+  "business.mission.desc": "To provide citizens with a transparent, efficient, and time-bound platform for filing and tracking civic grievances with their MLA constituency office.",
+  "business.vision.title": "Our Vision",
+  "business.vision.desc": "A system where every citizen's voice is heard, every grievance is addressed, and governance becomes more responsive and accountable.",
+  "business.values.title": "Our Values",
+  "business.values.desc": "Transparency, accountability, citizen-centricity, efficiency, and democratic participation in local governance.",
+
+  "business.benefitsTitle": "Who Benefits?",
+  "business.benefit.citizens.title": "For Citizens",
+  "business.benefit.citizens.desc": "Easy filing, real-time tracking, guaranteed accountability, and fair resolution of grievances.",
+  "business.benefit.admin.title": "For MLA Staff",
+  "business.benefit.admin.desc": "Streamlined complaint management, better organization, data-driven insights, and improved efficiency.",
+  "business.benefit.govt.title": "For Government",
+  "business.benefit.govt.desc": "Real-time grievance analytics, better resource allocation, performance metrics, and improved citizen satisfaction.",
+
+  "business.coreFeatures": "Core Features & Strengths",
+  "business.feature.digital": "Digital-first approach ensuring accessibility to all",
+  "business.feature.transparent": "Complete transparency in complaint status and resolution",
+  "business.feature.accountable": "Accountability at every stage of grievance redressal",
+  "business.feature.timeBound": "Time-bound resolution with defined SLAs",
+  "business.feature.efficient": "Efficient workflow reducing manual interventions",
+  "business.feature.inclusive": "Inclusive design supporting multiple languages and accessibility",
+
+  "business.ctaTitle": "Ready to File Your First Grievance?",
+  "business.ctaDescription": "Join thousands of citizens who are already using Seva me Sirsa to get their concerns addressed. Your voice matters, and we're here to ensure it's heard.",
+  "business.ctaButton": "File a Complaint Now",
+
+  "business.contactDetailsTitle": "Contact Information"
 }

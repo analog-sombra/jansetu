@@ -25,6 +25,7 @@
   "shell.subtitle": "ਨਿਰ੍ਵਾਚਨ ਕ੍ਸ਼ੇਤ੍ਰ ਸ਼ਿਕਾਯਤ ਨਿਵਾਰਣ ਪੋਰ੍ਟਲ",
   "shell.footerLine": "ਜਨਸੇਤੁ — ਨਿਰ੍ਵਾਚਨ ਕ੍ਸ਼ੇਤ੍ਰ ਸ਼ਿਕਾਯਤ ਨਿਵਾਰਣ ਪੋਰ੍ਟਲ",
   "shell.footerOwned": "ਪਰਿਯੋਜਨਾ ਸ੍ਮਾਰ੍ਟ ਟੇਕ੍ਨੋਲੌਜੀ ਦ੍ਵਾਰਾ ਵਿਕਸਿਤ · © 2026-27",
+  "shell.footerAboutBusiness": "ਬਾਰੇ",
   "shell.footerPrivacy": "ਗੋਪਨੀਯਤਾ ਨੀਤਿ",
   "shell.footerDisclaimer": "ਅਸ੍ਵੀਕਰਣ",
   "shell.footerTerms": "ਉਪਯੋਗ ਕੀ ਸ਼ਰ੍ਤੇਂ",
@@ -520,5 +521,39 @@
   "meetingSection.modal.approveCta": "ਮੀਟਿੰਗ ਮਨਜ਼ੂਰ ਕਰੋ",
   "meetingSection.modal.noDetails": "ਕੋਈ ਵੇਰਵਾ ਉਪਲਬਧ ਨਹੀਂ।",
   "meetingSection.rejection.prompt": "ਰੱਦ ਕਰਨ ਦੀ ਟਿੱਪਣੀ",
-  "meetingSection.rejection.default": "ਬੇਨਤੀ ਕੀਤੇ ਸਮੇਂ ਤੇ ਸੰਭਵ ਨਹੀਂ"
+  "meetingSection.rejection.default": "ਬੇਨਤੀ ਕੀਤੇ ਸਮੇਂ ਤੇ ਸੰਭਵ ਨਹੀਂ",
+
+  "business.pageTitle": "ਜਨ ਸੇਤੁ ਬਾਰੇ",
+  "business.pageSubtitle": "ਨਾਗਰਿਕਾਂ ਨੂੰ ਸ਼ਕਤੀ ਪ੍ਰਦਾਨ ਕਰਨਾ, ਭਰੋਸਾ ਬਣਾਨਾ",
+  "business.pageDescription": "ਜਨ ਸੇਤੁ ਇੱਕ ਡਿਜੀਟਲ ਪਲੇਟਫਾਰਮ ਹੈ ਜੋ ਨਾਗਰਿਕਾਂ ਅਤੇ ਉਨ੍ਹਾਂ ਦੇ ਚੁਣੇ ਹੋਏ ਪ੍ਰਤਿਨਿਧੀਆਂ ਵਿਚਕਾਰ ਸਬੰਧ ਨੂੰ ਮਜ਼ਬੂਤ ਕਰਦਾ ਹੈ। ਅਸੀਂ ਭਾਗ ਦੀ ਸ਼ਿਕਾਯਤ ਨਿਵਾਰਣ ਲਈ ਇੱਕ ਪਾਰਦਰਸ਼ੀ, ਮੁਹਾਰਤ ਅਤੇ ਜਵਾਬਦੇਹੀ ਵਿਧੀ ਪ੍ਰਦਾਨ ਕਰਦੇ ਹਾਂ।",
+  "business.backHome": "← ਮੁਖਪ੍ਰਸ੍ਥ 'ਤੇ ਵਾਪਸ ਜਾਓ",
+
+  "business.mission.title": "ਸਾਡਾ ਮਿਸ਼ਨ",
+  "business.mission.desc": "ਨਾਗਰਿਕਾਂ ਨੂੰ ਆਪਣੇ ਵਿਧਾਨ ਸਭਾ ਖੇਤਰ ਦੀ ਕਾਰਯਾਲੇ ਵਿਚ ਸ਼ਿਕਾਯਤ ਦਰਜ ਅਤੇ ਟ੍ਰੈਕ ਕਰਨ ਲਈ ਇੱਕ ਪਾਰਦਰਸ਼ੀ, ਮੁਹਾਰਤ ਅਤੇ ਸਮਯ-ਪਾਬਂਦ ਮੰਚ ਪ੍ਰਦਾਨ ਕਰਨਾ।",
+  "business.vision.title": "ਸਾਡੀ ਦਨਿਆ",
+  "business.vision.desc": "ਇੱਕ ਅਜਿਹੀ ਪ੍ਰਣਾਲੀ ਜਿੱਥੇ ਹਰੇਕ ਨਾਗਰਿਕ ਦੀ ਆਵਾਜ਼ ਸੁਣੀ ਜਾਏ, ਹਰੇਕ ਸ਼ਿਕਾਯਤ ਦਾ ਹੱਲ ਹੋ, ਅਤੇ ਸ਼ਾਸਨ ਹੋਰ ਜਵਾਬਦੇਹ ਹੋਵੇ।",
+  "business.values.title": "ਸਾਡੀਆਂ ਕੀਮਤਾਂ",
+  "business.values.desc": "ਪਾਰਦਰਸ਼ਤਾ, ਜਵਾਬਦੇਹੀ, ਨਾਗਰਿਕ-ਕੇਂਦ੍ਰਿਤ, ਮੁਹਾਰਤ, ਅਤੇ ਸਥਾਨਕ ਸ਼ਾਸਨ ਵਿੱਚ ਲੋਕਤਾਂਤ੍ਰਿਕ ਭਾਗੀਦਾਰੀ।",
+
+  "business.benefitsTitle": "ਕਿਸ ਨੂੰ ਲਾਭ ਮਿਲਦਾ ਹੈ?",
+  "business.benefit.citizens.title": "ਨਾਗਰਿਕਾਂ ਲਈ",
+  "business.benefit.citizens.desc": "ਆਸਾਨ ਫਾਈਲਿੰਗ, ਰਿਅਲ-ਟਾਈਮ ਟ੍ਰੈਕਿੰਗ, ਗਾਰੰਟੀ ਜਵਾਬਦੇਹੀ, ਅਤੇ ਸ਼ਿਕਾਯਤਾਂ ਦਾ ਨਿਰਪੱਖ ਹੱਲ।",
+  "business.benefit.admin.title": "ਵਿਧਾਨ ਸਭਾ ਸਟਾਫ ਲਈ",
+  "business.benefit.admin.desc": "ਸਰਲ ਸ਼ਿਕਾਯਤ ਪ੍ਰਬੰਧਨ, ਬਿਹਤਰ ਸੰਗਠਨ, ਡੇਟਾ-ਚਾਲਿਤ ਜਾਨਕਾਰੀ, ਅਤੇ ਬਿਹਤਰ ਮੁਹਾਰਤ।",
+  "business.benefit.govt.title": "ਸਰਕਾਰ ਲਈ",
+  "business.benefit.govt.desc": "ਰਿਅਲ-ਟਾਈਮ ਸ਼ਿਕਾਯਤ ਵਿਸ਼ਲੇਸ਼ਣ, ਬਿਹਤਰ ਸਰੋਤ ਵੰਡ, ਪ੍ਰਦਰਸ਼ਨ ਮੈਟ੍ਰਿਕਸ, ਅਤੇ ਨਾਗਰਿਕ ਸੰਤੁਸ਼ਟੀ ਵਿੱਚ ਸੁਧਾਰ।",
+
+  "business.coreFeatures": "ਮੁੱਖ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਅਤੇ ਮਜ਼ਬੂਤੀਆਂ",
+  "business.feature.digital": "ਡਿਜੀਟਲ-ਪਹਿਲਾ ਪੜਾਅ ਸਭ ਲਈ ਪਹੁੰਚ ਯਕੀਨੀ ਬਣਾਉਂਦਾ ਹੈ",
+  "business.feature.transparent": "ਸ਼ਿਕਾਯਤ ਦੀ ਸਥਿਤੀ ਅਤੇ ਹੱਲ ਵਿੱਚ ਸੰਪੂਰਣ ਪਾਰਦਰਸ਼ਤਾ",
+  "business.feature.accountable": "ਸ਼ਿਕਾਯਤ ਨਿਵਾਰਣ ਦੇ ਹਰੇਕ ਚਰਨ ਵਿੱਚ ਜਵਾਬਦੇਹੀ",
+  "business.feature.timeBound": "ਪਰਿਭਾਸ਼ਿਤ SLAs ਨਾਲ ਸਮਯ-ਪਾਬੰਦ ਹੱਲ",
+  "business.feature.efficient": "ਮੈਨਿਊਅਲ ਹਸਤਖੇਪ ਨੂੰ ਘਟਾਉਣ ਵਾਲੀ ਮੁਹਾਰਤ ਵੁੜਕੀ",
+  "business.feature.inclusive": "ਕਈ ਭਾਸ਼ਾਵਾਂ ਅਤੇ ਪਹੁੰਚ ਸਹਾਯਤਾ ਦੀ ਲਭੂਖੀ ਡਿਜ਼ਾਈਨ",
+
+  "business.ctaTitle": "ਆਪਣੀ ਪਹਿਲੀ ਸ਼ਿਕਾਯਤ ਦਰਜ ਕਰਨ ਲਈ ਤਿਆਰ?",
+  "business.ctaDescription": "ਹਜ਼ਾਰਾਂ ਨਾਗਰਿਕਾਂ ਵਿਚ ਸ਼ਾਮਲ ਹੋਵੋ ਜੋ ਪਹਿਲਾਂ ਹੀ ਆਪਣੀ ਚਿੰਤਾਵਾਂ ਨੂੰ ਹੱਲ ਕਰਾਉਣ ਲਈ ਜਨ ਸੇਤੁ ਦੀ ਵਰਤੋਂ ਕਰ ਰਹੇ ਹਨ। ਤੁਹਾਡੀ ਆਵਾਜ਼ ਮਹੱਤਵਪੂਰਣ ਹੈ, ਅਤੇ ਅਸੀਂ ਯਕੀਨੀ ਬਣਾਉਂਦੇ ਹਾਂ ਕਿ ਇਸ ਨੂੰ ਸੁਣਿਆ ਜਾਵੇ।",
+  "business.ctaButton": "ਹੁਣ ਸ਼ਿਕਾਯਤ ਦਰਜ ਕਰੋ",
+
+  "business.contactDetailsTitle": "ਸੰਪਰਕ ਜਾਣਕਾਰੀ"
 }

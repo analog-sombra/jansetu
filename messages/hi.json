@@ -25,8 +25,9 @@
   "nav.reportDemo": "रिपोर्ट 2",
   "shell.brand": "जन सेतु",
   "shell.subtitle": "निर्वाचन क्षेत्र शिकायत निवारण पोर्टल",
-  "shell.footerLine": "जनसेतु — निर्वाचन क्षेत्र शिकायत निवारण पोर्टल",
+  "shell.footerLine": "सेवा में सिरसा द्वारा संचालित।",
   "shell.footerOwned": "परियोजना स्मार्ट टेक्नोलॉजी द्वारा विकसित · © 2026-27",
+  "shell.footerAboutBusiness": "परिचय",
   "shell.footerPrivacy": "गोपनीयता नीति",
   "shell.footerDisclaimer": "अस्वीकरण",
   "shell.footerTerms": "उपयोग की शर्तें",
@@ -533,5 +534,39 @@
   "meetingSection.modal.approveCta": "बैठक अनुमोदित करें",
   "meetingSection.modal.noDetails": "कोई विवरण उपलब्ध नहीं।",
   "meetingSection.rejection.prompt": "अस्वीकृति टिप्पणी",
-  "meetingSection.rejection.default": "अनुरोधित समय पर संभव नहीं"
+  "meetingSection.rejection.default": "अनुरोधित समय पर संभव नहीं",
+
+  "business.pageTitle": "जन सेतु के बारे में",
+  "business.pageSubtitle": "नागरिकों को सशक्त बनाना, विश्वास बनाना",
+  "business.pageDescription": "जन सेतु एक डिजिटल प्लेटफ़ॉर्म है जो नागरिकों और उनके निर्वाचित प्रतिनिधियों के बीच संबंध को मजबूत करता है। हम निर्वाचन क्षेत्र स्तर पर शिकायत निवारण के लिए एक पारदर्शी, कुशल और जवाबदेह तंत्र प्रदान करते हैं।",
+  "business.backHome": "← मुखपृष्ठ पर वापस जाएँ",
+
+  "business.mission.title": "हमारा मिशन",
+  "business.mission.desc": "नागरिकों को अपने विधायक निर्वाचन क्षेत्र कार्यालय में शिकायत दर्ज करने और ट्रैक करने के लिए एक पारदर्शी, कुशल और समयबद्ध मंच प्रदान करना।",
+  "business.vision.title": "हमारी दृष्टि",
+  "business.vision.desc": "एक ऐसी व्यवस्था जहाँ हर नागरिक की आवाज सुनी जाए, हर शिकायत का समाधान हो, और शासन अधिक प्रतिक्रियाशील और जवाबदेह हो।",
+  "business.values.title": "हमारे मूल्य",
+  "business.values.desc": "पारदर्शिता, जवाबदेही, नागरिक-केंद्रिकता, दक्षता, और स्थानीय शासन में लोकतांत्रिक भागीदारी।",
+
+  "business.benefitsTitle": "किसे लाभ मिलता है?",
+  "business.benefit.citizens.title": "नागरिकों के लिए",
+  "business.benefit.citizens.desc": "आसान दाखिल, रीयल-टाइम ट्रैकिंग, गारंटीकृत जवाबदेही, और शिकायतों का निष्पक्ष समाधान।",
+  "business.benefit.admin.title": "विधायक कर्मचारियों के लिए",
+  "business.benefit.admin.desc": "सुव्यवस्थित शिकायत प्रबंधन, बेहतर संगठन, डेटा-संचालित अंतर्दृष्टि, और बेहतर दक्षता।",
+  "business.benefit.govt.title": "सरकार के लिए",
+  "business.benefit.govt.desc": "रीयल-टाइम शिकायत विश्लेषण, बेहतर संसाधन आवंटन, प्रदर्शन मेट्रिक्स, और नागरिक संतुष्टि में सुधार।",
+
+  "business.coreFeatures": "मुख्य विशेषताएँ और शक्तियाँ",
+  "business.feature.digital": "डिजिटल-पहली दृष्टिकोण सभी के लिए पहुंच सुनिश्चित करता है",
+  "business.feature.transparent": "शिकायत की स्थिति और समाधान में पूर्ण पारदर्शिता",
+  "business.feature.accountable": "शिकायत निवारण के हर चरण में जवाबदेही",
+  "business.feature.timeBound": "निर्धारित SLAs के साथ समयबद्ध समाधान",
+  "business.feature.efficient": "मैनुअल हस्तक्षेप को कम करने वाली कुशल वर्कफ़्लो",
+  "business.feature.inclusive": "कई भाषाओं और पहुंच-क्षमता का समर्थन करने वाला समावेशी डिज़ाइन",
+
+  "business.ctaTitle": "अपनी पहली शिकायत दर्ज करने के लिए तैयार?",
+  "business.ctaDescription": "हजारों नागरिकों में शामिल हों जो पहले से ही जन सेतु का उपयोग कर रहे हैं अपनी चिंताओं को हल करवाने के लिए। आपकी आवाज मायने रखती है, और हम सुनिश्चित करते हैं कि इसे सुना जाए।",
+  "business.ctaButton": "अभी शिकायत दर्ज करें",
+
+  "business.contactDetailsTitle": "संपर्क जानकारी"
 }
