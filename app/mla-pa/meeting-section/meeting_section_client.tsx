@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  InvitationSubtype,
-  MlaPaMeetingType,
-  UserRole,
+  INVITATIONSUBTYPE,
+  MLAPAMEETINGTYPE,
+  ROLE,
 } from "@prisma/client";
 import {
   Alert,
@@ -53,8 +53,8 @@ type MeetingStatusFilter = "SCHEDULED" | "COMPLETED";
 type EditFormValues = {
   mlaUserId: string;
   campHeadUserId: string;
-  type: MlaPaMeetingType;
-  invitationSubtype?: InvitationSubtype;
+  type: MLAPAMEETINGTYPE;
+  invitationSubtype?: INVITATIONSUBTYPE;
   invitationOtherPurpose?: string;
   purpose: string;
   scheduledAt: Dayjs;
@@ -63,14 +63,14 @@ type EditFormValues = {
   selfDraftedLetter?: string;
 };
 
-const INVITATION_SUBTYPES: InvitationSubtype[] = [
+const INVITATION_SUBTYPES: INVITATIONSUBTYPE[] = [
   "MARRIAGE",
   "BIRTHDAY",
   "FUNERAL",
   "OTHER",
 ];
 
-const ALL_TYPES: MlaPaMeetingType[] = [
+const ALL_TYPES: MLAPAMEETINGTYPE[] = [
   "INVITATION",
   "CONSTITUENCY_VISIT",
   "CITIZEN_MEET",
@@ -81,7 +81,7 @@ const ALL_TYPES: MlaPaMeetingType[] = [
 export default function MlaPaMeetingSectionClient({
   userRole,
 }: {
-  userRole: UserRole;
+  userRole: ROLE;
 }) {
   const [meetings, setMeetings] = useState<MlaPaMeetingRecord[]>([]);
   const [mlaUsers, setMlaUsers] = useState<MlaPaMeetingUserLite[]>([]);
@@ -93,7 +93,7 @@ export default function MlaPaMeetingSectionClient({
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<MeetingStatusFilter>();
-  const [typeFilter, setTypeFilter] = useState<MlaPaMeetingType>();
+  const [typeFilter, setTypeFilter] = useState<MLAPAMEETINGTYPE>();
   const [search, setSearch] = useState("");
   const [calendarValue, setCalendarValue] = useState<Dayjs>(dayjs());
 

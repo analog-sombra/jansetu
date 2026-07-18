@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { ROLE } from "@prisma/client";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
@@ -7,20 +7,20 @@ export const AUTH_USER_ROLE_COOKIE = "sevamesirsa_user_role";
 
 type AuthSession = {
   userId: string;
-  role: UserRole;
+  role: ROLE;
 };
 
-const USER_ROLES = new Set<UserRole>(Object.values(UserRole));
+const USER_ROLES = new Set<ROLE>(Object.values(ROLE));
 
-function parseRole(role: string | undefined): UserRole | null {
+function parseRole(role: string | undefined): ROLE | null {
   if (!role) {
     return null;
   }
 
-  return USER_ROLES.has(role as UserRole) ? (role as UserRole) : null;
+  return USER_ROLES.has(role as ROLE) ? (role as ROLE) : null;
 }
 
-export async function setAuthSession(userId: string, role: UserRole) {
+export async function setAuthSession(userId: string, role: ROLE) {
   const cookieStore = await cookies();
   // const secure = process.env.NODE_ENV === "production";
   const secure = false;

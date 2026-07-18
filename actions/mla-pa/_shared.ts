@@ -1,7 +1,7 @@
-import { UserRole } from "@prisma/client";
+import { ROLE } from "@prisma/client";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
-export function isMlaPaRouteRole(role: UserRole): boolean {
+export function isMlaPaRouteRole(role: ROLE): boolean {
   return role === "MLA_PA" || role === "CAMP_HEAD";
 }
 

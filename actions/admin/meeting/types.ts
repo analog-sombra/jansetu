@@ -1,11 +1,11 @@
-import { MeetingApprovalStatus, MeetingPriority, MeetingType, UserRole } from "@prisma/client";
+import { MEETINGAPPROVALSTATUS, MEETINGPRIORITY, MEETINGTYPE, ROLE } from "@prisma/client";
 import { AdminAuthResult } from "../types";
 
 export type AdminMeetingAssignee = {
   id: string;
   name: string | null;
   mobile: string;
-  role: UserRole;
+  role: ROLE;
 };
 
 export type AdminMeetingAssigneesResult =
@@ -62,12 +62,12 @@ export type AdminMeetingContactLookupResult =
 
 export type CreateAdminMeetingInput = {
   assignedToUserId: string;
-  type: MeetingType;
+  type: MEETINGTYPE;
   purpose: string;
   meetingDateTime?: string;
   meetingPlace?: string;
   preferredDateTime?: string;
-  priority?: MeetingPriority;
+  priority?: MEETINGPRIORITY;
   citizenName?: string;
   citizenMobile?: string;
   citizenArea?: string;
@@ -83,8 +83,8 @@ export type CreateAdminMeetingResult =
       ok: true;
       meeting: {
         id: number;
-        type: MeetingType;
-        approvalStatus: MeetingApprovalStatus;
+        type: MEETINGTYPE;
+        approvalStatus: MEETINGAPPROVALSTATUS;
         createdAt: string;
       };
     }
@@ -98,17 +98,17 @@ export type AdminMeetingDashboardRecord = {
   id: number;
   createdByUserId: string;
   assignedToUserId: string;
-  type: MeetingType;
+  type: MEETINGTYPE;
   purpose: string;
   meetingDateTime: string | null;
   meetingPlace: string | null;
-  approvalStatus: MeetingApprovalStatus;
+  approvalStatus: MEETINGAPPROVALSTATUS;
   approvedAt: string | null;
   rejectedAt: string | null;
   completedAt: string | null;
   approvalRemarks: string | null;
   preferredDateTime: string | null;
-  priority: MeetingPriority | null;
+  priority: MEETINGPRIORITY | null;
   citizenName: string | null;
   citizenMobile: string | null;
   citizenArea: string | null;
@@ -123,13 +123,13 @@ export type AdminMeetingDashboardRecord = {
     id: string;
     name: string | null;
     mobile: string;
-    role: UserRole;
+    role: ROLE;
   };
   assignedToUser: {
     id: string;
     name: string | null;
     mobile: string;
-    role: UserRole;
+    role: ROLE;
   };
 };
 

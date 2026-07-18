@@ -129,7 +129,7 @@ export async function createCampComplaintAction(
         lng,
       });
 
-      const clusterComplaintCount = await tx.complaintCluster.count({
+      const clusterComplaintCount = await tx.complaint_cluster.count({
         where: { clusterId },
       });
 

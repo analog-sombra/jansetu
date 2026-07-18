@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { ROLE } from "@prisma/client";
 
 export type CampCitizenInput = {
   mobile: string;
@@ -25,7 +25,7 @@ export type CampCreateComplaintInput = {
 
 export type CampUserSummary = {
   id: string;
-  role: UserRole;
+  role: ROLE;
   name: string | null;
   mobile: string;
   address: string | null;

@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { MediaType } from "@prisma/client";
+import { MEDIATYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireCampUser } from "./_shared";
 
@@ -95,7 +95,7 @@ export async function addCampComplaintMediaAction(
 
     await mkdir(targetDir, { recursive: true });
 
-    const mediaRows: Array<{ complaintId: number; fileUrl: string; type: MediaType }> = [];
+    const mediaRows: Array<{ complaintId: number; fileUrl: string; type: MEDIATYPE }> = [];
 
     for (const file of files) {
       const extension = getFileExtension(file);
@@ -112,7 +112,7 @@ export async function addCampComplaintMediaAction(
       });
     }
 
-    const result = await prisma.complaintMedia.createMany({
+    const result = await prisma.complaint_media.createMany({
       data: mediaRows,
     });
 

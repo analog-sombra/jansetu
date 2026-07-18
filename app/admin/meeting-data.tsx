@@ -1,10 +1,10 @@
-export type MeetingType =
+export type MEETINGTYPE =
   | "CONSTITUENCY_VISIT"
   | "DEPARTMENT_VISIT"
   | "CITIZEN_MEET"
   | "PERSONAL_MEET";
 
-export type MeetingApprovalStatus =
+export type MEETINGAPPROVALSTATUS =
   | "NOT_REQUIRED"
   | "PENDING"
   | "APPROVED"
@@ -17,7 +17,7 @@ export type MeetingStatus =
   | "COMPLETED"
   | "REJECTED";
 
-export type MeetingPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+export type MEETINGPRIORITY = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
 export type UserLite = {
   id: string;
@@ -30,17 +30,17 @@ export type MeetingRecord = {
   id: number;
   createdByUserId: string;
   assignedToUserId: string;
-  type: MeetingType;
+  type: MEETINGTYPE;
   purpose: string;
   meetingDateTime: string | null;
   meetingPlace: string | null;
-  approvalStatus: MeetingApprovalStatus;
+  approvalStatus: MEETINGAPPROVALSTATUS;
   approvedAt: string | null;
   rejectedAt: string | null;
   completedAt: string | null;
   approvalRemarks: string | null;
   preferredDateTime: string | null;
-  priority: MeetingPriority | null;
+  priority: MEETINGPRIORITY | null;
   citizenName: string | null;
   citizenMobile: string | null;
   citizenArea: string | null;
@@ -57,7 +57,7 @@ export type MeetingRecord = {
 
 export const MEETING_TYPE_OPTIONS: Array<{
   label: string;
-  value: MeetingType;
+  value: MEETINGTYPE;
 }> = [
   { label: "Constituency Visit", value: "CONSTITUENCY_VISIT" },
   { label: "Department Visit", value: "DEPARTMENT_VISIT" },
@@ -67,7 +67,7 @@ export const MEETING_TYPE_OPTIONS: Array<{
 
 export const PRIORITY_OPTIONS: Array<{
   label: string;
-  value: MeetingPriority;
+  value: MEETINGPRIORITY;
 }> = [
   { label: "Low", value: "LOW" },
   { label: "Medium", value: "MEDIUM" },
@@ -75,7 +75,7 @@ export const PRIORITY_OPTIONS: Array<{
   { label: "Urgent", value: "URGENT" },
 ];
 
-export function getMeetingTypeLabel(type: MeetingType) {
+export function getMeetingTypeLabel(type: MEETINGTYPE) {
   return (
     MEETING_TYPE_OPTIONS.find((item) => item.value === type)?.label ?? type
   );

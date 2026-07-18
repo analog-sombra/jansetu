@@ -11,7 +11,7 @@ export async function getMlaPaMeetingsDashboardAction(): Promise<GetMlaPaMeeting
   }
 
   try {
-    const meetings = await prisma.mlaPaMeeting.findMany({
+    const meetings = await prisma.mla_pa_meeting.findMany({
       where:
         auth.user.role === "CAMP_HEAD"
           ? {

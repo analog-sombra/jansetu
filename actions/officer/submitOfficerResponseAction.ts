@@ -88,7 +88,7 @@ export async function submitOfficerResponseAction(
         },
       });
 
-      await tx.auditLog.create({
+      await tx.audit_log.create({
         data: {
           complaintId: assignment.complaintId,
           action: "OFFICER_RESPONSE",

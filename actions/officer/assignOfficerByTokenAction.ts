@@ -46,7 +46,7 @@ export async function assignOfficerByTokenAction(payload: {
     dueDate.setDate(dueDate.getDate() + 7);
 
     const createdAssignment = await prisma.$transaction(async (tx) => {
-      await tx.complaintOfficerAssignmentHistory.updateMany({
+      await tx.complaint_assignment_history.updateMany({
         where: {
           complaintId: assignment.complaintId,
           isCurrent: true,
@@ -72,7 +72,7 @@ export async function assignOfficerByTokenAction(payload: {
         data: { status: "IN_PROGRESS" },
       });
 
-      await tx.complaintOfficerAssignmentHistory.create({
+      await tx.complaint_assignment_history.create({
         data: {
           complaintId: assignment.complaintId,
           officerId: officer.id,
@@ -81,7 +81,7 @@ export async function assignOfficerByTokenAction(payload: {
         },
       });
 
-      await tx.auditLog.create({
+      await tx.audit_log.create({
         data: {
           complaintId: assignment.complaintId,
           action: "REASSIGN_OFFICER_BY_TOKEN",

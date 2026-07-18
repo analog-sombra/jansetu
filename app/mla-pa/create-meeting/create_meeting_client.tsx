@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  InvitationSubtype,
-  MlaPaMeetingType,
-  UserRole,
+  INVITATIONSUBTYPE,
+  MLAPAMEETINGTYPE,
+  ROLE,
 } from "@prisma/client";
 import {
   Alert,
@@ -124,26 +124,26 @@ const COPY = {
   },
 } as const;
 
-const MEETING_TYPES: MlaPaMeetingType[] = [
-  MlaPaMeetingType.INVITATION,
-  MlaPaMeetingType.CONSTITUENCY_VISIT,
-  MlaPaMeetingType.CITIZEN_MEET,
-  MlaPaMeetingType.DEPARTMENT_VISIT,
-  MlaPaMeetingType.PERSONAL_MEET,
+const MEETING_TYPES: MLAPAMEETINGTYPE[] = [
+  MLAPAMEETINGTYPE.INVITATION,
+  MLAPAMEETINGTYPE.CONSTITUENCY_VISIT,
+  MLAPAMEETINGTYPE.CITIZEN_MEET,
+  MLAPAMEETINGTYPE.DEPARTMENT_VISIT,
+  MLAPAMEETINGTYPE.PERSONAL_MEET,
 ];
 
-const INVITATION_SUBTYPES: InvitationSubtype[] = [
-  InvitationSubtype.MARRIAGE,
-  InvitationSubtype.BIRTHDAY,
-  InvitationSubtype.FUNERAL,
-  InvitationSubtype.OTHER,
+const INVITATION_SUBTYPES: INVITATIONSUBTYPE[] = [
+  INVITATIONSUBTYPE.MARRIAGE,
+  INVITATIONSUBTYPE.BIRTHDAY,
+  INVITATIONSUBTYPE.FUNERAL,
+  INVITATIONSUBTYPE.OTHER,
 ];
 
 type FormValues = {
   mlaUserId: string;
   campHeadUserId: string;
-  type: MlaPaMeetingType;
-  invitationSubtype?: InvitationSubtype;
+  type: MLAPAMEETINGTYPE;
+  invitationSubtype?: INVITATIONSUBTYPE;
   invitationOtherPurpose?: string;
   purpose: string;
   scheduledAt: { toISOString(): string };
@@ -152,8 +152,8 @@ type FormValues = {
   selfDraftedLetter?: string;
 };
 
-function getTypeLabel(type: MlaPaMeetingType): string {
-  const labels: Record<MlaPaMeetingType, string> = {
+function getTypeLabel(type: MLAPAMEETINGTYPE): string {
+  const labels: Record<MLAPAMEETINGTYPE, string> = {
     INVITATION: "Invitation",
     CONSTITUENCY_VISIT: "Constituency Visit",
     CITIZEN_MEET: "Citizen Meet",
@@ -163,8 +163,8 @@ function getTypeLabel(type: MlaPaMeetingType): string {
   return labels[type] ?? type;
 }
 
-function getInvitationSubtypeLabel(value: InvitationSubtype): string {
-  const labels: Record<InvitationSubtype, string> = {
+function getInvitationSubtypeLabel(value: INVITATIONSUBTYPE): string {
+  const labels: Record<INVITATIONSUBTYPE, string> = {
     MARRIAGE: "Marriage",
     BIRTHDAY: "Birthday",
     FUNERAL: "Funeral",
@@ -176,7 +176,7 @@ function getInvitationSubtypeLabel(value: InvitationSubtype): string {
 export default function CreateMlaPaMeetingClient({
   userRole,
 }: {
-  userRole: UserRole;
+  userRole: ROLE;
 }) {
   const router = useRouter();
   const { language } = useLanguage();
@@ -191,9 +191,9 @@ export default function CreateMlaPaMeetingClient({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const selectedType = Form.useWatch("type", form) ?? MlaPaMeetingType.INVITATION;
+  const selectedType = Form.useWatch("type", form) ?? MLAPAMEETINGTYPE.INVITATION;
   const selectedInvitationSubtype = Form.useWatch("invitationSubtype", form);
-  const isInvitation = selectedType === MlaPaMeetingType.INVITATION;
+  const isInvitation = selectedType === MLAPAMEETINGTYPE.INVITATION;
 
   useEffect(() => {
     async function loadUsers() {
@@ -253,7 +253,7 @@ export default function CreateMlaPaMeetingClient({
     setError("");
     setMessage(copy.successCreate);
     form.resetFields();
-    form.setFieldValue("type", MlaPaMeetingType.INVITATION);
+    form.setFieldValue("type", MLAPAMEETINGTYPE.INVITATION);
     setTimeout(() => router.push("/mla-pa/meeting-section"), 500);
   }
 
@@ -292,7 +292,7 @@ export default function CreateMlaPaMeetingClient({
         <Form<FormValues>
           layout="vertical"
           form={form}
-          initialValues={{ type: MlaPaMeetingType.INVITATION }}
+          initialValues={{ type: MLAPAMEETINGTYPE.INVITATION }}
           onFinish={(values) => void onFinish(values)}
         >
           <Row gutter={[16, 16]}>
@@ -363,7 +363,7 @@ export default function CreateMlaPaMeetingClient({
                     />
                   </Form.Item>
                 </Col>
-                {selectedInvitationSubtype === InvitationSubtype.OTHER && (
+                {selectedInvitationSubtype === INVITATIONSUBTYPE.OTHER && (
                   <Col xs={24}>
                     <Form.Item
                       label={copy.invitationOtherPurpose}

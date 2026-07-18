@@ -1,9 +1,9 @@
-import { UserRole } from "@prisma/client";
+import { ROLE } from "@prisma/client";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import prisma from "@/lib/prisma";
 import { CampCitizenInput, CampComplaintInput } from "./types";
 
-export function isCampRole(role: UserRole): boolean {
+export function isCampRole(role: ROLE): boolean {
   return role === "CAMP_DEO" || role === "CAMP_FIELD_OFFICER";
 }
 

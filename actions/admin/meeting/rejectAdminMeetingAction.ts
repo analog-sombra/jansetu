@@ -1,6 +1,6 @@
 "use server";
 
-import { MeetingApprovalStatus, MeetingType } from "@prisma/client";
+import { MEETINGAPPROVALSTATUS, MEETINGTYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import { RejectAdminMeetingInput, RejectAdminMeetingResult } from "./types";
@@ -38,18 +38,18 @@ export async function rejectAdminMeetingAction(
       return { ok: false, error: "Meeting not found." };
     }
 
-    if (meeting.type !== MeetingType.CITIZEN_MEET) {
+    if (meeting.type !== MEETINGTYPE.CITIZEN_MEET) {
       return { ok: false, error: "Only citizen meetings can be rejected." };
     }
 
-    if (meeting.approvalStatus !== MeetingApprovalStatus.PENDING) {
+    if (meeting.approvalStatus !== MEETINGAPPROVALSTATUS.PENDING) {
       return { ok: false, error: "Only pending meetings can be rejected." };
     }
 
     await prisma.meeting.update({
       where: { id: meetingId },
       data: {
-        approvalStatus: MeetingApprovalStatus.REJECTED,
+        approvalStatus: MEETINGAPPROVALSTATUS.REJECTED,
         rejectedAt: new Date(),
         approvedAt: null,
         approvalRemarks: rejectionRemarks,

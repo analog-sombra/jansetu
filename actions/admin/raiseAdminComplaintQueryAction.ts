@@ -75,7 +75,7 @@ export async function raiseAdminComplaintQueryAction(payload: {
         data: { status: "QUERY_RAISED" },
       });
 
-      await tx.auditLog.create({
+      await tx.audit_log.create({
         data: {
           actorUserId: user.id,
           complaintId: complaint.id,

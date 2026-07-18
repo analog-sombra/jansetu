@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { MeetingPriority, MeetingType } from "@prisma/client";
+import { MEETINGPRIORITY, MEETINGTYPE } from "@prisma/client";
 import {
   Alert,
   Button,
@@ -200,28 +200,28 @@ const PAGE_COPY = {
   },
 } as const;
 
-const MEETING_TYPE_OPTIONS: Array<{ value: MeetingType }> = [
-  { value: MeetingType.CONSTITUENCY_VISIT },
-  { value: MeetingType.DEPARTMENT_VISIT },
-  { value: MeetingType.CITIZEN_MEET },
-  { value: MeetingType.PERSONAL_MEET },
+const MEETING_TYPE_OPTIONS: Array<{ value: MEETINGTYPE }> = [
+  { value: MEETINGTYPE.CONSTITUENCY_VISIT },
+  { value: MEETINGTYPE.DEPARTMENT_VISIT },
+  { value: MEETINGTYPE.CITIZEN_MEET },
+  { value: MEETINGTYPE.PERSONAL_MEET },
 ];
 
-const PRIORITY_OPTIONS: Array<{ value: MeetingPriority }> = [
-  { value: MeetingPriority.LOW },
-  { value: MeetingPriority.MEDIUM },
-  { value: MeetingPriority.HIGH },
-  { value: MeetingPriority.URGENT },
+const PRIORITY_OPTIONS: Array<{ value: MEETINGPRIORITY }> = [
+  { value: MEETINGPRIORITY.LOW },
+  { value: MEETINGPRIORITY.MEDIUM },
+  { value: MEETINGPRIORITY.HIGH },
+  { value: MEETINGPRIORITY.URGENT },
 ];
 
 type FormValues = {
   assignedToUserId: string;
-  type: MeetingType;
+  type: MEETINGTYPE;
   purpose: string;
   meetingDateTime?: { toISOString(): string };
   meetingPlace?: string;
   preferredDateTime?: { toISOString(): string };
-  priority?: MeetingPriority;
+  priority?: MEETINGPRIORITY;
   citizenName?: string;
   citizenMobile?: string;
   citizenArea?: string;
@@ -239,7 +239,7 @@ export default function CreateMeetingPage() {
   const [form] = Form.useForm<FormValues>();
   const [users, setUsers] = useState<AdminMeetingAssignee[]>([]);
   const [selectedType, setSelectedType] =
-    useState<FormValues["type"]>(MeetingType.CONSTITUENCY_VISIT);
+    useState<FormValues["type"]>(MEETINGTYPE.CONSTITUENCY_VISIT);
   const [saving, setSaving] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingLookup, setLoadingLookup] = useState(false);
@@ -304,7 +304,7 @@ export default function CreateMeetingPage() {
 
     setLoadingLookup(true);
     const shouldLookupOfficer =
-      target === "contact" && selectedType === MeetingType.DEPARTMENT_VISIT;
+      target === "contact" && selectedType === MEETINGTYPE.DEPARTMENT_VISIT;
 
     if (target === "citizen") {
       const result = await lookupAdminMeetingCitizenByMobileAction(mobile);
@@ -415,7 +415,7 @@ export default function CreateMeetingPage() {
     setMessage(copy.successCreate);
     setError("");
     form.resetFields();
-    setSelectedType(MeetingType.CONSTITUENCY_VISIT);
+    setSelectedType(MEETINGTYPE.CONSTITUENCY_VISIT);
     setCitizenDetailsLocked(false);
     setContactDetailsLocked(false);
     setTimeout(() => {
@@ -423,11 +423,11 @@ export default function CreateMeetingPage() {
     }, 600);
   }
 
-  const isCitizenMeet = selectedType === MeetingType.CITIZEN_MEET;
-  const isDepartmentVisit = selectedType === MeetingType.DEPARTMENT_VISIT;
+  const isCitizenMeet = selectedType === MEETINGTYPE.CITIZEN_MEET;
+  const isDepartmentVisit = selectedType === MEETINGTYPE.DEPARTMENT_VISIT;
   const showContactFields =
-    selectedType === MeetingType.DEPARTMENT_VISIT ||
-    selectedType === MeetingType.PERSONAL_MEET;
+    selectedType === MEETINGTYPE.DEPARTMENT_VISIT ||
+    selectedType === MEETINGTYPE.PERSONAL_MEET;
 
   return (
     <div>
@@ -677,7 +677,7 @@ export default function CreateMeetingPage() {
                         if (sanitized.length === 10) {
                           void fetchUserByMobile(sanitized, "contact");
                         } else {
-                          if (selectedType === MeetingType.DEPARTMENT_VISIT) {
+                          if (selectedType === MEETINGTYPE.DEPARTMENT_VISIT) {
                             form.setFieldsValue({
                               contactName: undefined,
                               contactDesignation: undefined,

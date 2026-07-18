@@ -1,6 +1,6 @@
 "use server";
 
-import { MeetingApprovalStatus, MeetingType } from "@prisma/client";
+import { MEETINGAPPROVALSTATUS, MEETINGTYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import { CreateAdminMeetingInput, CreateAdminMeetingResult } from "./types";
@@ -42,11 +42,11 @@ export async function createAdminMeetingAction(
     return { ok: false, error: "Purpose must be at least 10 characters." };
   }
 
-  const isCitizenMeet = payload.type === MeetingType.CITIZEN_MEET;
-  const isDepartmentVisit = payload.type === MeetingType.DEPARTMENT_VISIT;
+  const isCitizenMeet = payload.type === MEETINGTYPE.CITIZEN_MEET;
+  const isDepartmentVisit = payload.type === MEETINGTYPE.DEPARTMENT_VISIT;
   const requiresContactDetails =
-    payload.type === MeetingType.DEPARTMENT_VISIT ||
-    payload.type === MeetingType.PERSONAL_MEET;
+    payload.type === MEETINGTYPE.DEPARTMENT_VISIT ||
+    payload.type === MEETINGTYPE.PERSONAL_MEET;
 
   const meetingDateTime = payload.meetingDateTime
     ? new Date(payload.meetingDateTime)
@@ -114,8 +114,8 @@ export async function createAdminMeetingAction(
     }
 
     const approvalStatus = isCitizenMeet
-      ? MeetingApprovalStatus.PENDING
-      : MeetingApprovalStatus.NOT_REQUIRED;
+      ? MEETINGAPPROVALSTATUS.PENDING
+      : MEETINGAPPROVALSTATUS.NOT_REQUIRED;
 
     const meeting = await prisma.meeting.create({
       data: {

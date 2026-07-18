@@ -1,6 +1,6 @@
 "use server";
 
-import { MlaPaMeetingType } from "@prisma/client";
+import { MLAPAMEETINGTYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import {
   canEditOrDeleteMeeting,
@@ -37,7 +37,7 @@ export async function updateMlaPaMeetingAction(
   }
 
   try {
-    const existing = await prisma.mlaPaMeeting.findUnique({
+    const existing = await prisma.mla_pa_meeting.findUnique({
       where: { id: payload.meetingId },
       select: { id: true },
     });
@@ -47,18 +47,18 @@ export async function updateMlaPaMeetingAction(
     }
 
     await prisma.$transaction(async (tx) => {
-      await tx.mlaPaMeeting.update({
+      await tx.mla_pa_meeting.update({
         where: { id: payload.meetingId },
         data: {
           mlaUserId: payload.mlaUserId.trim(),
           campHeadUserId: payload.campHeadUserId.trim(),
           type: payload.type,
           invitationSubtype:
-            payload.type === MlaPaMeetingType.INVITATION
+            payload.type === MLAPAMEETINGTYPE.INVITATION
               ? payload.invitationSubtype ?? null
               : null,
           invitationOtherPurpose:
-            payload.type === MlaPaMeetingType.INVITATION
+            payload.type === MLAPAMEETINGTYPE.INVITATION
               ? payload.invitationOtherPurpose?.trim() || null
               : null,
           purpose: payload.purpose.trim(),
@@ -67,8 +67,8 @@ export async function updateMlaPaMeetingAction(
         },
       });
 
-      if (payload.type === MlaPaMeetingType.INVITATION) {
-        await tx.mlaPaMeetingInvitationDetail.upsert({
+      if (payload.type === MLAPAMEETINGTYPE.INVITATION) {
+        await tx.mla_pa_invitation_details.upsert({
           where: { meetingId: payload.meetingId },
           update: {
             giftToCarry: payload.giftToCarry?.trim() || null,
@@ -81,7 +81,7 @@ export async function updateMlaPaMeetingAction(
           },
         });
       } else {
-        await tx.mlaPaMeetingInvitationDetail.deleteMany({
+        await tx.mla_pa_invitation_details.deleteMany({
           where: { meetingId: payload.meetingId },
         });
       }

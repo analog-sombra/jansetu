@@ -144,7 +144,7 @@ export async function getOfficerComplaintDetailAction(
     const primaryCluster = complaint.complaintClusters[0];
 
     if (primaryCluster) {
-      const clusterComplaints = await prisma.complaintCluster.findMany({
+      const clusterComplaints = await prisma.complaint_cluster.findMany({
         where: { clusterId: primaryCluster.clusterId },
         select: {
           complaint: {

@@ -32,7 +32,7 @@ import {
   MEETING_TYPE_OPTIONS,
   MeetingRecord,
   MeetingStatus,
-  MeetingType,
+  MEETINGTYPE,
   getMeetingTypeLabel,
 } from "../meeting-data";
 
@@ -79,7 +79,7 @@ export default function MeetingSectionPage() {
   const { t } = useLanguage();
   const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
   const [statusFilter, setStatusFilter] = useState<MeetingStatus | undefined>();
-  const [typeFilter, setTypeFilter] = useState<MeetingType | undefined>();
+  const [typeFilter, setTypeFilter] = useState<MEETINGTYPE | undefined>();
   const [search, setSearch] = useState("");
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingRecord | null>(
     null,

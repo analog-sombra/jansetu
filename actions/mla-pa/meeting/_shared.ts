@@ -1,8 +1,4 @@
-import {
-  InvitationSubtype,
-  MlaPaMeetingType,
-  UserRole,
-} from "@prisma/client";
+import { INVITATIONSUBTYPE, MLAPAMEETINGTYPE, ROLE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireMlaPaRouteUser } from "../_shared";
 import {
@@ -11,8 +7,8 @@ import {
   MlaPaRouteAuthResult,
 } from "./types";
 
-const MLA_ROLE: UserRole = "MLA";
-const CAMP_HEAD_ROLE: UserRole = "CAMP_HEAD";
+const MLA_ROLE: ROLE = "MLA";
+const CAMP_HEAD_ROLE: ROLE = "CAMP_HEAD";
 
 export async function requireMlaPaMeetingUser() {
   return requireMlaPaRouteUser();
@@ -68,13 +64,13 @@ export function validateMeetingPayload(
     return "Please select a valid date and time.";
   }
 
-  if (payload.type === MlaPaMeetingType.INVITATION) {
+  if (payload.type === MLAPAMEETINGTYPE.INVITATION) {
     if (!payload.invitationSubtype) {
       return "Please select invitation subtype.";
     }
 
     if (
-      payload.invitationSubtype === InvitationSubtype.OTHER &&
+      payload.invitationSubtype === INVITATIONSUBTYPE.OTHER &&
       !payload.invitationOtherPurpose?.trim()
     ) {
       return "Please provide purpose for invitation subtype Other.";
@@ -93,7 +89,7 @@ export function validateMeetingPayload(
 }
 
 export function canEditOrDeleteMeeting(
-  role: UserRole,
+  role: ROLE,
 ): MlaPaRouteAuthResult | null {
   if (role !== "MLA_PA") {
     return { ok: false, error: "Only MLA-PA can edit or delete meetings." };
@@ -103,10 +99,13 @@ export function canEditOrDeleteMeeting(
 }
 
 export function canMarkMeetingCompleted(
-  role: UserRole,
+  role: ROLE,
 ): MlaPaRouteAuthResult | null {
   if (role !== "MLA_PA" && role !== "CAMP_HEAD") {
-    return { ok: false, error: "You are not allowed to complete this meeting." };
+    return {
+      ok: false,
+      error: "You are not allowed to complete this meeting.",
+    };
   }
 
   return null;
@@ -117,8 +116,8 @@ export function mapMeetingRecord(meeting: {
   createdByUserId: string;
   mlaUserId: string;
   campHeadUserId: string;
-  type: MlaPaMeetingType;
-  invitationSubtype: InvitationSubtype | null;
+  type: MLAPAMEETINGTYPE;
+  invitationSubtype: INVITATIONSUBTYPE | null;
   invitationOtherPurpose: string | null;
   purpose: string;
   scheduledAt: Date;
@@ -134,19 +133,19 @@ export function mapMeetingRecord(meeting: {
     id: string;
     name: string | null;
     mobile: string;
-    role: UserRole;
+    role: ROLE;
   };
   mlaUser: {
     id: string;
     name: string | null;
     mobile: string;
-    role: UserRole;
+    role: ROLE;
   };
   campHeadUser: {
     id: string;
     name: string | null;
     mobile: string;
-    role: UserRole;
+    role: ROLE;
   };
 }): MlaPaMeetingRecord {
   return {

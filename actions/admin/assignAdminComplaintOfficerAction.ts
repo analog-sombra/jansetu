@@ -61,7 +61,7 @@ export async function assignAdminComplaintOfficerAction(payload: {
     dueDate.setDate(dueDate.getDate() + 7);
 
     const assignment = await prisma.$transaction(async (tx) => {
-      await tx.complaintOfficerAssignmentHistory.updateMany({
+      await tx.complaint_assignment_history.updateMany({
         where: {
           complaintId: complaint.id,
           isCurrent: true,
@@ -82,7 +82,7 @@ export async function assignAdminComplaintOfficerAction(payload: {
         select: { id: true },
       });
 
-      await tx.complaintOfficerAssignmentHistory.create({
+      await tx.complaint_assignment_history.create({
         data: {
           complaintId: complaint.id,
           officerId: officer.id,
@@ -97,7 +97,7 @@ export async function assignAdminComplaintOfficerAction(payload: {
         data: { status: "IN_PROGRESS" },
       });
 
-      await tx.auditLog.create({
+      await tx.audit_log.create({
         data: {
           actorUserId: user.id,
           complaintId: complaint.id,

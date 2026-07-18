@@ -79,7 +79,7 @@ export async function attachComplaintToCluster(
     `${latBucket}:${lngBucket}`,
   ].join("|");
 
-  await tx.complaintCluster.create({
+  await tx.complaint_cluster.create({
     data: {
       complaintId: input.complaintId,
       clusterId,

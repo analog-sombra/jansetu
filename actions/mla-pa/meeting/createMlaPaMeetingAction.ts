@@ -1,6 +1,6 @@
 "use server";
 
-import { MlaPaMeetingType } from "@prisma/client";
+import { MLAPAMEETINGTYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import {
   requireMlaPaMeetingUser,
@@ -35,25 +35,25 @@ export async function createMlaPaMeetingAction(
   }
 
   try {
-    const meeting = await prisma.mlaPaMeeting.create({
+    const meeting = await prisma.mla_pa_meeting.create({
       data: {
         createdByUserId: auth.user.id,
         mlaUserId: payload.mlaUserId.trim(),
         campHeadUserId: payload.campHeadUserId.trim(),
         type: payload.type,
         invitationSubtype:
-          payload.type === MlaPaMeetingType.INVITATION
+          payload.type === MLAPAMEETINGTYPE.INVITATION
             ? payload.invitationSubtype ?? null
             : null,
         invitationOtherPurpose:
-          payload.type === MlaPaMeetingType.INVITATION
+          payload.type === MLAPAMEETINGTYPE.INVITATION
             ? payload.invitationOtherPurpose?.trim() || null
             : null,
         purpose: payload.purpose.trim(),
         scheduledAt: new Date(payload.scheduledAt),
         meetingPlace: payload.meetingPlace.trim(),
         invitationDetail:
-          payload.type === MlaPaMeetingType.INVITATION
+          payload.type === MLAPAMEETINGTYPE.INVITATION
             ? {
                 create: {
                   giftToCarry: payload.giftToCarry?.trim() || null,

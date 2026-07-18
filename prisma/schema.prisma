@@ -11,7 +11,7 @@ datasource db {
   provider = "mysql"
 }
 
-enum UserRole {
+enum ROLE {
   SYSTEM
   ADMIN
 
@@ -29,7 +29,7 @@ enum UserRole {
   CITIZEN
 }
 
-enum ComplaintStatus {
+enum COMPLAINTSTATUS {
   PENDING
   IN_PROGRESS
   WORK_IN_PROGRESS
@@ -41,7 +41,7 @@ enum ComplaintStatus {
   AUTO_CLOSED
 }
 
-enum AssignmentStatus {
+enum ASIGNMENTSTATUS {
   ASSIGNED
   IN_PROGRESS
   RESOLVED
@@ -50,52 +50,52 @@ enum AssignmentStatus {
   ESCALATED
 }
 
-enum ResponseType {
+enum RESPONSETYPE {
   RESOLVED
   QUERY
   REJECTED
   WORK_IN_PROGESS
 }
 
-enum MediaType {
+enum MEDIATYPE {
   IMAGE
   VIDEO
   DOCUMENT
 }
 
-enum NotificationChannel {
+enum NOTIFICATIONCHANNEL {
   SMS
   EMAIL
   SYSTEM
 }
 
-enum NotificationStatus {
+enum NOTIFICATIONSTATUS {
   SENT
   FAILED
 }
 
-enum MeetingType {
+enum MEETINGTYPE {
   CONSTITUENCY_VISIT
   DEPARTMENT_VISIT
   CITIZEN_MEET
   PERSONAL_MEET
 }
 
-enum MeetingApprovalStatus {
+enum MEETINGAPPROVALSTATUS {
   NOT_REQUIRED
   PENDING
   APPROVED
   REJECTED
 }
 
-enum MeetingPriority {
+enum MEETINGPRIORITY {
   LOW
   MEDIUM
   HIGH
   URGENT
 }
 
-enum MlaPaMeetingType {
+enum MLAPAMEETINGTYPE {
   INVITATION
   CONSTITUENCY_VISIT
   DEPARTMENT_VISIT
@@ -103,18 +103,18 @@ enum MlaPaMeetingType {
   PERSONAL_MEET
 }
 
-enum InvitationSubtype {
+enum INVITATIONSUBTYPE {
   MARRIAGE
   BIRTHDAY
   FUNERAL
   OTHER
 }
 
-model User {
-  id                   String                              @id @default(cuid())
+model user {
+  id                   String                         @id @default(cuid())
   name                 String?
-  mobile               String                              @unique
-  role                 UserRole                            @default(CITIZEN)
+  mobile               String                         @unique
+  role                 ROLE                           @default(CITIZEN)
   address              String?
   aadhaar              String?
   voterId              String?
@@ -122,25 +122,25 @@ model User {
   partySupporter       String?
   pollingBooth         String?
   locality             String?
-  isPartOfParty        Boolean?                            @default(false)
-  firstLoginComplete   Boolean                             @default(false)
-  complaints           Complaint[]
-  complaintsCreated    Complaint[]                         @relation("ComplaintCreatedBy")
-  auditLogs            AuditLog[]
-  notifications        Notification[]
-  meetingsCreated      Meeting[]                           @relation("MeetingCreatedBy")
-  meetingsAssigned     Meeting[]                           @relation("MeetingAssignedTo")
-  reviews              Review[]
-  disputes             Dispute[]
-  officerAssignments   ComplaintOfficerAssignmentHistory[] @relation("OfficerAssignedBy")
-  mlaPaMeetingsCreated MlaPaMeeting[]                      @relation("MlaPaMeetingCreatedBy")
-  mlaPaMeetingsForMla  MlaPaMeeting[]                      @relation("MlaPaMeetingMla")
-  mlaPaMeetingsForCamp MlaPaMeeting[]                      @relation("MlaPaMeetingCampHead")
-  createdAt            DateTime                            @default(now())
-  updatedAt            DateTime                            @updatedAt
+  isPartOfParty        Boolean?                       @default(false)
+  firstLoginComplete   Boolean                        @default(false)
+  complaints           complaint[]
+  complaintsCreated    complaint[]                    @relation("ComplaintCreatedBy")
+  auditLogs            audit_log[]
+  notifications        notification[]
+  meetingsCreated      meeting[]                      @relation("MeetingCreatedBy")
+  meetingsAssigned     meeting[]                      @relation("MeetingAssignedTo")
+  reviews              review[]
+  disputes             dispute[]
+  officerAssignments   complaint_assignment_history[] @relation("OfficerAssignedBy")
+  mlaPaMeetingsCreated mla_pa_meeting[]               @relation("MlaPaMeetingCreatedBy")
+  mlaPaMeetingsForMla  mla_pa_meeting[]               @relation("MlaPaMeetingMla")
+  mlaPaMeetingsForCamp mla_pa_meeting[]               @relation("MlaPaMeetingCampHead")
+  createdAt            DateTime                       @default(now())
+  updatedAt            DateTime                       @updatedAt
 }
 
-model OtpCode {
+model otp_code {
   id        Int      @id @default(autoincrement())
   mobile    String
   otpHash   String
@@ -152,44 +152,44 @@ model OtpCode {
   @@index([mobile, createdAt])
 }
 
-model Complaint {
-  id                    Int                                 @id @default(autoincrement())
+model complaint {
+  id                    Int                            @id @default(autoincrement())
   userId                String
-  user                  User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  user                           @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdByUserId       String?
-  createdByUser         User?                               @relation("ComplaintCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdByUser         user?                          @relation("ComplaintCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   categoryId            Int
-  category              Category                            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  category              category                       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   subcategoryId         Int
-  subcategory           Subcategory                         @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
-  description           String                              @db.LongText
-  status                ComplaintStatus                     @default(PENDING)
+  subcategory           subcategory                    @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
+  description           String                         @db.LongText
+  status                COMPLAINTSTATUS                @default(PENDING)
   plannedCompletionDate DateTime?
   lat                   Float
   lng                   Float
   area                  String?
-  media                 ComplaintMedia[]
-  assignments           Assignment[]
-  officerAssignments    ComplaintOfficerAssignmentHistory[]
-  auditLogs             AuditLog[]
-  reviews               Review[]
-  disputes              Dispute[]
-  affectedCitizensCount Int                                 @default(1)
-  createdAt             DateTime                            @default(now())
-  updatedAt             DateTime                            @updatedAt
-  complaintClusters     ComplaintCluster[]
+  media                 complaint_media[]
+  assignments           assignment[]
+  officerAssignments    complaint_assignment_history[]
+  auditLogs             audit_log[]
+  reviews               review[]
+  disputes              dispute[]
+  affectedCitizensCount Int                            @default(1)
+  createdAt             DateTime                       @default(now())
+  updatedAt             DateTime                       @updatedAt
+  complaintClusters     complaint_cluster[]
 
   @@index([categoryId, subcategoryId, createdAt])
   @@index([lat, lng])
   @@index([createdByUserId, createdAt])
 }
 
-model Review {
+model review {
   id          Int       @id @default(autoincrement())
   complaintId Int
-  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  complaint   complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        user      @relation(fields: [userId], references: [id], onDelete: Cascade)
   rating      Int
   review      String    @db.LongText
   photoUrl    String
@@ -201,12 +201,12 @@ model Review {
   @@index([userId, createdAt])
 }
 
-model Dispute {
+model dispute {
   id          Int       @id @default(autoincrement())
   complaintId Int
-  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  complaint   complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        user      @relation(fields: [userId], references: [id], onDelete: Cascade)
   remark      String    @db.LongText
   imageUrl    String
   createdAt   DateTime  @default(now())
@@ -215,10 +215,10 @@ model Dispute {
   @@index([userId, createdAt])
 }
 
-model ComplaintCluster {
+model complaint_cluster {
   id             Int       @id @default(autoincrement())
   complaintId    Int
-  complaint      Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  complaint      complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   clusterId      String
   departmentName String
   category       String
@@ -234,71 +234,71 @@ model ComplaintCluster {
   @@index([departmentName, category, subcategory, latBucket, lngBucket])
 }
 
-model ComplaintMedia {
+model complaint_media {
   id          Int       @id @default(autoincrement())
   complaintId Int
-  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  complaint   complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   fileUrl     String
-  type        MediaType
+  type        MEDIATYPE
   createdAt   DateTime  @default(now())
 
   @@index([complaintId])
 }
 
-model Department {
+model department {
   id         Int        @id @default(autoincrement())
   name       String     @unique
-  officers   Officer[]
-  categories Category[]
+  officers   officer[]
+  categories category[]
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 }
 
-model Officer {
-  id           Int                                 @id @default(autoincrement())
+model officer {
+  id           Int                            @id @default(autoincrement())
   name         String
   designation  String
-  email        String                              @unique
+  email        String                         @unique
   phone        String
   departmentId Int
-  department   Department                          @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  assignments  Assignment[]
-  history      ComplaintOfficerAssignmentHistory[]
-  createdAt    DateTime                            @default(now())
-  updatedAt    DateTime                            @updatedAt
+  department   department                     @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  assignments  assignment[]
+  history      complaint_assignment_history[]
+  createdAt    DateTime                       @default(now())
+  updatedAt    DateTime                       @updatedAt
 
   @@index([departmentId])
 }
 
-model Assignment {
-  id            Int                                 @id @default(autoincrement())
+model assignment {
+  id            Int                            @id @default(autoincrement())
   complaintId   Int
-  complaint     Complaint                           @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  complaint     complaint                      @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   officerId     Int
-  officer       Officer                             @relation(fields: [officerId], references: [id], onDelete: Restrict)
-  status        AssignmentStatus                    @default(ASSIGNED)
+  officer       officer                        @relation(fields: [officerId], references: [id], onDelete: Restrict)
+  status        ASIGNMENTSTATUS                @default(ASSIGNED)
   dueDate       DateTime
-  token         String                              @unique
-  responses     Response[]
-  notifications Notification[]
-  history       ComplaintOfficerAssignmentHistory[]
-  createdAt     DateTime                            @default(now())
-  updatedAt     DateTime                            @updatedAt
+  token         String                         @unique
+  responses     response[]
+  notifications notification[]
+  history       complaint_assignment_history[]
+  createdAt     DateTime                       @default(now())
+  updatedAt     DateTime                       @updatedAt
 
   @@index([complaintId, officerId])
   @@index([status, dueDate])
 }
 
-model ComplaintOfficerAssignmentHistory {
+model complaint_assignment_history {
   id               Int         @id @default(autoincrement())
   complaintId      Int
-  complaint        Complaint   @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  complaint        complaint   @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   officerId        Int
-  officer          Officer     @relation(fields: [officerId], references: [id], onDelete: Restrict)
+  officer          officer     @relation(fields: [officerId], references: [id], onDelete: Restrict)
   assignmentId     Int?
-  assignment       Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  assignment       assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
   assignedByUserId String?
-  assignedByUser   User?       @relation("OfficerAssignedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+  assignedByUser   user?       @relation("OfficerAssignedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull)
   isCurrent        Boolean     @default(false)
   createdAt        DateTime    @default(now())
 
@@ -307,11 +307,11 @@ model ComplaintOfficerAssignmentHistory {
   @@index([officerId, createdAt])
 }
 
-model Response {
+model response {
   id           Int          @id @default(autoincrement())
   assignmentId Int
-  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  type         ResponseType
+  assignment   assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  type         RESPONSETYPE
   message      String       @db.LongText
   proofUrl     String?
   createdAt    DateTime     @default(now())
@@ -319,12 +319,12 @@ model Response {
   @@index([assignmentId, createdAt])
 }
 
-model AuditLog {
+model audit_log {
   id          Int        @id @default(autoincrement())
   actorUserId String?
-  actorUser   User?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actorUser   user?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
   complaintId Int?
-  complaint   Complaint? @relation(fields: [complaintId], references: [id], onDelete: SetNull)
+  complaint   complaint? @relation(fields: [complaintId], references: [id], onDelete: SetNull)
   action      String
   meta        Json?
   createdAt   DateTime   @default(now())
@@ -332,16 +332,16 @@ model AuditLog {
   @@index([complaintId, createdAt])
 }
 
-model Notification {
+model notification {
   id           Int                 @id @default(autoincrement())
   userId       String?
-  user         User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user         user?               @relation(fields: [userId], references: [id], onDelete: SetNull)
   assignmentId Int?
-  assignment   Assignment?         @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
-  channel      NotificationChannel
+  assignment   assignment?         @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  channel      NOTIFICATIONCHANNEL
   recipient    String
   message      String
-  status       NotificationStatus  @default(SENT)
+  status       NOTIFICATIONSTATUS  @default(SENT)
   error        String?
   createdAt    DateTime            @default(now())
 
@@ -349,23 +349,23 @@ model Notification {
   @@index([assignmentId, createdAt])
 }
 
-model Meeting {
+model meeting {
   id                 Int                   @id @default(autoincrement())
   createdByUserId    String
-  createdByUser      User                  @relation("MeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  createdByUser      user                  @relation("MeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
   assignedToUserId   String
-  assignedToUser     User                  @relation("MeetingAssignedTo", fields: [assignedToUserId], references: [id], onDelete: Cascade)
-  type               MeetingType
+  assignedToUser     user                  @relation("MeetingAssignedTo", fields: [assignedToUserId], references: [id], onDelete: Cascade)
+  type               MEETINGTYPE
   purpose            String                @db.LongText
   meetingDateTime    DateTime?
   meetingPlace       String?
-  approvalStatus     MeetingApprovalStatus @default(NOT_REQUIRED)
+  approvalStatus     MEETINGAPPROVALSTATUS @default(NOT_REQUIRED)
   approvedAt         DateTime?
   rejectedAt         DateTime?
   completedAt        DateTime?
   approvalRemarks    String?               @db.LongText
   preferredDateTime  DateTime?
-  priority           MeetingPriority?
+  priority           MEETINGPRIORITY?
   citizenName        String?
   citizenMobile      String?
   citizenArea        String?
@@ -383,24 +383,24 @@ model Meeting {
   @@index([meetingDateTime])
 }
 
-model MlaPaMeeting {
-  id                     Int                           @id @default(autoincrement())
+model mla_pa_meeting {
+  id                     Int                        @id @default(autoincrement())
   createdByUserId        String
-  createdByUser          User                          @relation("MlaPaMeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  createdByUser          user                       @relation("MlaPaMeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
   mlaUserId              String
-  mlaUser                User                          @relation("MlaPaMeetingMla", fields: [mlaUserId], references: [id], onDelete: Restrict)
+  mlaUser                user                       @relation("MlaPaMeetingMla", fields: [mlaUserId], references: [id], onDelete: Restrict)
   campHeadUserId         String
-  campHeadUser           User                          @relation("MlaPaMeetingCampHead", fields: [campHeadUserId], references: [id], onDelete: Restrict)
-  type                   MlaPaMeetingType
-  invitationSubtype      InvitationSubtype?
-  invitationOtherPurpose String?                       @db.LongText
-  purpose                String                        @db.LongText
+  campHeadUser           user                       @relation("MlaPaMeetingCampHead", fields: [campHeadUserId], references: [id], onDelete: Restrict)
+  type                   MLAPAMEETINGTYPE
+  invitationSubtype      INVITATIONSUBTYPE?
+  invitationOtherPurpose String?                    @db.LongText
+  purpose                String                     @db.LongText
   scheduledAt            DateTime
   meetingPlace           String
   completedAt            DateTime?
-  createdAt              DateTime                      @default(now())
-  updatedAt              DateTime                      @updatedAt
-  invitationDetail       MlaPaMeetingInvitationDetail?
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
+  invitationDetail       mla_pa_invitation_details?
 
   @@index([createdByUserId, createdAt])
   @@index([mlaUserId, scheduledAt])
@@ -408,35 +408,35 @@ model MlaPaMeeting {
   @@index([type, invitationSubtype])
 }
 
-model MlaPaMeetingInvitationDetail {
-  id                Int          @id @default(autoincrement())
-  meetingId         Int          @unique
-  meeting           MlaPaMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  giftToCarry       String?      @db.LongText
-  selfDraftedLetter String?      @db.LongText
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+model mla_pa_invitation_details {
+  id                Int            @id @default(autoincrement())
+  meetingId         Int            @unique
+  meeting           mla_pa_meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  giftToCarry       String?        @db.LongText
+  selfDraftedLetter String?        @db.LongText
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }
 
-model Category {
+model category {
   id            Int           @id @default(autoincrement())
   name          String
   departmentId  Int
-  department    Department    @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  subcategories Subcategory[]
-  complaints    Complaint[]
+  department    department    @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  subcategories subcategory[]
+  complaints    complaint[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([departmentId])
 }
 
-model Subcategory {
+model subcategory {
   id         Int         @id @default(autoincrement())
   name       String
   categoryId Int
-  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  complaints Complaint[]
+  category   category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  complaints complaint[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 }

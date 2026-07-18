@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { MediaType } from "@prisma/client";
+import { MEDIATYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { attachComplaintToCluster } from "@/lib/complaintCluster";
@@ -267,7 +267,7 @@ export async function addComplaintAction(
         lng,
       });
 
-      const clusterComplaintCount = await tx.complaintCluster.count({
+      const clusterComplaintCount = await tx.complaint_cluster.count({
         where: { clusterId },
       });
 
@@ -348,7 +348,7 @@ export async function addComplaintMediaAction(
 
     await mkdir(targetDir, { recursive: true });
 
-    const mediaRows: Array<{ complaintId: number; fileUrl: string; type: MediaType }> = [];
+    const mediaRows: Array<{ complaintId: number; fileUrl: string; type: MEDIATYPE }> = [];
 
     for (const file of files) {
       const extension = getFileExtension(file);
@@ -365,7 +365,7 @@ export async function addComplaintMediaAction(
       });
     }
 
-    const result = await prisma.complaintMedia.createMany({
+    const result = await prisma.complaint_media.createMany({
       data: mediaRows,
     });
 
@@ -599,7 +599,7 @@ export async function getMyComplaintDetailAction(
     let cluster = null;
     const primaryCluster = complaint.complaintClusters[0];
     if (primaryCluster) {
-      const clusterComplaintCount = await prisma.complaintCluster.count({
+      const clusterComplaintCount = await prisma.complaint_cluster.count({
         where: { clusterId: primaryCluster.clusterId },
       });
 
@@ -808,7 +808,7 @@ export async function createComplaintDisputeAction(
         data: { status: "ESCALATED" },
       });
 
-      await tx.auditLog.create({
+      await tx.audit_log.create({
         data: {
           actorUserId: user.id,
           complaintId,
@@ -930,7 +930,7 @@ export async function createComplaintReviewAction(
         data: { status: "CLOSED" },
       });
 
-      await tx.auditLog.create({
+      await tx.audit_log.create({
         data: {
           actorUserId: user.id,
           complaintId,

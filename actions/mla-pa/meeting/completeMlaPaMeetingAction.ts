@@ -24,7 +24,7 @@ export async function completeMlaPaMeetingAction(
   }
 
   try {
-    const meeting = await prisma.mlaPaMeeting.findUnique({
+    const meeting = await prisma.mla_pa_meeting.findUnique({
       where: { id: payload.meetingId },
       select: {
         id: true,
@@ -48,7 +48,7 @@ export async function completeMlaPaMeetingAction(
       return { ok: true };
     }
 
-    await prisma.mlaPaMeeting.update({
+    await prisma.mla_pa_meeting.update({
       where: { id: payload.meetingId },
       data: {
         completedAt: new Date(),

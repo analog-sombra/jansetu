@@ -87,7 +87,7 @@ export async function rejectComplaintAction(payload: {
       }
 
       // Create audit log
-      await tx.auditLog.create({
+      await tx.audit_log.create({
         data: {
           actorUserId: user.id,
           action: "COMPLAINT_REJECTED",

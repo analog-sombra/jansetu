@@ -1,11 +1,11 @@
 "use server";
 
-import { UserRole } from "@prisma/client";
+import { ROLE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import { AdminMeetingAssigneesResult } from "./types";
 
-const ASSIGNABLE_ROLES: UserRole[] = [
+const ASSIGNABLE_ROLES: ROLE[] = [
   "SYSTEM",
   "ADMIN",
   "MLA",

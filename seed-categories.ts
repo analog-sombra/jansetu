@@ -10,6 +10,8 @@ const COMPLAINT_CATEGORIES = [
   "Other",
 ] as const;
 
+const DEFAULT_DEPARTMENT_NAME = "General";
+
 const SUBCATEGORIES: Record<string, string[]> = {
   Road: [
     "Pothole",
@@ -74,6 +76,20 @@ async function seedCategoriesAndSubcategories() {
   const forceReseed = process.argv.includes("--force");
 
   try {
+    // Ensure a valid department exists for category foreign key.
+    let department = await prisma.department.findFirst({
+      where: { name: DEFAULT_DEPARTMENT_NAME },
+    });
+
+    if (!department) {
+      department = await prisma.department.create({
+        data: { name: DEFAULT_DEPARTMENT_NAME },
+      });
+    }
+    console.log(
+      `🏢 Using department: ${department.name} (ID: ${department.id})`,
+    );
+
     // Check if categories already exist
     const existingCount = await prisma.category.count();
     if (existingCount > 0 && !forceReseed) {
@@ -106,7 +122,7 @@ async function seedCategoriesAndSubcategories() {
       const category = await prisma.category.create({
         data: {
           name: categoryName,
-          departmentId: 1,
+          departmentId: department.id,
         },
       });
       totalCategories++;

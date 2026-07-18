@@ -1,6 +1,6 @@
 "use server";
 
-import { MeetingApprovalStatus, MeetingType } from "@prisma/client";
+import { MEETINGAPPROVALSTATUS, MEETINGTYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import { ApproveAdminMeetingInput, ApproveAdminMeetingResult } from "./types";
@@ -46,11 +46,11 @@ export async function approveAdminMeetingAction(
       return { ok: false, error: "Meeting not found." };
     }
 
-    if (meeting.type !== MeetingType.CITIZEN_MEET) {
+    if (meeting.type !== MEETINGTYPE.CITIZEN_MEET) {
       return { ok: false, error: "Only citizen meetings require approval." };
     }
 
-    if (meeting.approvalStatus !== MeetingApprovalStatus.PENDING) {
+    if (meeting.approvalStatus !== MEETINGAPPROVALSTATUS.PENDING) {
       return { ok: false, error: "Only pending meetings can be approved." };
     }
 
@@ -60,7 +60,7 @@ export async function approveAdminMeetingAction(
         meetingDateTime,
         meetingPlace,
         approvalRemarks,
-        approvalStatus: MeetingApprovalStatus.APPROVED,
+        approvalStatus: MEETINGAPPROVALSTATUS.APPROVED,
         approvedAt: new Date(),
         rejectedAt: null,
       },

@@ -1,7 +1,7 @@
 import {
-  InvitationSubtype,
-  MlaPaMeetingType,
-  UserRole,
+  INVITATIONSUBTYPE,
+  MLAPAMEETINGTYPE,
+  ROLE,
 } from "@prisma/client";
 
 export type MlaPaRouteAuthResult = {
@@ -13,7 +13,7 @@ export type MlaPaMeetingUserLite = {
   id: string;
   name: string | null;
   mobile: string;
-  role: UserRole;
+  role: ROLE;
 };
 
 export type MlaPaMeetingUsersResult =
@@ -31,8 +31,8 @@ export type MlaPaMeetingUsersResult =
 export type CreateMlaPaMeetingInput = {
   mlaUserId: string;
   campHeadUserId: string;
-  type: MlaPaMeetingType;
-  invitationSubtype?: InvitationSubtype;
+  type: MLAPAMEETINGTYPE;
+  invitationSubtype?: INVITATIONSUBTYPE;
   invitationOtherPurpose?: string;
   purpose: string;
   scheduledAt: string;
@@ -46,8 +46,8 @@ export type MlaPaMeetingRecord = {
   createdByUserId: string;
   mlaUserId: string;
   campHeadUserId: string;
-  type: MlaPaMeetingType;
-  invitationSubtype: InvitationSubtype | null;
+  type: MLAPAMEETINGTYPE;
+  invitationSubtype: INVITATIONSUBTYPE | null;
   invitationOtherPurpose: string | null;
   purpose: string;
   scheduledAt: string;
@@ -67,7 +67,7 @@ export type CreateMlaPaMeetingResult =
       ok: true;
       meeting: {
         id: number;
-        type: MlaPaMeetingType;
+        type: MLAPAMEETINGTYPE;
         createdAt: string;
       };
     }

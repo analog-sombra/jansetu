@@ -18,7 +18,7 @@ export async function deleteMlaPaMeetingAction(
   }
 
   try {
-    const existing = await prisma.mlaPaMeeting.findUnique({
+    const existing = await prisma.mla_pa_meeting.findUnique({
       where: { id: payload.meetingId },
       select: { id: true },
     });
@@ -27,7 +27,7 @@ export async function deleteMlaPaMeetingAction(
       return { ok: false, error: "Meeting not found." };
     }
 
-    await prisma.mlaPaMeeting.delete({
+    await prisma.mla_pa_meeting.delete({
       where: { id: payload.meetingId },
     });
 

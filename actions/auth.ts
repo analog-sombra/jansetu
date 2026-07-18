@@ -1,7 +1,7 @@
 "use server";
 
 import { randomInt, createHash } from "crypto";
-import { UserRole } from "@prisma/client";
+import { ROLE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { clearAuthSession, setAuthSession } from "@/lib/auth/session";
 
@@ -16,7 +16,7 @@ type VerifyOtpActionResult = {
   error?: string;
   userId?: string;
   firstLoginComplete?: boolean;
-  role?: UserRole;
+  role?: ROLE;
 };
 
 function normalizeMobile(mobile: string): string {
@@ -46,11 +46,11 @@ export async function sendOtpAction(
 
   try {
     await prisma.$transaction([
-      prisma.otpCode.updateMany({
+      prisma.otp_code.updateMany({
         where: { mobile, isUsed: false },
         data: { isUsed: true },
       }),
-      prisma.otpCode.create({
+      prisma.otp_code.create({
         data: {
           mobile,
           otpHash,
@@ -84,7 +84,7 @@ export async function verifyOtpAction(
   }
 
   try {
-    const otpRecord = await prisma.otpCode.findFirst({
+    const otpRecord = await prisma.otp_code.findFirst({
       where: {
         mobile,
         isUsed: false,
@@ -97,7 +97,7 @@ export async function verifyOtpAction(
     }
 
     if (otpRecord.expiresAt.getTime() < Date.now()) {
-      await prisma.otpCode.update({
+      await prisma.otp_code.update({
         where: { id: otpRecord.id },
         data: { isUsed: true },
       });
@@ -109,7 +109,7 @@ export async function verifyOtpAction(
 
     if (!isMatch) {
       const attempts = otpRecord.attempts + 1;
-      await prisma.otpCode.update({
+      await prisma.otp_code.update({
         where: { id: otpRecord.id },
         data: {
           attempts,
@@ -119,7 +119,7 @@ export async function verifyOtpAction(
       return { ok: false, error: "Invalid OTP. Please try again." };
     }
 
-    await prisma.otpCode.update({
+    await prisma.otp_code.update({
       where: { id: otpRecord.id },
       data: { isUsed: true },
     });

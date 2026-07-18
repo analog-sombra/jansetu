@@ -1,7 +1,7 @@
 import {
-  InvitationSubtype,
-  MlaPaMeetingType,
-  UserRole,
+  INVITATIONSUBTYPE,
+  MLAPAMEETINGTYPE,
+  ROLE,
 } from "@prisma/client";
 
 export type MlaPaMeetingStatus = "SCHEDULED" | "COMPLETED";
@@ -11,8 +11,8 @@ export type MlaPaMeetingRecord = {
   createdByUserId: string;
   mlaUserId: string;
   campHeadUserId: string;
-  type: MlaPaMeetingType;
-  invitationSubtype: InvitationSubtype | null;
+  type: MLAPAMEETINGTYPE;
+  invitationSubtype: INVITATIONSUBTYPE | null;
   invitationOtherPurpose: string | null;
   purpose: string;
   scheduledAt: string;
@@ -26,19 +26,19 @@ export type MlaPaMeetingRecord = {
     id: string;
     name: string | null;
     mobile: string;
-    role: UserRole;
+    role: ROLE;
   };
   mlaUser: {
     id: string;
     name: string | null;
     mobile: string;
-    role: UserRole;
+    role: ROLE;
   };
   campHeadUser: {
     id: string;
     name: string | null;
     mobile: string;
-    role: UserRole;
+    role: ROLE;
   };
 };
 
@@ -48,8 +48,8 @@ export function deriveMlaPaMeetingStatus(
   return meeting.completedAt ? "COMPLETED" : "SCHEDULED";
 }
 
-export function getMlaPaMeetingTypeLabel(type: MlaPaMeetingType): string {
-  const labels: Record<MlaPaMeetingType, string> = {
+export function getMlaPaMeetingTypeLabel(type: MLAPAMEETINGTYPE): string {
+  const labels: Record<MLAPAMEETINGTYPE, string> = {
     INVITATION: "Invitation",
     CONSTITUENCY_VISIT: "Constituency Visit",
     DEPARTMENT_VISIT: "Department Visit",
@@ -60,8 +60,8 @@ export function getMlaPaMeetingTypeLabel(type: MlaPaMeetingType): string {
   return labels[type] ?? type;
 }
 
-export function getInvitationSubtypeLabel(subtype: InvitationSubtype): string {
-  const labels: Record<InvitationSubtype, string> = {
+export function getInvitationSubtypeLabel(subtype: INVITATIONSUBTYPE): string {
+  const labels: Record<INVITATIONSUBTYPE, string> = {
     MARRIAGE: "Marriage",
     BIRTHDAY: "Birthday",
     FUNERAL: "Funeral",

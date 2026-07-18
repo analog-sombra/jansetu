@@ -1,6 +1,6 @@
 "use server";
 
-import { UserRole } from "@prisma/client";
+import { ROLE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import {
@@ -29,7 +29,7 @@ export async function lookupAdminMeetingCitizenByMobileAction(
     const user = await prisma.user.findFirst({
       where: {
         mobile,
-        role: UserRole.CITIZEN,
+        role: ROLE.CITIZEN,
       },
       select: {
         id: true,
