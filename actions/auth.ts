@@ -28,7 +28,7 @@ function hashOtp(otp: string): string {
 }
 
 function generateSixDigitOtp(): string {
-  return String(randomInt(0, 1_000_000)).padStart(6, "0");
+  return String(randomInt(100_000, 1_000_000));
 }
 
 export async function sendOtpAction(

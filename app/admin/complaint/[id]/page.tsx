@@ -218,7 +218,7 @@ export default function AdminComplaintDetailPage() {
       if (complaint.status === "REJECTED" && index === 5) {
         return {
           title,
-          description: "Rejected",
+          content: "Rejected",
           status: "error" as const,
         };
       }
@@ -226,7 +226,7 @@ export default function AdminComplaintDetailPage() {
       if (complaint.status === "ESCALATED" && index === 6) {
         return {
           title,
-          description: "Reopened by citizen dispute",
+          content: "Reopened by citizen dispute",
           status: "process" as const,
         };
       }
@@ -234,7 +234,7 @@ export default function AdminComplaintDetailPage() {
       if (index < currentStep) {
         return {
           title,
-          description: "Completed",
+          content: "Completed",
           status: "finish" as const,
         };
       }
@@ -242,14 +242,14 @@ export default function AdminComplaintDetailPage() {
       if (index === currentStep) {
         return {
           title,
-          description: formatLabel(complaint.status),
+          content: formatLabel(complaint.status),
           status: "process" as const,
         };
       }
 
       return {
         title,
-        description: "Pending",
+        content: "Pending",
         status: "wait" as const,
       };
     });
@@ -696,7 +696,7 @@ export default function AdminComplaintDetailPage() {
                   Officer Assignment History
                 </Divider>
                 <Space
-                  direction="vertical"
+                  orientation="vertical"
                   size="small"
                   style={{ width: "100%" }}
                 >

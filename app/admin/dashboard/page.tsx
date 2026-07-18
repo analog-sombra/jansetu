@@ -6,7 +6,6 @@ import {
   Card,
   Col,
   Divider,
-  List,
   Progress,
   Row,
   Select,
@@ -624,7 +623,7 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
         area: "Ward 14",
         category: "Water",
         activeCases: 28,
-        icon: "≡ƒÆº",
+        icon: "💧",
         severity: "High priority",
       },
       {
@@ -632,7 +631,7 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
         area: "Ward 3",
         category: "Roads",
         activeCases: 21,
-        icon: "≡ƒ¢ú∩╕Å",
+        icon: "🛣️",
         severity: "Escalation watch",
       },
       {
@@ -640,7 +639,7 @@ const DEMO_DATA: Record<PeriodKey, DemoOverview> = {
         area: "Ward 6",
         category: "Health",
         activeCases: 11,
-        icon: "≡ƒÅÑ",
+        icon: "🏥",
         severity: "Monitoring",
       },
     ],
@@ -1377,65 +1376,70 @@ export default function ReportDashboardPage() {
                     title={t("report.topAffectedAreas")}
                     style={{ height: "100%" }}
                   >
-                    <List
-                      dataSource={topAffectedAreas.slice(0, 5)}
-                      renderItem={(item, index) => {
+                    <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                      {topAffectedAreas.slice(0, 5).map((item, index) => {
                         const resolutionRate = Math.round(
                           (item.resolved / item.complaints) * 100,
                         );
                         return (
-                          <List.Item>
-                            <div style={{ width: "100%" }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  gap: 10,
-                                  marginBottom: 6,
-                                }}
-                              >
-                                <Text strong>
-                                  {index + 1}. {item.area}
-                                </Text>
-                                <Tag
-                                  color={
-                                    item.color === "RED"
-                                      ? "red"
-                                      : item.color === "AMBER"
-                                        ? "orange"
-                                        : "green"
-                                  }
-                                >
-                                  {item.severityScore}
-                                </Tag>
-                              </div>
-                              <Text
-                                type="secondary"
-                                style={{
-                                  fontSize: 12,
-                                  display: "block",
-                                  marginBottom: 6,
-                                }}
-                              >
-                                {item.topIssue}
+                          <div
+                            key={`${item.area}-${index}`}
+                            style={{
+                              width: "100%",
+                              paddingBottom: 12,
+                              borderBottom:
+                                index < 4 ? "1px solid rgba(5, 5, 5, 0.06)" : "none",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                gap: 10,
+                                marginBottom: 6,
+                              }}
+                            >
+                              <Text strong>
+                                {index + 1}. {item.area}
                               </Text>
-                              <Progress
-                                percent={Math.min(item.severityScore, 100)}
-                                strokeColor={WARD_COLOR[item.color]}
-                                size="small"
-                                format={() =>
-                                  `${item.complaints} ${t("report.grievances")}`
+                              <Tag
+                                color={
+                                  item.color === "RED"
+                                    ? "red"
+                                    : item.color === "AMBER"
+                                      ? "orange"
+                                      : "green"
                                 }
-                              />
-                              <Text type="secondary" style={{ fontSize: 12 }}>
-                                {t("report.resolutionRate")}: {resolutionRate}%
-                                | {t("report.demoTrend")}: {item.trend}
-                              </Text>
+                              >
+                                {item.severityScore}
+                              </Tag>
                             </div>
-                          </List.Item>
+                            <Text
+                              type="secondary"
+                              style={{
+                                fontSize: 12,
+                                display: "block",
+                                marginBottom: 6,
+                              }}
+                            >
+                              {item.topIssue}
+                            </Text>
+                            <Progress
+                              percent={Math.min(item.severityScore, 100)}
+                              strokeColor={WARD_COLOR[item.color]}
+                              size="small"
+                              format={() =>
+                                `${item.complaints} ${t("report.grievances")}`
+                              }
+                            />
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              {t("report.resolutionRate")}: {resolutionRate}% |{" "}
+                              {t("report.demoTrend")}: {item.trend}
+                            </Text>
+                          </div>
                         );
-                      }}
-                    />
+                      })}
+                    </Space>
                   </Card>
                 </Col>
               </Row>
@@ -1593,32 +1597,42 @@ export default function ReportDashboardPage() {
 
         <Divider />
         <Title level={5}>{t("report.noticeTriggers")}</Title>
-        <List
-          dataSource={overview.noticeTriggerList}
-          renderItem={(item) => (
-            <List.Item
-              actions={[
-                <Button key={item.assignmentId} size="small" disabled>
-                  {t("report.demoPreviewAction")}
-                </Button>,
-              ]}
+        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+          {overview.noticeTriggerList.map((item, index) => (
+            <div
+              key={item.assignmentId}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: 12,
+                paddingBottom: 12,
+                borderBottom:
+                  index < overview.noticeTriggerList.length - 1
+                    ? "1px solid rgba(5, 5, 5, 0.06)"
+                    : "none",
+              }}
             >
-              <List.Item.Meta
-                title={
-                  <Space>
-                    <Text strong>
-                      {t("report.ticket")} #{item.ticketId}
-                    </Text>
-                    <Tag color="red">
-                      {item.daysOverdue} {t("report.daysOverdue")}
-                    </Tag>
-                  </Space>
-                }
-                description={`${item.department} | ${item.officerName} | ${item.reminderCount} reminders | ${item.area}`}
-              />
-            </List.Item>
-          )}
-        />
+              <div>
+                <Space style={{ marginBottom: 4 }}>
+                  <Text strong>
+                    {t("report.ticket")} #{item.ticketId}
+                  </Text>
+                  <Tag color="red">
+                    {item.daysOverdue} {t("report.daysOverdue")}
+                  </Tag>
+                </Space>
+                <Text type="secondary">
+                  {item.department} | {item.officerName} | {item.reminderCount} reminders
+                  | {item.area}
+                </Text>
+              </div>
+              <Button size="small" disabled>
+                {t("report.demoPreviewAction")}
+              </Button>
+            </div>
+          ))}
+        </Space>
       </Card>
 
       <Card

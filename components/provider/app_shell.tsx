@@ -23,7 +23,8 @@ const CAMP_NAV_LINKS = [
 ];
 
 const ADMIN_NAV_LINKS = [
-  { href: "/admin/complaint", labelKey: "nav.adminDashboard" },
+  { href: "/admin/dashboard", labelKey: "nav.adminDashboard" },
+  { href: "/admin/complaint", labelKey: "nav.adminComplaint" },
   { href: "/admin/department", labelKey: "nav.adminDepartment" },
   { href: "/admin/category", labelKey: "nav.adminCategory" },
   { href: "/admin/queue-demo", labelKey: "nav.adminQueueDemo" },
