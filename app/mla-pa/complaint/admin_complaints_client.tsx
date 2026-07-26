@@ -44,9 +44,7 @@ function TanstackTable<TData>({ table, emptyLabel }: TableProps<TData>) {
 
   return (
     <div style={{ overflowX: "auto" }}>
-      <table
-        style={{ width: "100%", borderCollapse: "collapse", minWidth: 1200 }}
-      >
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr
@@ -71,7 +69,7 @@ function TanstackTable<TData>({ table, emptyLabel }: TableProps<TData>) {
                       fontSize: 13,
                       color: "#4b5563",
                       fontWeight: 700,
-                      padding: "12px 10px",
+                      padding: "8px 6px",
                       whiteSpace: "nowrap",
                       cursor: canSort ? "pointer" : "default",
                     }}
@@ -101,7 +99,7 @@ function TanstackTable<TData>({ table, emptyLabel }: TableProps<TData>) {
                 <td
                   key={cell.id}
                   style={{
-                    padding: "12px 10px",
+                    padding: "8px 6px",
                     fontSize: 13,
                     color: "#111827",
                     verticalAlign: "top",

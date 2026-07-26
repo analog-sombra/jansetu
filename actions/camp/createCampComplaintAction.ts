@@ -36,6 +36,7 @@ export async function createCampComplaintAction(
   const categoryId = Number(payload.complaint.categoryId);
   const subcategoryId = Number(payload.complaint.subcategoryId);
   const description = payload.complaint.description.trim();
+  const complaintAddress = payload.complaint.complaintAddress.trim() || null;
   const affectedCitizensCount = Number(payload.complaint.affectedCitizensCount);
   const area = payload.complaint.area?.trim() || null;
   const lat = Number(payload.complaint.lat);
@@ -110,6 +111,7 @@ export async function createCampComplaintAction(
           categoryId,
           subcategoryId,
           description,
+          address: complaintAddress,
           affectedCitizensCount,
           area,
           lat,
@@ -127,17 +129,20 @@ export async function createCampComplaintAction(
         area,
         lat,
         lng,
+        status: "PENDING",
       });
 
-      const clusterComplaintCount = await tx.complaint_cluster.count({
-        where: { clusterId },
-      });
+      const clusterComplaintCount = clusterId
+        ? await tx.complaint_cluster.count({
+            where: { clusterId },
+          })
+        : 0;
 
       return {
         complaintId: complaint.id,
         userId: citizen.id,
         createdNewUser: !existingUser,
-        clusterId,
+        clusterId: clusterId ?? "",
         clusterComplaintCount,
       };
     });

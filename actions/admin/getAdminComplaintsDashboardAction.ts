@@ -47,22 +47,52 @@ export async function getAdminComplaintsDashboardAction(): Promise<AdminComplain
             mobile: true,
           },
         },
+        assignments: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            officer: {
+              select: {
+                name: true,
+                department: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
     return {
       ok: true,
-      complaints: complaints.map((complaint) => ({
-        id: complaint.id,
-        citizenName: complaint.user.name ?? "Citizen",
-        citizenMobile: complaint.user.mobile,
-        category: complaint.category.name,
-        subcategory: complaint.subcategory.name,
-        status: complaint.status,
-        area: complaint.area ?? "",
-        affectedCitizensCount: complaint.affectedCitizensCount,
-        createdAt: complaint.createdAt.toISOString(),
-      })),
+      complaints: complaints.map((complaint) => {
+        const officerNames = Array.from(
+          new Set(complaint.assignments.map((assignment) => assignment.officer.name)),
+        );
+        const departmentNames = Array.from(
+          new Set(
+            complaint.assignments.map(
+              (assignment) => assignment.officer.department.name,
+            ),
+          ),
+        );
+
+        return {
+          id: complaint.id,
+          citizenName: complaint.user.name ?? "Citizen",
+          citizenMobile: complaint.user.mobile,
+          departmentName: departmentNames[0] ?? null,
+          officerNames,
+          category: complaint.category.name,
+          subcategory: complaint.subcategory.name,
+          status: complaint.status,
+          area: complaint.area ?? "",
+          affectedCitizensCount: complaint.affectedCitizensCount,
+          createdAt: complaint.createdAt.toISOString(),
+        };
+      }),
     };
   } catch {
     return {

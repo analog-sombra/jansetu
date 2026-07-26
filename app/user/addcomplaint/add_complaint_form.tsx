@@ -45,6 +45,7 @@ export default function AddComplaintForm() {
       categoryId: "0",
       subcategoryId: "0",
       description: "",
+      address: "",
       area: "",
       lat: "",
       lng: "",
@@ -262,6 +263,7 @@ export default function AddComplaintForm() {
         categoryId: String(firstCategory?.id ?? 0),
         subcategoryId: String(firstCategory?.subcategories[0]?.id ?? 0),
         description: "",
+        address: "",
         area: "",
         lat: "",
         lng: "",
@@ -362,6 +364,16 @@ export default function AddComplaintForm() {
                     placeholder={t("newComplaint.descriptionPlaceholder")}
                     required
                     maxlength={1000}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <CustomTextAreaInput<complaintValidationForm>
+                    name="address"
+                    title="Address"
+                    placeholder="Enter complete address (e.g., House No. 123, Street Name, Area, City)"
+                    required
+                    maxlength={500}
                   />
                 </div>
 

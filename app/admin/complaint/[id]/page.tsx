@@ -550,6 +550,15 @@ export default function AdminComplaintDetailPage() {
               </p>
             </div>
 
+            <div className="h-4" />
+
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">Complaint Address</h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {complaint.address?.trim() || t("adminDetail.notProvided")}
+              </p>
+            </div>
+
             {complaint.cluster && (
               <>
                 <Divider

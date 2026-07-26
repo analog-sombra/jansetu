@@ -291,6 +291,18 @@ export default function CampComplaintDetailPage() {
                 {complaint.description}
               </div>
 
+              <Divider style={{ margin: "12px 0" }} />
+
+              <Text strong>Complaint Address</Text>
+              <div
+                style={{
+                  marginTop: 6,
+                  lineHeight: 1.7,
+                }}
+              >
+                {complaint.complaintAddress?.trim() || "-"}
+              </div>
+
               {complaint.cluster && (
                 <>
                   <Divider

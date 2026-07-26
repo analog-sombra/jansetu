@@ -43,6 +43,7 @@ export async function validateComplaintInput(complaint: CampComplaintInput): Pro
   const categoryId = Number(complaint.categoryId);
   const subcategoryId = Number(complaint.subcategoryId);
   const description = complaint.description.trim();
+  const complaintAddress = complaint.complaintAddress.trim();
   const affectedCitizensCount = Number(complaint.affectedCitizensCount);
   const lat = Number(complaint.lat);
   const lng = Number(complaint.lng);
@@ -69,6 +70,10 @@ export async function validateComplaintInput(complaint: CampComplaintInput): Pro
 
   if (description.length < 20) {
     return "Description must be at least 20 characters.";
+  }
+
+  if (complaintAddress.length < 10) {
+    return "Address must be at least 10 characters.";
   }
 
   if (!Number.isInteger(affectedCitizensCount) || affectedCitizensCount <= 0) {

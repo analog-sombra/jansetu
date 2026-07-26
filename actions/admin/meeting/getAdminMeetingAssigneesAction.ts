@@ -1,18 +1,8 @@
 "use server";
 
-import { ROLE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import { AdminMeetingAssigneesResult } from "./types";
-
-const ASSIGNABLE_ROLES: ROLE[] = [
-  "SYSTEM",
-  "ADMIN",
-  "MLA",
-  "MLA_SECRETARY",
-  "CAMP_DEO",
-  "CAMP_FIELD_OFFICER",
-];
 
 export async function getAdminMeetingAssigneesAction(): Promise<AdminMeetingAssigneesResult> {
   const auth = await requireAdminUser();
@@ -22,15 +12,7 @@ export async function getAdminMeetingAssigneesAction(): Promise<AdminMeetingAssi
 
   try {
     const users = await prisma.user.findMany({
-      where: {
-        role: {
-          in: ASSIGNABLE_ROLES,
-        },
-      },
-      orderBy: [
-        { role: "asc" },
-        { name: "asc" },
-      ],
+      orderBy: [{ role: "asc" }, { name: "asc" }],
       select: {
         id: true,
         name: true,

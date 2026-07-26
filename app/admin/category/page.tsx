@@ -101,7 +101,7 @@ function TanstackTable<TData>({ table, loading, emptyLabel }: TableProps<TData>)
 											fontSize: 13,
 											color: "#4b5563",
 											fontWeight: 700,
-											padding: "12px 10px",
+											padding: "8px 6px",
 											whiteSpace: "nowrap",
 											cursor: canSort ? "pointer" : "default",
 										}}
@@ -124,7 +124,7 @@ function TanstackTable<TData>({ table, loading, emptyLabel }: TableProps<TData>)
 								<td
 									key={cell.id}
 									style={{
-										padding: "12px 10px",
+										padding: "8px 6px",
 										fontSize: 13,
 										color: "#111827",
 										verticalAlign: "top",

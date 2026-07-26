@@ -49,6 +49,8 @@ export type MeetingRecord = {
   contactMobile: string | null;
   contactDesignation: string | null;
   contactDepartment: string | null;
+  partyMeetDetails: string | null;
+  selectedStaffNames: string | null;
   createdAt: string;
   updatedAt: string;
   createdByUser: UserLite;

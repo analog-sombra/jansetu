@@ -159,6 +159,8 @@ function getTypeLabel(type: MLAPAMEETINGTYPE): string {
     CITIZEN_MEET: "Citizen Meet",
     DEPARTMENT_VISIT: "Department Visit",
     PERSONAL_MEET: "Personal Meet",
+    PARTY_MEET: "Party Meet",
+    OFFICE_MEET: "Office Meet",
   };
   return labels[type] ?? type;
 }

@@ -1,4 +1,4 @@
-import { MEETINGAPPROVALSTATUS, MEETINGPRIORITY, MEETINGTYPE, ROLE } from "@prisma/client";
+import { MEETINGAPPROVALSTATUS, MEETINGPRIORITY, MEETINGTYPE, INVITATIONSUBTYPE, ROLE } from "@prisma/client";
 import { AdminAuthResult } from "../types";
 
 export type AdminMeetingAssignee = {
@@ -63,6 +63,7 @@ export type AdminMeetingContactLookupResult =
 export type CreateAdminMeetingInput = {
   assignedToUserId: string;
   type: MEETINGTYPE;
+  invitationSubtype?: INVITATIONSUBTYPE;
   purpose: string;
   meetingDateTime?: string;
   meetingPlace?: string;
@@ -76,6 +77,8 @@ export type CreateAdminMeetingInput = {
   contactMobile?: string;
   contactDesignation?: string;
   contactDepartment?: string;
+  partyMeetDetails?: string;
+  selectedStaffNames?: string;
 };
 
 export type CreateAdminMeetingResult =
@@ -99,6 +102,7 @@ export type AdminMeetingDashboardRecord = {
   createdByUserId: string;
   assignedToUserId: string;
   type: MEETINGTYPE;
+  invitationSubtype: INVITATIONSUBTYPE | null;
   purpose: string;
   meetingDateTime: string | null;
   meetingPlace: string | null;
@@ -117,6 +121,8 @@ export type AdminMeetingDashboardRecord = {
   contactMobile: string | null;
   contactDesignation: string | null;
   contactDepartment: string | null;
+  partyMeetDetails: string | null;
+  selectedStaffNames: string | null;
   createdAt: string;
   updatedAt: string;
   createdByUser: {

@@ -1,6 +1,6 @@
 "use server";
 
-import { MEETINGAPPROVALSTATUS, MEETINGTYPE } from "@prisma/client";
+import { MEETINGAPPROVALSTATUS, MEETINGTYPE, INVITATIONSUBTYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import { CreateAdminMeetingInput, CreateAdminMeetingResult } from "./types";
@@ -31,6 +31,8 @@ export async function createAdminMeetingAction(
   const contactName = payload.contactName?.trim() || null;
   const contactDesignation = payload.contactDesignation?.trim() || null;
   const contactDepartment = payload.contactDepartment?.trim() || null;
+  const partyMeetDetails = payload.partyMeetDetails?.trim() || null;
+  const selectedStaffNames = payload.selectedStaffNames?.trim() || null;
   const citizenMobile = normalizeMobile(payload.citizenMobile);
   const contactMobile = normalizeMobile(payload.contactMobile);
 
@@ -44,9 +46,13 @@ export async function createAdminMeetingAction(
 
   const isCitizenMeet = payload.type === MEETINGTYPE.CITIZEN_MEET;
   const isDepartmentVisit = payload.type === MEETINGTYPE.DEPARTMENT_VISIT;
+  const isPartyMeet = payload.type === MEETINGTYPE.PARTY_MEET;
+  const isOfficeMeet = payload.type === MEETINGTYPE.OFFICE_MEET;
+  const isInvitation = payload.type === MEETINGTYPE.INVITATION;
   const requiresContactDetails =
     payload.type === MEETINGTYPE.DEPARTMENT_VISIT ||
-    payload.type === MEETINGTYPE.PERSONAL_MEET;
+    payload.type === MEETINGTYPE.PERSONAL_MEET ||
+    payload.type === MEETINGTYPE.PARTY_MEET;
 
   const meetingDateTime = payload.meetingDateTime
     ? new Date(payload.meetingDateTime)
@@ -55,7 +61,7 @@ export async function createAdminMeetingAction(
     ? new Date(payload.preferredDateTime)
     : null;
 
-  if (!isCitizenMeet) {
+  if (!isCitizenMeet && !isInvitation) {
     if (!meetingDateTime || Number.isNaN(meetingDateTime.getTime())) {
       return { ok: false, error: "Please select a valid meeting date and time." };
     }
@@ -87,11 +93,11 @@ export async function createAdminMeetingAction(
   }
 
   if (requiresContactDetails) {
-    if (!contactName || !contactMobile) {
+    if (!isOfficeMeet && (!contactName || !contactMobile)) {
       return { ok: false, error: "Contact name and mobile are required." };
     }
 
-    if (!/^\d{10}$/.test(contactMobile)) {
+    if (!isOfficeMeet && !/^\d{10}$/.test(contactMobile || "")) {
       return { ok: false, error: "Please provide a valid contact mobile number." };
     }
 
@@ -101,6 +107,27 @@ export async function createAdminMeetingAction(
         error: "Designation and department are required for department visit.",
       };
     }
+
+    if (isPartyMeet && !partyMeetDetails) {
+      return {
+        ok: false,
+        error: "Party office details are required for party meeting.",
+      };
+    }
+  }
+
+  if (isOfficeMeet && !selectedStaffNames) {
+    return {
+      ok: false,
+      error: "Staff members are required for office meeting.",
+    };
+  }
+
+  if (isInvitation && !payload.invitationSubtype) {
+    return {
+      ok: false,
+      error: "Invitation type is required for invitation meeting.",
+    };
   }
 
   try {
@@ -122,6 +149,7 @@ export async function createAdminMeetingAction(
         createdByUserId: auth.user.id,
         assignedToUserId,
         type: payload.type,
+        invitationSubtype: payload.invitationSubtype,
         purpose,
         meetingDateTime,
         meetingPlace,
@@ -136,6 +164,8 @@ export async function createAdminMeetingAction(
         contactMobile,
         contactDesignation,
         contactDepartment,
+        partyMeetDetails,
+        selectedStaffNames,
       },
       select: {
         id: true,

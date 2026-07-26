@@ -12,6 +12,7 @@ type AddComplaintActionInput = {
   categoryId: number;
   subcategoryId: number;
   description: string;
+  address: string;
   area?: string;
   lat: string;
   lng: string;
@@ -20,7 +21,7 @@ type AddComplaintActionInput = {
 type AddComplaintActionResult = {
   ok: boolean;
   complaintId?: number;
-  clusterId?: string;
+  clusterId?: string | null;
   clusterComplaintCount?: number;
   error?: string;
 };
@@ -131,6 +132,7 @@ export type UserComplaintDetailItem = {
   category: string;
   subcategory: string | null;
   description: string;
+  address: string | null;
   status: string;
   plannedCompletionDate: string | null;
   createdAt: string;
@@ -199,6 +201,7 @@ export async function addComplaintAction(
   const categoryId = Number(payload.categoryId);
   const subcategoryId = Number(payload.subcategoryId);
   const description = payload.description.trim();
+  const address = payload.address.trim() || null;
   const area = payload.area?.trim() || null;
   const lat = Number(payload.lat);
   const lng = Number(payload.lng);
@@ -247,6 +250,7 @@ export async function addComplaintAction(
           categoryId,
           subcategoryId,
           description,
+          address,
           area,
           lat,
           lng,
@@ -265,11 +269,15 @@ export async function addComplaintAction(
         area,
         lat,
         lng,
+        status: "PENDING",
       });
 
-      const clusterComplaintCount = await tx.complaint_cluster.count({
-        where: { clusterId },
-      });
+      let clusterComplaintCount = 0;
+      if (clusterId) {
+        clusterComplaintCount = await tx.complaint_cluster.count({
+          where: { clusterId },
+        });
+      }
 
       return {
         id: createdComplaint.id,
@@ -514,6 +522,7 @@ export async function getMyComplaintDetailAction(
           },
         },
         description: true,
+        address: true,
         status: true,
         plannedCompletionDate: true,
         createdAt: true,
@@ -615,6 +624,7 @@ export async function getMyComplaintDetailAction(
       ok: true,
       complaint: {
         id: complaint.id,
+        address: complaint.address,
         category: complaint.category.name,
         subcategory: complaint.subcategory.name,
         description: complaint.description,

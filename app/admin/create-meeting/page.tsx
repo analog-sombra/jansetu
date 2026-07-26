@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { MEETINGPRIORITY, MEETINGTYPE } from "@prisma/client";
+import { MEETINGPRIORITY, MEETINGTYPE, INVITATIONSUBTYPE } from "@prisma/client";
 import {
   Alert,
   Button,
@@ -82,6 +82,20 @@ const PAGE_COPY = {
     typeDepartment: "Department Visit",
     typeCitizen: "Citizen Meet",
     typePersonal: "Personal Meet",
+    typeParty: "Party Meet",
+    typeOffice: "Office Meet",
+    invitationType: "Invitation",
+    invitationSubtype: "Invitation Type",
+    selectInvitationSubtype: "Select invitation type",
+    invitationMarriage: "Marriage",
+    invitationBirthday: "Birthday",
+    invitationFuneral: "Funeral",
+    invitationOther: "Other",
+    partyMeetDetails: "Party Office Details",
+    enterPartyOfficeDetails: "Enter party office details",
+    selectedStaff: "Select Staff Members",
+    enterSelectedStaff: "Select staff members who will attend",
+    noStaffAvailable: "No staff members available",
     priorityLow: "Low",
     priorityMedium: "Medium",
     priorityHigh: "High",
@@ -138,6 +152,20 @@ const PAGE_COPY = {
     typeDepartment: "विभागीय बैठक",
     typeCitizen: "नागरिक बैठक",
     typePersonal: "व्यक्तिगत बैठक",
+    typeParty: "पार्टी बैठक",
+    typeOffice: "कार्यालय बैठक",
+    invitationType: "आमंत्रण",
+    invitationSubtype: "आमंत्रण प्रकार",
+    selectInvitationSubtype: "आमंत्रण प्रकार चुनें",
+    invitationMarriage: "विवाह",
+    invitationBirthday: "जन्मदिन",
+    invitationFuneral: "अंतिम संस्कार",
+    invitationOther: "अन्य",
+    partyMeetDetails: "पार्टी कार्यालय विवरण",
+    enterPartyOfficeDetails: "पार्टी कार्यालय विवरण दर्ज करें",
+    selectedStaff: "कर्मचारी सदस्यों को चुनें",
+    enterSelectedStaff: "कर्मचारी सदस्यों को चुनें जो उपस्थित होंगे",
+    noStaffAvailable: "कोई कर्मचारी सदस्य उपलब्ध नहीं है",
     priorityLow: "निम्न",
     priorityMedium: "मध्यम",
     priorityHigh: "उच्च",
@@ -193,6 +221,20 @@ const PAGE_COPY = {
     typeDepartment: "ਵਿਭਾਗੀ ਮੀਟਿੰਗ",
     typeCitizen: "ਨਾਗਰਿਕ ਮੀਟਿੰਗ",
     typePersonal: "ਨਿੱਜੀ ਮੀਟਿੰਗ",
+    typeParty: "ਪਾਰਟੀ ਮੀਟਿੰਗ",
+    typeOffice: "ਦਫ਼ਤਰ ਮੀਟਿੰਗ",
+    invitationType: "ਸੱਦਾ",
+    invitationSubtype: "ਸੱਦਾ ਕਿਸਮ",
+    selectInvitationSubtype: "ਸੱਦਾ ਕਿਸਮ ਚੁਣੋ",
+    invitationMarriage: "ਵਿਆਹ",
+    invitationBirthday: "ਜਨਮਦਿਨ",
+    invitationFuneral: "ਲਈਂਦਾ",
+    invitationOther: "ਹੋਰ",
+    partyMeetDetails: "ਪਾਰਟੀ ਦਫ਼ਤਰ ਦੇ ਵੇਰਵੇ",
+    enterPartyOfficeDetails: "ਪਾਰਟੀ ਦਫ਼ਤਰ ਦੇ ਵੇਰਵੇ ਦਰਜ ਕਰੋ",
+    selectedStaff: "ਸਟਾਫ ਸਦੱਸਾਂ ਨੂੰ ਚੁਣੋ",
+    enterSelectedStaff: "ਉਹ ਸਟਾਫ ਸਦੱਸੇ ਚੁਣੋ ਜੋ ਹਾਜਰ ਹੋਣਗੇ",
+    noStaffAvailable: "ਕੋਈ ਸਟਾਫ ਸਦੱਸੇ ਉਪਲਬਧ ਨਹੀਂ",
     priorityLow: "ਘੱਟ",
     priorityMedium: "ਮੱਧਮ",
     priorityHigh: "ਉੱਚ",
@@ -201,10 +243,13 @@ const PAGE_COPY = {
 } as const;
 
 const MEETING_TYPE_OPTIONS: Array<{ value: MEETINGTYPE }> = [
+  { value: MEETINGTYPE.INVITATION },
   { value: MEETINGTYPE.CONSTITUENCY_VISIT },
   { value: MEETINGTYPE.DEPARTMENT_VISIT },
   { value: MEETINGTYPE.CITIZEN_MEET },
   { value: MEETINGTYPE.PERSONAL_MEET },
+  { value: MEETINGTYPE.PARTY_MEET },
+  { value: MEETINGTYPE.OFFICE_MEET },
 ];
 
 const PRIORITY_OPTIONS: Array<{ value: MEETINGPRIORITY }> = [
@@ -217,6 +262,7 @@ const PRIORITY_OPTIONS: Array<{ value: MEETINGPRIORITY }> = [
 type FormValues = {
   assignedToUserId: string;
   type: MEETINGTYPE;
+  invitationSubtype?: INVITATIONSUBTYPE;
   purpose: string;
   meetingDateTime?: { toISOString(): string };
   meetingPlace?: string;
@@ -230,6 +276,8 @@ type FormValues = {
   contactMobile?: string;
   contactDesignation?: string;
   contactDepartment?: string;
+  partyMeetDetails?: string;
+  selectedStaffNames?: string;
 };
 
 export default function CreateMeetingPage() {
@@ -238,17 +286,22 @@ export default function CreateMeetingPage() {
   const copy = PAGE_COPY[language];
   const [form] = Form.useForm<FormValues>();
   const [users, setUsers] = useState<AdminMeetingAssignee[]>([]);
-  const [selectedType, setSelectedType] =
-    useState<FormValues["type"]>(MEETINGTYPE.CONSTITUENCY_VISIT);
+  const [selectedType, setSelectedType] = useState<FormValues["type"]>(
+    MEETINGTYPE.CONSTITUENCY_VISIT,
+  );
   const [saving, setSaving] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingLookup, setLoadingLookup] = useState(false);
   const [citizenDetailsLocked, setCitizenDetailsLocked] = useState(false);
   const [contactDetailsLocked, setContactDetailsLocked] = useState(false);
+  const [staffMembers, setStaffMembers] = useState<AdminMeetingAssignee[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   const [message, setMessage] = useState<string>("");
 
-  const reportUsers = users;
+  const reportUsers = users.filter(
+    (user) => user.role !== "OFFICER" && user.role !== "ADMIN" && user.role !== "CITIZEN",
+  );
   const mobileRules = [
     { required: true },
     { pattern: /^\d{10}$/, message: copy.invalidMobile },
@@ -256,10 +309,13 @@ export default function CreateMeetingPage() {
 
   const meetingTypeOptions = MEETING_TYPE_OPTIONS.map((option) => {
     const localizedLabel: Record<FormValues["type"], string> = {
+      INVITATION: copy.invitationType,
       CONSTITUENCY_VISIT: copy.typeConstituency,
       DEPARTMENT_VISIT: copy.typeDepartment,
       CITIZEN_MEET: copy.typeCitizen,
       PERSONAL_MEET: copy.typePersonal,
+      PARTY_MEET: copy.typeParty,
+      OFFICE_MEET: copy.typeOffice,
     };
     return {
       value: option.value,
@@ -279,6 +335,13 @@ export default function CreateMeetingPage() {
       label: localizedLabel,
     };
   });
+
+  const invitationSubtypeOptions = [
+    { value: INVITATIONSUBTYPE.MARRIAGE, label: copy.invitationMarriage },
+    { value: INVITATIONSUBTYPE.BIRTHDAY, label: copy.invitationBirthday },
+    { value: INVITATIONSUBTYPE.FUNERAL, label: copy.invitationFuneral },
+    { value: INVITATIONSUBTYPE.OTHER, label: copy.invitationOther },
+  ];
 
   const areaOptions = RAJOURI_GARDEN_AREAS.map((area) => ({
     value: area,
@@ -341,7 +404,9 @@ export default function CreateMeetingPage() {
 
     if (!result.found) {
       if (shouldLookupOfficer) {
-        setError(copy.userLookupFailed);
+        setError(
+          "No officer or contact found with this mobile number. You can enter the details manually.",
+        );
       }
       form.setFieldsValue({
         contactName: undefined,
@@ -371,6 +436,7 @@ export default function CreateMeetingPage() {
     async function loadUsers() {
       setLoadingUsers(true);
       const result = await getAdminMeetingAssigneesAction();
+
       setLoadingUsers(false);
 
       if (!result.ok) {
@@ -379,6 +445,15 @@ export default function CreateMeetingPage() {
       }
 
       setUsers(result.assignees ?? []);
+
+      // Filter staff members (exclude CITIZEN and OFFICER)
+      const staff = (result.assignees ?? []).filter(
+        (user) =>
+          user.role !== "CITIZEN" &&
+          user.role !== "OFFICER" &&
+          user.role !== "ADMIN",
+      );
+      setStaffMembers(staff);
     }
 
     void loadUsers();
@@ -389,6 +464,7 @@ export default function CreateMeetingPage() {
     const payload = {
       assignedToUserId: values.assignedToUserId,
       type: values.type,
+      invitationSubtype: values.invitationSubtype,
       purpose: values.purpose,
       meetingDateTime: values.meetingDateTime?.toISOString(),
       meetingPlace: values.meetingPlace,
@@ -402,6 +478,11 @@ export default function CreateMeetingPage() {
       contactMobile: values.contactMobile,
       contactDesignation: values.contactDesignation,
       contactDepartment: values.contactDepartment,
+      partyMeetDetails: values.partyMeetDetails,
+      selectedStaffNames: Array.from(selectedStaff)
+        .map((id) => staffMembers.find((s) => s.id === id)?.name)
+        .filter((name) => name)
+        .join(", "),
     };
 
     const result = await createAdminMeetingAction(payload);
@@ -418,6 +499,7 @@ export default function CreateMeetingPage() {
     setSelectedType(MEETINGTYPE.CONSTITUENCY_VISIT);
     setCitizenDetailsLocked(false);
     setContactDetailsLocked(false);
+    setSelectedStaff(new Set());
     setTimeout(() => {
       router.push("/admin");
     }, 600);
@@ -425,9 +507,13 @@ export default function CreateMeetingPage() {
 
   const isCitizenMeet = selectedType === MEETINGTYPE.CITIZEN_MEET;
   const isDepartmentVisit = selectedType === MEETINGTYPE.DEPARTMENT_VISIT;
+  const isPartyMeet = selectedType === MEETINGTYPE.PARTY_MEET;
+  const isOfficeMeet = selectedType === MEETINGTYPE.OFFICE_MEET;
+  const isInvitation = selectedType === MEETINGTYPE.INVITATION;
   const showContactFields =
     selectedType === MEETINGTYPE.DEPARTMENT_VISIT ||
-    selectedType === MEETINGTYPE.PERSONAL_MEET;
+    selectedType === MEETINGTYPE.PERSONAL_MEET ||
+    selectedType === MEETINGTYPE.PARTY_MEET;
 
   return (
     <div>
@@ -491,6 +577,20 @@ export default function CreateMeetingPage() {
                 />
               </Form.Item>
             </Col>
+            {isInvitation && (
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label={copy.invitationSubtype}
+                  name="invitationSubtype"
+                  rules={[{ required: true, message: copy.selectInvitationSubtype }]}
+                >
+                  <Select
+                    options={invitationSubtypeOptions}
+                    placeholder={copy.selectInvitationSubtype}
+                  />
+                </Form.Item>
+              </Col>
+            )}
             <Col xs={24} md={12}>
               <Form.Item
                 label={copy.assignToUser}
@@ -726,7 +826,89 @@ export default function CreateMeetingPage() {
                     />
                   </Form.Item>
                 </Col>
+                {isPartyMeet && (
+                  <Col xs={24}>
+                    <Form.Item
+                      label={copy.partyMeetDetails}
+                      name="partyMeetDetails"
+                      rules={[
+                        {
+                          required: true,
+                          message: copy.enterPartyOfficeDetails,
+                        },
+                      ]}
+                    >
+                      <Input.TextArea
+                        placeholder={copy.enterPartyOfficeDetails}
+                        rows={3}
+                      />
+                    </Form.Item>
+                  </Col>
+                )}
               </>
+            )}
+
+            {isOfficeMeet && (
+              <Row gutter={[16, 16]}>
+                <Col xs={24}>
+                  <div>
+                    <div style={{ marginBottom: 8 }}>
+                      <Text strong>{copy.selectedStaff}</Text>
+                    </div>
+                    <div
+                      style={{
+                        border: "1px solid #d9d9d9",
+                        borderRadius: "4px",
+                        padding: "8px",
+                        maxHeight: "250px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      {staffMembers.length === 0 ? (
+                        <Text type="secondary">{copy.noStaffAvailable}</Text>
+                      ) : (
+                        <div>
+                          {staffMembers.map((staff) => (
+                            <div
+                              key={staff.id}
+                              style={{
+                                padding: "6px",
+                                marginBottom: "4px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedStaff.has(staff.id)}
+                                onChange={(e) => {
+                                  const newSelected = new Set(selectedStaff);
+                                  if (e.target.checked) {
+                                    newSelected.add(staff.id);
+                                  } else {
+                                    newSelected.delete(staff.id);
+                                  }
+                                  setSelectedStaff(newSelected);
+                                }}
+                              />
+                              <label style={{ marginBottom: 0, flex: 1 }}>
+                                {staff.name} ({staff.role})
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: "12px", marginTop: "4px" }}
+                    >
+                      {copy.enterSelectedStaff}
+                    </Text>
+                  </div>
+                </Col>
+              </Row>
             )}
           </Row>
 

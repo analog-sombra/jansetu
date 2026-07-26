@@ -110,6 +110,7 @@ export default function CampNewComplaintForm() {
       categoryId: "0",
       subcategoryId: "0",
       description: "",
+      complaintAddress: "",
       affectedCitizensCount: "1",
       area: "",
       lat: "",
@@ -300,6 +301,7 @@ export default function CampNewComplaintForm() {
         categoryId: Number(values.categoryId),
         subcategoryId: Number(values.subcategoryId),
         description: values.description,
+        complaintAddress: values.complaintAddress,
         affectedCitizensCount: values.affectedCitizensCount,
         area: values.area,
         lat: values.lat,
@@ -361,6 +363,7 @@ export default function CampNewComplaintForm() {
       categoryId: String(firstCategory?.id ?? 0),
       subcategoryId: String(firstCategory?.subcategories[0]?.id ?? 0),
       description: "",
+      complaintAddress: "",
       affectedCitizensCount: "1",
       area: "",
       lat: "",
@@ -572,6 +575,16 @@ export default function CampNewComplaintForm() {
                 placeholder={t("newComplaint.descriptionPlaceholder")}
                 required
                 maxlength={1000}
+              />
+            </div>
+
+            <div className="mb-3">
+              <CustomTextAreaInput<campComplaintValidationForm>
+                name="complaintAddress"
+                title="Address"
+                placeholder="Enter complete address (e.g., House No. 123, Street Name, Area, City)"
+                required
+                maxlength={500}
               />
             </div>
 

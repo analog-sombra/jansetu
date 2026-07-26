@@ -8,6 +8,10 @@ export type {
   AdminComplaintDetail,
   AdminAuthResult,
   AdminComplaintsDashboardResult,
+  AdminEscalationStatus,
+  AdminEscalationTrigger,
+  AdminEscalationRecord,
+  AdminEscalationQueueResult,
   AdminComplaintDetailResult,
   AdminAssignmentResult,
   AdminQueryResult,
@@ -19,9 +23,15 @@ export type {
   AdminCategorySubcategoryDirectoryResult,
   AdminCategoryCreateResult,
   AdminSubcategoryCreateResult,
+  AdminReportPeriodKey,
+  AdminReportWardStatus,
+  AdminReportAreaStatus,
+  AdminReportOverview,
+  AdminReportDashboardResult,
 } from "./types";
 
 export { getAdminComplaintsDashboardAction } from "./getAdminComplaintsDashboardAction";
+export { getAdminEscalationQueueAction } from "./getAdminEscalationQueueAction";
 export { getAdminComplaintDetailAction } from "./getAdminComplaintDetailAction";
 export { assignAdminComplaintOfficerAction } from "./assignAdminComplaintOfficerAction";
 export { raiseAdminComplaintQueryAction } from "./raiseAdminComplaintQueryAction";
@@ -42,6 +52,7 @@ export { deleteAdminCategoryAction } from "./deleteAdminCategoryAction";
 export { updateAdminSubcategoryAction } from "./updateAdminSubcategoryAction";
 export { deleteAdminSubcategoryAction } from "./deleteAdminSubcategoryAction";
 export { getComplaintClusterPrecisionImpactAction } from "./getComplaintClusterPrecisionImpactAction";
+export { getAdminReportDashboardAction } from "./getAdminReportDashboardAction";
 export {
   getAdminMeetingAssigneesAction,
   getAdminMeetingsDashboardAction,

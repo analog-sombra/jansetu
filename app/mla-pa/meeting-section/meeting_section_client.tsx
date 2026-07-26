@@ -502,7 +502,7 @@ export default function MlaPaMeetingSectionClient({
             {selectedDateMeetings.length === 0 ? (
               <Empty description="No meetings" />
             ) : (
-              <Space direction="vertical" style={{ width: "100%" }}>
+              <Space orientation="vertical" style={{ width: "100%" }}>
                 {selectedDateMeetings.map((meeting) => (
                   <Card key={meeting.id} size="small">
                     <Text strong>{getMlaPaMeetingTypeLabel(meeting.type)}</Text>
@@ -529,7 +529,7 @@ export default function MlaPaMeetingSectionClient({
         footer={null}
       >
         {!selectedMeeting ? null : (
-          <Space direction="vertical" style={{ width: "100%" }}>
+          <Space orientation="vertical" style={{ width: "100%" }}>
             <Text>
               <strong>Type:</strong> {getMlaPaMeetingTypeLabel(selectedMeeting.type)}
             </Text>

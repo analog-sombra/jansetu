@@ -161,7 +161,7 @@ export default function CampComplaintsClient({
           columns={columns}
           dataSource={initialComplaints}
           rowKey="id"
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1400 }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

@@ -13,6 +13,7 @@ export type OfficerCompletedAssignmentSummary = {
   category: string;
   subcategory: string | null;
   area: string | null;
+  address: string | null;
   status: string;
   completedAt: string;
 };

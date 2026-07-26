@@ -75,10 +75,13 @@ enum NOTIFICATIONSTATUS {
 }
 
 enum MEETINGTYPE {
+  INVITATION
   CONSTITUENCY_VISIT
   DEPARTMENT_VISIT
   CITIZEN_MEET
   PERSONAL_MEET
+  PARTY_MEET
+  OFFICE_MEET
 }
 
 enum MEETINGAPPROVALSTATUS {
@@ -101,6 +104,8 @@ enum MLAPAMEETINGTYPE {
   DEPARTMENT_VISIT
   CITIZEN_MEET
   PERSONAL_MEET
+  PARTY_MEET
+  OFFICE_MEET
 }
 
 enum INVITATIONSUBTYPE {
@@ -163,6 +168,7 @@ model complaint {
   subcategoryId         Int
   subcategory           subcategory                    @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
   description           String                         @db.LongText
+  address               String?                        @db.LongText
   status                COMPLAINTSTATUS                @default(PENDING)
   plannedCompletionDate DateTime?
   lat                   Float
@@ -356,6 +362,7 @@ model meeting {
   assignedToUserId   String
   assignedToUser     user                  @relation("MeetingAssignedTo", fields: [assignedToUserId], references: [id], onDelete: Cascade)
   type               MEETINGTYPE
+  invitationSubtype  INVITATIONSUBTYPE?
   purpose            String                @db.LongText
   meetingDateTime    DateTime?
   meetingPlace       String?
@@ -374,6 +381,8 @@ model meeting {
   contactMobile      String?
   contactDesignation String?
   contactDepartment  String?
+  partyMeetDetails   String?               @db.LongText
+  selectedStaffNames String?               @db.LongText
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
 

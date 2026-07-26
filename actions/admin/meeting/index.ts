@@ -15,6 +15,8 @@ export type {
 
 export { getAdminMeetingAssigneesAction } from "./getAdminMeetingAssigneesAction";
 export { getAdminMeetingsDashboardAction } from "./getAdminMeetingsDashboardAction";
+export { getAdminMeetingDetailAction } from "./getAdminMeetingDetailAction";
+export type { AdminMeetingDetailResult } from "./getAdminMeetingDetailAction";
 export {
   lookupAdminMeetingCitizenByMobileAction,
   lookupAdminMeetingContactByMobileAction,

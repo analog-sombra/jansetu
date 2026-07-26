@@ -55,6 +55,8 @@ export function getMlaPaMeetingTypeLabel(type: MLAPAMEETINGTYPE): string {
     DEPARTMENT_VISIT: "Department Visit",
     CITIZEN_MEET: "Citizen Meet",
     PERSONAL_MEET: "Personal Meet",
+    PARTY_MEET: "Party Meet",
+    OFFICE_MEET: "Office Meet",
   };
 
   return labels[type] ?? type;

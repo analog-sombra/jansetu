@@ -18,6 +18,7 @@ export async function getAdminMeetingsDashboardAction(): Promise<AdminMeetingsDa
         createdByUserId: true,
         assignedToUserId: true,
         type: true,
+        invitationSubtype: true,
         purpose: true,
         meetingDateTime: true,
         meetingPlace: true,
@@ -36,6 +37,8 @@ export async function getAdminMeetingsDashboardAction(): Promise<AdminMeetingsDa
         contactMobile: true,
         contactDesignation: true,
         contactDepartment: true,
+        partyMeetDetails: true,
+        selectedStaffNames: true,
         createdAt: true,
         updatedAt: true,
         createdByUser: {

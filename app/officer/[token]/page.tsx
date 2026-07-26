@@ -211,6 +211,10 @@ export default function OfficerTokenPage() {
         header: t("officer.completedTableArea"),
         cell: (info) => info.getValue() || "-",
       }),
+      completedAssignmentColumnHelper.accessor("address", {
+        header: "Address",
+        cell: (info) => info.getValue()?.trim() || "-",
+      }),
       completedAssignmentColumnHelper.accessor("status", {
         header: t("officer.completedTableStatus"),
         cell: (info) => formatLabel(info.getValue()),

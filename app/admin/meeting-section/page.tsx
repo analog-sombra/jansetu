@@ -68,6 +68,16 @@ function formatTime(value: string | null) {
   return `${hours}:${minutes}`;
 }
 
+function formatTime12Hour(value: string | null) {
+  if (!value) return "-";
+  const date = new Date(value);
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const period = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${period}`;
+}
+
 function dateKeyFromIso(value: string | null) {
   if (!value) return "";
   const date = new Date(value);
@@ -301,6 +311,11 @@ export default function MeetingSectionPage() {
     {
       title: t("meetingSection.col.dateTime"),
       key: "meetingDateTime",
+      sorter: (a, b) => {
+        const dateA = new Date(a.meetingDateTime ?? a.preferredDateTime ?? 0).getTime();
+        const dateB = new Date(b.meetingDateTime ?? b.preferredDateTime ?? 0).getTime();
+        return dateA - dateB;
+      },
       render: (_, row) =>
         formatDateTime(row.meetingDateTime ?? row.preferredDateTime),
     },
@@ -395,7 +410,7 @@ export default function MeetingSectionPage() {
       key: "selectedDateTime",
       render: (_, row) => (
         <Text style={{ fontSize: 11, whiteSpace: "nowrap" }}>
-          {formatTime(row.meetingDateTime ?? row.preferredDateTime)}
+          {formatTime12Hour(row.meetingDateTime ?? row.preferredDateTime)}
         </Text>
       ),
     },

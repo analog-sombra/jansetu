@@ -69,6 +69,7 @@ export async function lookupAdminMeetingContactByMobileAction(
 
   try {
     if (departmentVisit) {
+      // For department visit, look for an officer first
       const officer = await prisma.officer.findFirst({
         where: { phone: mobile },
         select: {
@@ -82,19 +83,39 @@ export async function lookupAdminMeetingContactByMobileAction(
         },
       });
 
-      if (!officer) {
-        return { ok: true, found: false };
+      if (officer) {
+        return {
+          ok: true,
+          found: true,
+          contact: {
+            name: officer.name,
+            designation: officer.designation,
+            department: officer.department?.name ?? null,
+          },
+        };
       }
 
-      return {
-        ok: true,
-        found: true,
-        contact: {
-          name: officer.name,
-          designation: officer.designation,
-          department: officer.department.name,
+      // If no officer found, try to find a user with that mobile
+      const user = await prisma.user.findFirst({
+        where: { mobile },
+        select: {
+          name: true,
         },
-      };
+      });
+
+      if (user?.name) {
+        return {
+          ok: true,
+          found: true,
+          contact: {
+            name: user.name,
+            designation: null,
+            department: null,
+          },
+        };
+      }
+
+      return { ok: true, found: false };
     }
 
     const user = await prisma.user.findFirst({
@@ -117,7 +138,8 @@ export async function lookupAdminMeetingContactByMobileAction(
         department: null,
       },
     };
-  } catch {
+  } catch (error) {
+    console.error("Contact lookup error:", error);
     return { ok: false, error: "Unable to lookup contact." };
   }
 }

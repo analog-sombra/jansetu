@@ -86,14 +86,16 @@ export default function LoginForm() {
 
     if (
       result.role === "ADMIN" ||
-      result.role === "MLA" ||
       result.role === "MLA_SECRETARY" ||
       result.role === "SYSTEM"
     ) {
       router.push("/admin");
       return;
     }
-
+    if (result.role === "MLA") {
+      router.push("/mla");
+      return;
+    }
 
     if (result.role === "MLA_PA" || result.role === "CAMP_HEAD") {
       router.push("/mla-pa");

@@ -12,6 +12,7 @@ type ComplaintClusterInput = {
   area: string | null;
   lat: number;
   lng: number;
+  status: string;
 };
 
 function normalizePart(value: string | null | undefined): string {
@@ -67,18 +68,44 @@ export function getBucketPrecisionImpact(lat: number, lng: number) {
 export async function attachComplaintToCluster(
   tx: Prisma.TransactionClient,
   input: ComplaintClusterInput,
-): Promise<string> {
+): Promise<string | null> {
   const departmentName = getDepartmentName(input.categoryName);
   const { latBucket, lngBucket } = get500mBuckets(input.lat, input.lng);
   const areaKey = normalizePart(input.area);
+  
+  // Create cluster ID based only on category and location radius
   const clusterId = [
-    normalizePart(departmentName),
     normalizePart(input.categoryName),
-    normalizePart(input.subcategoryName),
-    areaKey,
     `${latBucket}:${lngBucket}`,
   ].join("|");
 
+  // Check if there's an existing complaint with the same category in the same or neighboring 500m radius
+  // Search in a 3x3 grid of buckets (current ±1) to account for complaints near bucket boundaries
+  const existingCluster = await tx.complaint_cluster.findFirst({
+    where: {
+      category: input.categoryName,
+      latBucket: {
+        gte: latBucket - 1,
+        lte: latBucket + 1,
+      },
+      lngBucket: {
+        gte: lngBucket - 1,
+        lte: lngBucket + 1,
+      },
+    },
+  });
+
+  // Logic:
+  // - If complaint is CLOSED -> create new cluster
+  // - If complaint is NOT CLOSED (open) and existing cluster exists -> add to cluster
+  // - If complaint is NOT CLOSED and no existing cluster -> no cluster
+  const isComplaintClosed = input.status === "CLOSED";
+
+  if (!isComplaintClosed && !existingCluster) {
+    return null;
+  }
+
+  // If complaint is CLOSED or cluster exists -> create/add cluster
   await tx.complaint_cluster.create({
     data: {
       complaintId: input.complaintId,

@@ -12,6 +12,7 @@ export type CampComplaintInput = {
   categoryId: number;
   subcategoryId: number;
   description: string;
+  complaintAddress: string;
   affectedCitizensCount: string;
   area?: string;
   lat: string;
@@ -81,6 +82,7 @@ export type CampComplaintDetail = {
   category: string;
   subcategory: string | null;
   description: string;
+  complaintAddress: string | null;
   affectedCitizensCount: number;
   status: string;
   plannedCompletionDate: string | null;

@@ -27,28 +27,46 @@ const ADMIN_NAV_LINKS = [
   { href: "/admin/complaint", labelKey: "nav.adminComplaint" },
   { href: "/admin/department", labelKey: "nav.adminDepartment" },
   { href: "/admin/category", labelKey: "nav.adminCategory" },
-  { href: "/admin/queue-demo", labelKey: "nav.adminQueueDemo" },
-  { href: "/admin/escalation-demo", labelKey: "nav.adminEscalationDemo" },
+  { href: "/admin/queue", labelKey: "nav.adminQueue" },
+  { href: "/admin/escalation", labelKey: "nav.adminEscalation" },
   {
-    href: "/admin/priority-cases-demo",
-    labelKey: "nav.adminPriorityCasesDemo",
+    href: "/admin/priority-cases",
+    labelKey: "nav.adminPriorityCases",
   },
   { href: "/admin/create-meeting", labelKey: "nav.adminCreateMeeting" },
   { href: "/admin/meeting-section", labelKey: "nav.adminMeetingSection" },
 ];
 
-const REPORT_NAV_LINKS = [
-  { href: "/report/meeting-calendar", labelKey: "nav.reportMeetingCalendar" },
-  { href: "/report/demo", labelKey: "nav.mlaReport" },
+const MLA_NAV_LINKS = [
+  { href: "/mla/dashboard", labelKey: "nav.adminDashboard" },
+  { href: "/mla/complaint", labelKey: "nav.adminComplaint" },
+  { href: "/mla/queue", labelKey: "nav.adminQueue" },
+  { href: "/mla/escalation", labelKey: "nav.adminEscalation" },
+  {
+    href: "/mla/priority-cases",
+    labelKey: "nav.adminPriorityCases",
+  },
+  { href: "/mla/create-meeting", labelKey: "nav.adminCreateMeeting" },
+  { href: "/mla/meeting-section", labelKey: "nav.adminMeetingSection" },
 ];
 
 const MLA_PA_NAV_LINKS = [
   { href: "/mla-pa/complaint", labelKey: "nav.mlaPaComplaint" },
+  { href: "/mla-pa/cluster-complaints", labelKey: "nav.mlaPaClusters" },
   { href: "/mla-pa/meeting-section", labelKey: "nav.mlaPaMeetingSection" },
   { href: "/mla-pa/create-meeting", labelKey: "nav.mlaPaCreateMeeting" },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+interface AppShellProps {
+  children: React.ReactNode;
+  user?: {
+    name?: string;
+    role?: string;
+    email?: string;
+  };
+}
+
+export function AppShell({ children, user }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
@@ -56,7 +74,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isAuthPage =
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
-    pathname.startsWith("/officer");
+    pathname.startsWith("/officer") ||
+    pathname.startsWith("/adminlogin");
   const isHomePage = pathname === "/";
   const showPrivateNav = !isAuthPage && !isHomePage;
 
@@ -69,12 +88,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return MLA_PA_NAV_LINKS;
     }
 
-    if (pathname.startsWith("/camp")) {
-      return CAMP_NAV_LINKS;
+    if (pathname.startsWith("/mla")) {
+      return MLA_NAV_LINKS;
     }
 
-    if (pathname.startsWith("/report")) {
-      return REPORT_NAV_LINKS;
+    if (pathname.startsWith("/camp")) {
+      return CAMP_NAV_LINKS;
     }
 
     return CITIZEN_NAV_LINKS;
@@ -91,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     try {
       await logoutAction();
     } finally {
-      router.replace("/login");
+      router.replace("/");
       router.refresh();
     }
   }
@@ -118,7 +137,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           flexShrink: 0,
         }}
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "10px 16px" }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "10px 16px" }}>
           <Row align="middle" justify="space-between" wrap={false}>
             <Col flex="auto" style={{ minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -174,10 +193,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             </Col>
+
             <Col flex="none">
               <Space size="small">
                 {isHomePage && (
-                  <Link href="/login">
+                  <Link href="/adminlogin">
                     <Button
                       size="small"
                       style={{
@@ -208,6 +228,67 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               </Space>
             </Col>
+            <div className="w-6"></div>
+            {/* User Info Box - Only show if logged in */}
+            {showPrivateNav && user?.name && (
+              <Col flex="none" style={{ marginRight: 16 }}>
+                <div
+                  style={{
+                    background: "rgba(255, 255, 255, 0.1)",
+                    border: "1px solid rgba(255, 255, 255, 0.25)",
+                    borderRadius: 6,
+                    padding: "8px 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  {/* <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: "#FF9933",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: 14,
+                    }}
+                  >
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div> */}
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
+                    <Text
+                      style={{
+                        color: "#ffffff",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        margin: 0,
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {user.name}
+                    </Text>
+                    <Text
+                      style={{
+                        color: "rgba(255,255,255,0.7)",
+                        fontSize: 10,
+                        margin: 0,
+                        lineHeight: 1.2,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {user.role?.toLowerCase().replace(/_/g, " ")}
+                    </Text>
+                  </div>
+                </div>
+              </Col>
+            )}
           </Row>
         </div>
       </Header>
@@ -224,7 +305,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div
             className="nav-scroll"
             style={{
-              maxWidth: 1200,
+              maxWidth: 1400,
               margin: "0 auto",
               padding: "0 16px",
               display: "flex",
@@ -267,7 +348,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Content style={{ flexGrow: 1 }}>
         <div
           style={{
-            maxWidth: 1200,
+            maxWidth: 1400,
             margin: "0 auto",
             width: "100%",
             padding: "20px 16px",
@@ -286,7 +367,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           flexShrink: 0,
         }}
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
           <Text
             style={{
               color: "rgba(255,255,255,0.75)",
