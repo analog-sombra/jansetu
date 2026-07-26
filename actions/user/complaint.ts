@@ -7,12 +7,14 @@ import { MEDIATYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { attachComplaintToCluster } from "@/lib/complaintCluster";
+import { getComplaintPriority } from "@/lib/complaintPriority";
 
 type AddComplaintActionInput = {
   categoryId: number;
   subcategoryId: number;
   description: string;
   address: string;
+  affectedCitizensCount: number;
   area?: string;
   lat: string;
   lng: string;
@@ -202,9 +204,19 @@ export async function addComplaintAction(
   const subcategoryId = Number(payload.subcategoryId);
   const description = payload.description.trim();
   const address = payload.address.trim() || null;
+  const affectedCitizensCount = Number(payload.affectedCitizensCount);
   const area = payload.area?.trim() || null;
   const lat = Number(payload.lat);
   const lng = Number(payload.lng);
+
+  if (!Number.isInteger(affectedCitizensCount) || affectedCitizensCount <= 0) {
+    return {
+      ok: false,
+      error: "Affected citizens count must be a positive integer.",
+    };
+  }
+
+  const priority = getComplaintPriority(affectedCitizensCount);
 
   // Validate category exists in database
   const categoryRecord = await prisma.category.findUnique({
@@ -251,6 +263,8 @@ export async function addComplaintAction(
           subcategoryId,
           description,
           address,
+          affectedCitizensCount,
+          priority,
           area,
           lat,
           lng,

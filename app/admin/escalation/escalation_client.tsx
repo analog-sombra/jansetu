@@ -1,95 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Alert,
   Button,
   Card,
   Col,
+  Input,
   Row,
+  Select,
   Space,
   Statistic,
   Table,
   Tag,
   Tooltip,
   Typography,
-} from "antd";
+} from "antd"
 import type { TableColumnsType } from "antd";
 import {
   AdminEscalationRecord,
+  updateEscalationPrioritiesAction,
 } from "@/actions/admin";
 import { useLanguage } from "@/components/provider/language_provider";
-
-const CATEGORY_KEY_BY_NORMALIZED: Record<string, string> = {
-  road: "road",
-  roads: "road",
-  water: "water",
-  electricity: "electricity",
-  power: "electricity",
-  sanitation: "sanitation",
-  health: "health",
-  publicsafety: "publicSafety",
-  safety: "publicSafety",
-  other: "other",
-};
-
-const SUBCATEGORY_KEY_BY_NORMALIZED: Record<string, string> = {
-  pothole: "pothole",
-  roaddamage: "roadDamage",
-  missingsignage: "missingSignage",
-  streetlightnotworking: "streetlightNotWorking",
-  roaddebris: "roadDebris",
-  accidentsite: "accidentSite",
-  nowatersupply: "noWaterSupply",
-  lowpressure: "lowPressure",
-  waterleakage: "waterLeakage",
-  waterqualityissue: "waterQualityIssue",
-  pipelinedamage: "pipelineDamage",
-  watercontamination: "waterContamination",
-  powercut: "powerCut",
-  powerfluctuation: "powerFluctuation",
-  brokenpole: "brokenPole",
-  damagedwire: "damagedWire",
-  illegalconnection: "illegalConnection",
-  meterissue: "meterIssue",
-  garbagenotcollected: "garbageNotCollected",
-  opendefecation: "openDefecation",
-  dirtypublicarea: "dirtyPublicArea",
-  drainclogged: "drainClogged",
-  sweepingnotdone: "sweepingNotDone",
-  publictoiletissue: "publicToiletIssue",
-  diseaseoutbreak: "diseaseOutbreak",
-  lackofvaccination: "lackOfVaccination",
-  hospitalissue: "hospitalIssue",
-  ambulanceservice: "ambulanceService",
-  healthcenterissue: "healthCenterIssue",
-  medicalstaffissue: "medicalStaffIssue",
-  crimereport: "crimeReport",
-  unsafearea: "unsafeArea",
-  trafficviolation: "trafficViolation",
-  policeresponseissue: "policeResponseIssue",
-  securityconcern: "securityConcern",
-  firerisk: "fireRisk",
-  other: "other",
-  generalcomplaint: "generalComplaint",
-};
-
-function normalizeLabel(value: string) {
-  return value.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-}
-
-function getLocalizedCategory(category: string, t: (key: string) => string) {
-  const key = CATEGORY_KEY_BY_NORMALIZED[normalizeLabel(category)];
-  return key ? t(`category.${key}`) : category;
-}
-
-function getLocalizedSubcategory(
-  subcategory: string,
-  t: (key: string) => string,
-) {
-  const key = SUBCATEGORY_KEY_BY_NORMALIZED[normalizeLabel(subcategory)];
-  return key ? t(`subcategory.${key}`) : subcategory;
-}
 
 const { Title, Text } = Typography;
 
@@ -135,7 +69,93 @@ export default function EscalationClient({
   initialEscalations,
   initialError,
 }: EscalationClientProps) {
+  const router = useRouter();
   const { t } = useLanguage();
+  const [updatingPriority, setUpdatingPriority] = useState(false);
+  const [actionAlert, setActionAlert] = useState<{
+    type: "error" | "success" | "warning" | "info";
+    text: string;
+  } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  const [triggerFilter, setTriggerFilter] = useState<string | undefined>(undefined);
+  const [areaFilter, setAreaFilter] = useState("");
+  const [appliedFilter, setAppliedFilter] = useState<{
+    status?: string;
+    category?: string;
+    trigger?: string;
+    area?: string;
+  }>({});
+
+  const statusOptions = useMemo(
+    () => Array.from(new Set(initialEscalations.map((item) => item.status))),
+    [initialEscalations],
+  );
+
+  const categoryOptions = useMemo(
+    () => Array.from(new Set(initialEscalations.map((item) => item.category))),
+    [initialEscalations],
+  );
+
+  const triggerOptions = useMemo(
+    () => Array.from(new Set(initialEscalations.map((item) => item.trigger))),
+    [initialEscalations],
+  );
+
+  function applyFilters() {
+    setAppliedFilter({
+      status: statusFilter,
+      category: categoryFilter,
+      trigger: triggerFilter,
+      area: areaFilter.trim() || undefined,
+    });
+  }
+
+  const filteredEscalations = useMemo(() => {
+    return initialEscalations.filter((item) => {
+      if (appliedFilter.status && item.status !== appliedFilter.status) {
+        return false;
+      }
+      if (appliedFilter.category && item.category !== appliedFilter.category) {
+        return false;
+      }
+      if (appliedFilter.trigger && item.trigger !== appliedFilter.trigger) {
+        return false;
+      }
+      if (
+        appliedFilter.area &&
+        !(item.area ?? "").toLowerCase().includes(appliedFilter.area.toLowerCase())
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [appliedFilter, initialEscalations]);
+
+  async function handleUpdatePriority() {
+    setUpdatingPriority(true);
+    setActionAlert(null);
+
+    try {
+      const result = await updateEscalationPrioritiesAction();
+
+      if (!result.ok) {
+        setActionAlert({
+          type: "error",
+          text: result.error ?? "Unable to update priorities.",
+        });
+        return;
+      }
+
+      setActionAlert({
+        type: "success",
+        text: `Priority updated for ${result.updatedComplaints} complaints. Skipped ${result.skippedComplaints} already updated today. Total +${result.totalPriorityAdded}.`,
+      });
+      router.refresh();
+    } finally {
+      setUpdatingPriority(false);
+    }
+  }
 
   function sendReminder(row: AdminEscalationRecord) {
     const message = [
@@ -161,13 +181,13 @@ export default function EscalationClient({
     window.open(whatsappLink, "_blank", "noopener,noreferrer");
   }
 
-  const escalatedCount = initialEscalations.filter(
+  const escalatedCount = filteredEscalations.filter(
     (row) => row.trigger === "AUTO_ESCALATED_7D",
   ).length;
-  const reminderCount = initialEscalations.filter(
+  const reminderCount = filteredEscalations.filter(
     (row) => row.trigger === "REMINDER_48H",
   ).length;
-  const oldestHours = initialEscalations.reduce(
+  const oldestHours = filteredEscalations.reduce(
     (acc, row) => Math.max(acc, row.ageHours),
     0,
   );
@@ -186,12 +206,10 @@ export default function EscalationClient({
       key: "category",
       render: (_, row) => (
         <div>
-          <Text strong>{getLocalizedCategory(row.category, t)}</Text>
+          <Text strong>{row.category}</Text>
           <div>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {row.subcategory
-                ? getLocalizedSubcategory(row.subcategory, t)
-                : "General"}
+              {row.subcategory || "General"}
             </Text>
           </div>
         </div>
@@ -288,11 +306,35 @@ export default function EscalationClient({
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, color: "#1a3c6e" }}>
-          {t("admin.escalation.title")}
-        </Title>
-        <Text type="secondary">{t("admin.escalation.subtitle")}</Text>
+      <div
+        style={{
+          marginBottom: 24,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <Title level={3} style={{ margin: 0, color: "#1a3c6e" }}>
+            {t("admin.escalation.title")}
+          </Title>
+          {/* <Text type="secondary">{t("admin.escalation.subtitle")}</Text> */}
+        </div>
+
+        <Button
+          type="primary"
+          loading={updatingPriority}
+          onClick={handleUpdatePriority}
+          style={{
+            background: "#7c3aed",
+            borderColor: "#7c3aed",
+            fontWeight: 700,
+          }}
+        >
+          Update Priority (+5/day)
+        </Button>
       </div>
 
       {initialError && (
@@ -301,6 +343,17 @@ export default function EscalationClient({
           showIcon
           message={initialError}
           style={{ marginBottom: 16 }}
+        />
+      )}
+
+      {actionAlert && (
+        <Alert
+          type={actionAlert.type}
+          showIcon
+          message={actionAlert.text}
+          style={{ marginBottom: 16 }}
+          closable
+          onClose={() => setActionAlert(null)}
         />
       )}
 
@@ -322,6 +375,93 @@ export default function EscalationClient({
         </Col>
       </Row>
 
+      <Card style={{ marginBottom: 20 }}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={6}>
+            <div>
+              <Text style={{ fontSize: 12, color: "#888", fontWeight: 700 }}>
+                Status
+              </Text>
+              <Select
+                value={statusFilter || undefined}
+                onChange={(val) => setStatusFilter(val)}
+                placeholder="Filter by status"
+                allowClear
+                options={statusOptions.map((status) => ({
+                  label: status.replaceAll("_", " "),
+                  value: status,
+                }))}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </div>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <div>
+              <Text style={{ fontSize: 12, color: "#888", fontWeight: 700 }}>
+                Category
+              </Text>
+              <Select
+                value={categoryFilter || undefined}
+                onChange={(val) => setCategoryFilter(val)}
+                placeholder="Filter by category"
+                allowClear
+                options={categoryOptions.map((category) => ({
+                  label: category,
+                  value: category,
+                }))}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </div>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <div>
+              <Text style={{ fontSize: 12, color: "#888", fontWeight: 700 }}>
+                Trigger
+              </Text>
+              <Select
+                value={triggerFilter || undefined}
+                onChange={(val) => setTriggerFilter(val)}
+                placeholder="Filter by trigger"
+                allowClear
+                options={triggerOptions.map((trigger) => ({
+                  label: trigger.replaceAll("_", " "),
+                  value: trigger,
+                }))}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </div>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <div>
+              <Text style={{ fontSize: 12, color: "#888", fontWeight: 700 }}>
+                Area/Locality
+              </Text>
+              <Input
+                value={areaFilter}
+                onChange={(e) => setAreaFilter(e.target.value)}
+                placeholder="Search by area"
+                style={{ marginTop: 4 }}
+              />
+            </div>
+          </Col>
+          <Col xs={24}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Button
+                type="primary"
+                onClick={applyFilters}
+                style={{
+                  background: "#1a3c6e",
+                  borderColor: "#1a3c6e",
+                  fontWeight: 700,
+                }}
+              >
+                Apply Filters
+              </Button>
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
       <Card
         title={
           <span style={{ color: "#1a3c6e", fontWeight: 700 }}>
@@ -339,7 +479,7 @@ export default function EscalationClient({
         <Table
           rowKey="id"
           columns={columns}
-          dataSource={initialEscalations}
+          dataSource={filteredEscalations}
           size="small"
           scroll={{ x: "max-content" }}
           pagination={{

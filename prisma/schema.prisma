@@ -181,6 +181,7 @@ model complaint {
   reviews               review[]
   disputes              dispute[]
   affectedCitizensCount Int                            @default(1)
+  priority              Int                            @default(10)
   createdAt             DateTime                       @default(now())
   updatedAt             DateTime                       @updatedAt
   complaintClusters     complaint_cluster[]

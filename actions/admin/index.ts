@@ -12,6 +12,11 @@ export type {
   AdminEscalationTrigger,
   AdminEscalationRecord,
   AdminEscalationQueueResult,
+  AdminPriorityCaseGroup,
+  AdminPriorityCaseItem,
+  AdminPriorityCasesResult,
+  UpdateEscalationPrioritiesResult,
+  UpdateAdminComplaintPriorityResult,
   AdminComplaintDetailResult,
   AdminAssignmentResult,
   AdminQueryResult,
@@ -32,7 +37,12 @@ export type {
 
 export { getAdminComplaintsDashboardAction } from "./getAdminComplaintsDashboardAction";
 export { getAdminEscalationQueueAction } from "./getAdminEscalationQueueAction";
+export { getAdminPriorityCasesAction } from "./getAdminPriorityCasesAction";
+export { getCategoriesAndSubcategoriesAction } from "./getCategoriesAndSubcategoriesAction";
+export type { CategoryData, SubcategoryData, CategoriesAndSubcategoriesResult } from "./getCategoriesAndSubcategoriesAction";
+export { updateEscalationPrioritiesAction } from "./updateEscalationPrioritiesAction";
 export { getAdminComplaintDetailAction } from "./getAdminComplaintDetailAction";
+export { updateAdminComplaintPriorityAction } from "./updateAdminComplaintPriorityAction";
 export { assignAdminComplaintOfficerAction } from "./assignAdminComplaintOfficerAction";
 export { raiseAdminComplaintQueryAction } from "./raiseAdminComplaintQueryAction";
 export { rejectComplaintAction } from "./rejectComplaintAction";

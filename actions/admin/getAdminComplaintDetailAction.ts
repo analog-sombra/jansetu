@@ -35,6 +35,7 @@ export async function getAdminComplaintDetailAction(
         where: { id: complaintId },
         select: {
           id: true,
+          priority: true,
           category: {
             select: {
               name: true,
@@ -225,6 +226,7 @@ export async function getAdminComplaintDetailAction(
       ok: true,
       complaint: {
         id: complaint.id,
+        priority: complaint.priority,
         user: complaint.user,
         category: complaint.category.name,
         address: complaint.address ?? null,

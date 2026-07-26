@@ -23,6 +23,7 @@ import {
   assignAdminComplaintOfficerAction,
   getAdminComplaintDetailAction,
   raiseAdminComplaintQueryAction,
+  updateAdminComplaintPriorityAction,
   type AdminComplaintDetail,
   type AdminOfficerSummary,
 } from "@/actions/admin";
@@ -67,6 +68,7 @@ export default function AdminComplaintDetailPage() {
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [querying, setQuerying] = useState(false);
+  const [updatingPriority, setUpdatingPriority] = useState(false);
   const [assignedOfficerToken, setAssignedOfficerToken] = useState("");
   const [alert, setAlert] = useState<{
     type: "error" | "success" | "warning" | "info";
@@ -350,6 +352,34 @@ export default function AdminComplaintDetailPage() {
     await loadData();
   }
 
+  async function addPriorityBy40() {
+    if (!complaint) {
+      return;
+    }
+
+    setUpdatingPriority(true);
+    setAlert(null);
+
+    const result = await updateAdminComplaintPriorityAction(complaint.id);
+
+    setUpdatingPriority(false);
+
+    if (!result.ok) {
+      setAlert({
+        type: "error",
+        text: result.error ?? "Unable to update complaint priority.",
+      });
+      return;
+    }
+
+    setAlert({
+      type: "success",
+      text: `Priority updated to ${result.priority} for complaint #${result.complaintId}.`,
+    });
+
+    await loadData();
+  }
+
   if (loading) {
     return (
       <div>
@@ -533,6 +563,15 @@ export default function AdminComplaintDetailPage() {
                 {complaint.cluster
                   ? complaint.cluster.totalAffectedCitizensCount
                   : complaint.affectedCitizensCount}
+              </p>
+            </div>
+
+            <div className="h-4" />
+
+            <div className="bg-gray-100 rounded-md p-3 flex-1">
+              <h1 className="text-sm font-normal">Priority</h1>
+              <p className="text-xs font-semibold text-gray-500">
+                {complaint.priority}
               </p>
             </div>
 
@@ -965,6 +1004,34 @@ export default function AdminComplaintDetailPage() {
 
         <Col xs={24} lg={8}>
           <Space orientation="vertical" style={{ width: "100%" }} size="middle">
+            <Card
+              title={
+                <span style={{ color: "#7c3aed", fontWeight: 700 }}>
+                  Complaint Priority
+                </span>
+              }
+              style={{ borderRadius: 6, borderTop: "3px solid #7c3aed" }}
+              size="small"
+            >
+              <Button
+                type="primary"
+                block
+                loading={updatingPriority}
+                onClick={addPriorityBy40}
+                style={{
+                  background: "#7c3aed",
+                  borderColor: "#7c3aed",
+                  color: "#fff",
+                  fontWeight: 700,
+                }}
+              >
+                Mark as Prior
+              </Button>
+              <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>
+                Current priority: {complaint.priority}
+              </div>
+            </Card>
+
             <Card
               title={
                 <span style={{ color: "#1a3c6e", fontWeight: 700 }}>

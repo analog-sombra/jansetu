@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { attachComplaintToCluster } from "@/lib/complaintCluster";
+import { getComplaintPriority } from "@/lib/complaintPriority";
 import {
   requireCampUser,
   validateCitizenInput,
@@ -38,6 +39,7 @@ export async function createCampComplaintAction(
   const description = payload.complaint.description.trim();
   const complaintAddress = payload.complaint.complaintAddress.trim() || null;
   const affectedCitizensCount = Number(payload.complaint.affectedCitizensCount);
+  const priority = getComplaintPriority(affectedCitizensCount);
   const area = payload.complaint.area?.trim() || null;
   const lat = Number(payload.complaint.lat);
   const lng = Number(payload.complaint.lng);
@@ -113,6 +115,7 @@ export async function createCampComplaintAction(
           description,
           address: complaintAddress,
           affectedCitizensCount,
+          priority,
           area,
           lat,
           lng,

@@ -32,6 +32,13 @@ const complaintValidationSchema = object({
     minLength(20, "Description must be at least 20 characters"),
     maxLength(1000, "Description must be at most 1000 characters"),
   ),
+  affectedCitizensCount: custom(
+    (v): boolean => {
+      const num = typeof v === "string" ? Number(v) : (v as number);
+      return Number.isInteger(num) && num > 0;
+    },
+    "Affected citizens count must be a positive integer",
+  ),
   area: pipe(
     string(),
     trim(),

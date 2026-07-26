@@ -70,6 +70,7 @@ export type AdminOfficerAssignmentHistorySummary = {
 
 export type AdminComplaintDetail = {
   id: number;
+  priority: number;
   user: {
     name: string | null;
     address: string | null;
@@ -157,6 +158,52 @@ export type AdminEscalationQueueResult =
       error: string;
     };
 
+export type AdminPriorityCaseGroup = {
+  key: string;
+  area: string;
+  category: string;
+  subcategory: string;
+  complaintIds: number[];
+  pendingCount: number;
+  escalatedCount: number;
+  newestAt: string;
+  priorityScore: number;
+};
+
+export type AdminPriorityCaseItem = {
+  id: number;
+  area: string;
+  category: string;
+  subcategory: string | null;
+  status: string;
+  priority: number;
+  createdAt: string;
+};
+
+export type AdminPriorityCasesResult =
+  | {
+      ok: true;
+      cases: AdminPriorityCaseItem[];
+    }
+  | AdminAuthResult
+  | {
+      ok: false;
+      error: string;
+    };
+
+export type UpdateEscalationPrioritiesResult =
+  | {
+      ok: true;
+      updatedComplaints: number;
+      totalPriorityAdded: number;
+      skippedComplaints: number;
+    }
+  | AdminAuthResult
+  | {
+      ok: false;
+      error: string;
+    };
+
 export type AdminComplaintDetailResult =
   | {
       ok: true;
@@ -184,6 +231,18 @@ export type AdminAssignmentResult =
 export type AdminQueryResult =
   | {
       ok: true;
+    }
+  | AdminAuthResult
+  | {
+      ok: false;
+      error: string;
+    };
+
+export type UpdateAdminComplaintPriorityResult =
+  | {
+      ok: true;
+      complaintId: number;
+      priority: number;
     }
   | AdminAuthResult
   | {
