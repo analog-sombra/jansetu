@@ -150,7 +150,7 @@ export default function AdminComplaintsClient({
         id: "actions",
         header: t("admin.table.action"),
         cell: (info) => (
-          <Link href={`/admin/complaint/${info.row.original.id}`}>
+          <Link href={`/mla/complaint/${info.row.original.id}`}>
             {t("admin.table.view")}
           </Link>
         ),

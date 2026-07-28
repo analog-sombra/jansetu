@@ -2,12 +2,27 @@
 
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
+import { getAuthenticatedUser } from "@/lib/auth/session";
 import { AdminMeetingsDashboardResult } from "./types";
 
 export async function getAdminMeetingsDashboardAction(): Promise<AdminMeetingsDashboardResult> {
-  const auth = await requireAdminUser();
-  if (!auth.ok) {
-    return auth;
+  // Allow both admin users and MLA-PA users to access this
+  const adminAuth = await requireAdminUser();
+  let user = adminAuth.ok ? adminAuth.user : null;
+
+  if (!user) {
+    // If not admin, check if MLA_PA user
+    const currentUser = await getAuthenticatedUser();
+    if (
+      !currentUser ||
+      (currentUser.role !== "MLA_PA" && currentUser.role !== "CAMP_HEAD")
+    ) {
+      return {
+        ok: false,
+        error: "You are not authorized for this section.",
+      };
+    }
+    user = currentUser;
   }
 
   try {
@@ -17,8 +32,11 @@ export async function getAdminMeetingsDashboardAction(): Promise<AdminMeetingsDa
         id: true,
         createdByUserId: true,
         assignedToUserId: true,
+        campHeadUserId: true,
         type: true,
         invitationSubtype: true,
+        giftToCarry: true,
+        selfDraftedLetter: true,
         purpose: true,
         meetingDateTime: true,
         meetingPlace: true,
@@ -57,6 +75,14 @@ export async function getAdminMeetingsDashboardAction(): Promise<AdminMeetingsDa
             role: true,
           },
         },
+        campHeadUser: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true,
+            role: true,
+          },
+        },
       },
     });
 
@@ -71,12 +97,18 @@ export async function getAdminMeetingsDashboardAction(): Promise<AdminMeetingsDa
         preferredDateTime: meeting.preferredDateTime?.toISOString() ?? null,
         createdAt: meeting.createdAt.toISOString(),
         updatedAt: meeting.updatedAt.toISOString(),
+        campHeadUser: meeting.campHeadUser ?? undefined,
       })),
     };
-  } catch {
+  } catch (error) {
+    console.error(
+      "[getAdminMeetingsDashboardAction] Error fetching meetings:",
+      error,
+    );
     return {
       ok: false,
-      error: "Unable to fetch meetings.",
+      error:
+        "Unable to fetch meetings. Please ensure database migrations are up to date.",
     };
   }
 }

@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { MEETINGPRIORITY, MEETINGTYPE, INVITATIONSUBTYPE } from "@prisma/client";
+import {
+  MEETINGPRIORITY,
+  MEETINGTYPE,
+  INVITATIONSUBTYPE,
+} from "@prisma/client";
 import {
   Alert,
   Button,
@@ -100,6 +104,12 @@ const PAGE_COPY = {
     priorityMedium: "Medium",
     priorityHigh: "High",
     priorityUrgent: "Urgent",
+    giftToCarry: "Gift To Carry",
+    enterGiftToCarry: "Enter gift details",
+    selfDraftedLetter: "Self Drafted Letter",
+    enterSelfDraftedLetter: "Enter drafted letter text",
+    campHeadUser: "CAMP_HEAD User",
+    selectCampHeadUser: "Select CAMP_HEAD user",
   },
   hi: {
     title: "बैठक बनाएँ",
@@ -170,6 +180,12 @@ const PAGE_COPY = {
     priorityMedium: "मध्यम",
     priorityHigh: "उच्च",
     priorityUrgent: "अत्यावश्यक",
+    giftToCarry: "साथ ले जाने वाला उपहार",
+    enterGiftToCarry: "उपहार विवरण दर्ज करें",
+    selfDraftedLetter: "स्व-ड्राफ्टेड पत्र",
+    enterSelfDraftedLetter: "ड्राफ्टेड पत्र दर्ज करें",
+    campHeadUser: "CAMP_HEAD यूज़र",
+    selectCampHeadUser: "CAMP_HEAD यूज़र चुनें",
   },
   pa: {
     title: "ਮੀਟਿੰਗ ਬਣਾਓ",
@@ -239,6 +255,12 @@ const PAGE_COPY = {
     priorityMedium: "ਮੱਧਮ",
     priorityHigh: "ਉੱਚ",
     priorityUrgent: "ਤੁਰੰਤ",
+    giftToCarry: "ਨਾਲ ਲੈ ਜਾਣ ਵਾਲਾ ਤੋਹਫ਼ਾ",
+    enterGiftToCarry: "ਤੋਹਫ਼ੇ ਦਾ ਵੇਰਵਾ ਦਰਜ ਕਰੋ",
+    selfDraftedLetter: "ਸਵੈ-ਡਰਾਫਟ ਕੀਤਾ ਪੱਤਰ",
+    enterSelfDraftedLetter: "ਡਰਾਫਟ ਪੱਤਰ ਦਰਜ ਕਰੋ",
+    campHeadUser: "CAMP_HEAD ਯੂਜ਼ਰ",
+    selectCampHeadUser: "CAMP_HEAD ਯੂਜ਼ਰ ਚੁਣੋ",
   },
 } as const;
 
@@ -261,8 +283,11 @@ const PRIORITY_OPTIONS: Array<{ value: MEETINGPRIORITY }> = [
 
 type FormValues = {
   assignedToUserId: string;
+  campHeadUserId?: string;
   type: MEETINGTYPE;
   invitationSubtype?: INVITATIONSUBTYPE;
+  giftToCarry?: string;
+  selfDraftedLetter?: string;
   purpose: string;
   meetingDateTime?: { toISOString(): string };
   meetingPlace?: string;
@@ -300,7 +325,10 @@ export default function CreateMeetingPage() {
   const [message, setMessage] = useState<string>("");
 
   const reportUsers = users.filter(
-    (user) => user.role !== "OFFICER" && user.role !== "ADMIN" && user.role !== "CITIZEN",
+    (user) =>
+      user.role !== "OFFICER" &&
+      user.role !== "ADMIN" &&
+      user.role !== "CITIZEN",
   );
   const mobileRules = [
     { required: true },
@@ -463,8 +491,11 @@ export default function CreateMeetingPage() {
     setSaving(true);
     const payload = {
       assignedToUserId: values.assignedToUserId,
+      campHeadUserId: values.campHeadUserId,
       type: values.type,
       invitationSubtype: values.invitationSubtype,
+      giftToCarry: values.giftToCarry,
+      selfDraftedLetter: values.selfDraftedLetter,
       purpose: values.purpose,
       meetingDateTime: values.meetingDateTime?.toISOString(),
       meetingPlace: values.meetingPlace,
@@ -578,18 +609,22 @@ export default function CreateMeetingPage() {
               </Form.Item>
             </Col>
             {isInvitation && (
-              <Col xs={24} md={12}>
-                <Form.Item
-                  label={copy.invitationSubtype}
-                  name="invitationSubtype"
-                  rules={[{ required: true, message: copy.selectInvitationSubtype }]}
-                >
-                  <Select
-                    options={invitationSubtypeOptions}
-                    placeholder={copy.selectInvitationSubtype}
-                  />
-                </Form.Item>
-              </Col>
+              <>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    label={copy.invitationSubtype}
+                    name="invitationSubtype"
+                    rules={[
+                      { required: true, message: copy.selectInvitationSubtype },
+                    ]}
+                  >
+                    <Select
+                      options={invitationSubtypeOptions}
+                      placeholder={copy.selectInvitationSubtype}
+                    />
+                  </Form.Item>
+                </Col>
+              </>
             )}
             <Col xs={24} md={12}>
               <Form.Item
@@ -608,6 +643,25 @@ export default function CreateMeetingPage() {
                 />
               </Form.Item>
             </Col>
+            {isInvitation && (
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label={copy.campHeadUser}
+                  name="campHeadUserId"
+                  rules={[{ required: true, message: copy.selectCampHeadUser }]}
+                >
+                  <Select
+                    showSearch
+                    loading={loadingUsers}
+                    placeholder={copy.selectCampHeadUser}
+                    options={reportUsers.map((user) => ({
+                      label: `${user.name ?? "Unnamed User"} (${user.mobile})`,
+                      value: user.id,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+            )}
             <Col xs={24}>
               <Form.Item
                 label={copy.purpose}
@@ -651,6 +705,41 @@ export default function CreateMeetingPage() {
                     <Input placeholder={copy.enterMeetingPlace} />
                   </Form.Item>
                 </Col>
+                {isInvitation && (
+                  <>
+                    <Col xs={24}>
+                      <Form.Item
+                        label={copy.giftToCarry}
+                        name="giftToCarry"
+                        rules={[
+                          { required: true, message: copy.enterGiftToCarry },
+                        ]}
+                      >
+                        <Input.TextArea
+                          rows={2}
+                          placeholder={copy.enterGiftToCarry}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24}>
+                      <Form.Item
+                        label={copy.selfDraftedLetter}
+                        name="selfDraftedLetter"
+                        rules={[
+                          {
+                            required: true,
+                            message: copy.enterSelfDraftedLetter,
+                          },
+                        ]}
+                      >
+                        <Input.TextArea
+                          rows={4}
+                          placeholder={copy.enterSelfDraftedLetter}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </>
+                )}
               </>
             )}
 

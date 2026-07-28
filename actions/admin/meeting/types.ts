@@ -62,8 +62,11 @@ export type AdminMeetingContactLookupResult =
 
 export type CreateAdminMeetingInput = {
   assignedToUserId: string;
+  campHeadUserId?: string;
   type: MEETINGTYPE;
   invitationSubtype?: INVITATIONSUBTYPE;
+  giftToCarry?: string;
+  selfDraftedLetter?: string;
   purpose: string;
   meetingDateTime?: string;
   meetingPlace?: string;
@@ -101,8 +104,11 @@ export type AdminMeetingDashboardRecord = {
   id: number;
   createdByUserId: string;
   assignedToUserId: string;
+  campHeadUserId: string | null;
   type: MEETINGTYPE;
   invitationSubtype: INVITATIONSUBTYPE | null;
+  giftToCarry: string | null;
+  selfDraftedLetter: string | null;
   purpose: string;
   meetingDateTime: string | null;
   meetingPlace: string | null;
@@ -137,6 +143,12 @@ export type AdminMeetingDashboardRecord = {
     mobile: string;
     role: ROLE;
   };
+  campHeadUser?: {
+    id: string;
+    name: string | null;
+    mobile: string;
+    role: ROLE;
+  } | null;
 };
 
 export type AdminMeetingsDashboardResult =

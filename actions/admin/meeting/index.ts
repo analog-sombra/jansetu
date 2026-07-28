@@ -24,3 +24,4 @@ export {
 export { createAdminMeetingAction } from "./createAdminMeetingAction";
 export { approveAdminMeetingAction } from "./approveAdminMeetingAction";
 export { rejectAdminMeetingAction } from "./rejectAdminMeetingAction";
+export { completeInvitationMeetingAction } from "./completeInvitationMeetingAction";

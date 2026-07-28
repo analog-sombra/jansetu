@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Alert,
   Button,
@@ -17,6 +17,7 @@ import {
   Tag,
   Typography,
 } from "antd";
+import { PrinterOutlined } from "@ant-design/icons";
 import {
   getCampComplaintDetailAction,
   type CampComplaintDetail,
@@ -43,11 +44,18 @@ function isComplaintClosed(status: string) {
 
 export default function CampComplaintDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const [complaint, setComplaint] = useState<CampComplaintDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const complaintId = Number(params.id);
+
+  const handlePrint = () => {
+    if (complaint) {
+      router.push(`/camp/complaints/${complaint.id}/print`);
+    }
+  };
 
   useEffect(() => {
     async function loadComplaint() {
@@ -189,11 +197,21 @@ export default function CampComplaintDetailPage() {
           </Text>
         </div>
 
-        <Link href="/camp/complaints">
-          <Button style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
-            Back to Complaints
+        <div style={{ display: "flex", gap: 10 }}>
+          <Button
+            icon={<PrinterOutlined />}
+            onClick={handlePrint}
+            disabled={!complaint}
+            style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+          >
+            Print / Download PDF
           </Button>
-        </Link>
+          <Link href="/camp/complaints">
+            <Button style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
+              Back to Complaints
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {error && (
@@ -214,19 +232,19 @@ export default function CampComplaintDetailPage() {
       {!loading && complaint && (
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={16}>
-            <Card
-              style={{ borderRadius: 8, borderTop: "3px solid #1a3c6e" }}
-              title={
-                <Space align="center">
-                  <Text strong style={{ color: "#1a3c6e" }}>
-                    #{complaint.id}
-                  </Text>
-                  <Tag color={STATUS_COLORS[complaint.status] ?? "default"}>
-                    {complaint.status.replaceAll("_", " ")}
-                  </Tag>
-                </Space>
-              }
-            >
+              <Card
+                style={{ borderRadius: 8, borderTop: "3px solid #1a3c6e" }}
+                title={
+                  <Space align="center">
+                    <Text strong style={{ color: "#1a3c6e" }}>
+                      #{complaint.id}
+                    </Text>
+                    <Tag color={STATUS_COLORS[complaint.status] ?? "default"}>
+                      {complaint.status.replaceAll("_", " ")}
+                    </Tag>
+                  </Space>
+                }
+              >
               <Row gutter={[12, 12]}>
                 <Col xs={24} sm={12}>
                   <Text type="secondary">Citizen</Text>

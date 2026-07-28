@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button, Card, Col, Row, Typography, Space } from "antd";
 import { useLanguage } from "@/components/provider/language_provider";
 import Image from "next/image";
-
+import "./globals.css";
 const { Title, Paragraph, Text } = Typography;
 
 export default function HomePage() {

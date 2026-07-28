@@ -21,23 +21,31 @@
     "@tanstack/react-table": "^8.21.3",
     "antd": "^6.4.2",
     "dayjs": "^1.11.20",
+    "fs": "0.0.1-security",
+    "net": "^1.0.2",
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "react-hook-form": "^7.76.0",
     "recharts": "^3.9.2",
-    "valibot": "^1.4.0"
+    "tls": "^0.0.1",
+    "valibot": "^1.4.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@jest/globals": "^30.4.1",
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jest": "^30.4.2",
     "prisma": "^7.8.0",
     "tailwindcss": "^4.3.0",
+    "ts-jest": "^29.4.12",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }

@@ -27,7 +27,6 @@ const ADMIN_NAV_LINKS = [
   { href: "/admin/complaint", labelKey: "nav.adminComplaint" },
   { href: "/admin/department", labelKey: "nav.adminDepartment" },
   { href: "/admin/category", labelKey: "nav.adminCategory" },
-  { href: "/admin/queue", labelKey: "nav.adminQueue" },
   { href: "/admin/escalation", labelKey: "nav.adminEscalation" },
   {
     href: "/admin/priority-cases",
@@ -39,22 +38,20 @@ const ADMIN_NAV_LINKS = [
 
 const MLA_NAV_LINKS = [
   { href: "/mla/dashboard", labelKey: "nav.adminDashboard" },
+  { href: "/mla/works", labelKey: "nav.works" },
   { href: "/mla/complaint", labelKey: "nav.adminComplaint" },
-  { href: "/mla/queue", labelKey: "nav.adminQueue" },
   { href: "/mla/escalation", labelKey: "nav.adminEscalation" },
   {
     href: "/mla/priority-cases",
     labelKey: "nav.adminPriorityCases",
   },
-  { href: "/mla/create-meeting", labelKey: "nav.adminCreateMeeting" },
   { href: "/mla/meeting-section", labelKey: "nav.adminMeetingSection" },
 ];
 
 const MLA_PA_NAV_LINKS = [
   { href: "/mla-pa/complaint", labelKey: "nav.mlaPaComplaint" },
   { href: "/mla-pa/cluster-complaints", labelKey: "nav.mlaPaClusters" },
-  { href: "/mla-pa/meeting-section", labelKey: "nav.mlaPaMeetingSection" },
-  { href: "/mla-pa/create-meeting", labelKey: "nav.mlaPaCreateMeeting" },
+  { href: "/mla-pa/invitation", labelKey: "nav.mlaPaInvitation" },
 ];
 
 interface AppShellProps {
@@ -129,6 +126,7 @@ export function AppShell({ children, user }: AppShellProps) {
 
       {/* Main Header */}
       <Header
+        className="no-print"
         style={{
           background: "#1a3c6e",
           padding: "0",
@@ -296,6 +294,7 @@ export function AppShell({ children, user }: AppShellProps) {
       {/* Navigation Bar */}
       {showPrivateNav && (
         <div
+          className="no-print"
           style={{
             background: "#1f4d8a",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
@@ -360,6 +359,7 @@ export function AppShell({ children, user }: AppShellProps) {
 
       {/* Footer */}
       <Footer
+        className="no-print"
         style={{
           background: "#12294a",
           padding: "20px 16px",

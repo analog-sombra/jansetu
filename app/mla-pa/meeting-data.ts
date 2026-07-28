@@ -13,7 +13,6 @@ export type MlaPaMeetingRecord = {
   campHeadUserId: string;
   type: MLAPAMEETINGTYPE;
   invitationSubtype: INVITATIONSUBTYPE | null;
-  invitationOtherPurpose: string | null;
   purpose: string;
   scheduledAt: string;
   meetingPlace: string;

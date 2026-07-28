@@ -1,8 +1,19 @@
+import { ROLE } from "@prisma/client";
+
 export type MEETINGTYPE =
   | "CONSTITUENCY_VISIT"
   | "DEPARTMENT_VISIT"
   | "CITIZEN_MEET"
-  | "PERSONAL_MEET";
+  | "PERSONAL_MEET"
+  | "INVITATION"
+  | "PARTY_MEET"
+  | "OFFICE_MEET";
+
+export type INVITATIONSUBTYPE =
+  | "MARRIAGE"
+  | "BIRTHDAY"
+  | "FUNERAL"
+  | "OTHER";
 
 export type MEETINGAPPROVALSTATUS =
   | "NOT_REQUIRED"
@@ -23,14 +34,18 @@ export type UserLite = {
   id: string;
   name: string | null;
   mobile: string;
-  role: "CITIZEN" | "ADMIN" | "REPORT";
+  role: ROLE;
 };
 
 export type MeetingRecord = {
   id: number;
   createdByUserId: string;
   assignedToUserId: string;
+  campHeadUserId: string | null;
   type: MEETINGTYPE;
+  invitationSubtype: INVITATIONSUBTYPE | null;
+  giftToCarry: string | null;
+  selfDraftedLetter: string | null;
   purpose: string;
   meetingDateTime: string | null;
   meetingPlace: string | null;
@@ -57,6 +72,10 @@ export type MeetingRecord = {
   assignedToUser: UserLite;
 };
 
+export type AdminMeetingDashboardRecord = MeetingRecord & {
+  campHeadUser?: UserLite | null;
+};
+
 export const MEETING_TYPE_OPTIONS: Array<{
   label: string;
   value: MEETINGTYPE;
@@ -65,6 +84,9 @@ export const MEETING_TYPE_OPTIONS: Array<{
   { label: "Department Visit", value: "DEPARTMENT_VISIT" },
   { label: "Citizen Meet", value: "CITIZEN_MEET" },
   { label: "Personal Meet", value: "PERSONAL_MEET" },
+  { label: "Invitation", value: "INVITATION" },
+  { label: "Party Meet", value: "PARTY_MEET" },
+  { label: "Office Meet", value: "OFFICE_MEET" },
 ];
 
 export const PRIORITY_OPTIONS: Array<{
@@ -117,4 +139,29 @@ export function getMeetingStatusColor(status: MeetingStatus) {
     default:
       return "default";
   }
+}
+
+export function getInvitationSubtypeLabel(subtype: INVITATIONSUBTYPE): string {
+  const labels: Record<INVITATIONSUBTYPE, string> = {
+    MARRIAGE: "Marriage",
+    BIRTHDAY: "Birthday",
+    FUNERAL: "Funeral",
+    OTHER: "Other",
+  };
+
+  return labels[subtype] ?? subtype;
+}
+
+export function formatDateTime(value: string | null): string {
+  if (!value) {
+    return "-";
+  }
+  const date = new Date(value);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${day}-${month}-${year} ${hours}:${minutes}`;
 }

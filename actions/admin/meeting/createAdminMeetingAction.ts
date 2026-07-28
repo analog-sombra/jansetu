@@ -1,6 +1,10 @@
 "use server";
 
-import { MEETINGAPPROVALSTATUS, MEETINGTYPE, INVITATIONSUBTYPE } from "@prisma/client";
+import {
+  MEETINGAPPROVALSTATUS,
+  MEETINGTYPE,
+  INVITATIONSUBTYPE,
+} from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import { CreateAdminMeetingInput, CreateAdminMeetingResult } from "./types";
@@ -23,8 +27,11 @@ export async function createAdminMeetingAction(
   }
 
   const assignedToUserId = payload.assignedToUserId.trim();
+  const campHeadUserId = payload.campHeadUserId?.trim() || null;
   const purpose = payload.purpose.trim();
   const meetingPlace = payload.meetingPlace?.trim() || null;
+  const giftToCarry = payload.giftToCarry?.trim() || null;
+  const selfDraftedLetter = payload.selfDraftedLetter?.trim() || null;
   const citizenName = payload.citizenName?.trim() || null;
   const citizenArea = payload.citizenArea?.trim() || null;
   const citizenDetails = payload.citizenDetails?.trim() || null;
@@ -63,7 +70,10 @@ export async function createAdminMeetingAction(
 
   if (!isCitizenMeet && !isInvitation) {
     if (!meetingDateTime || Number.isNaN(meetingDateTime.getTime())) {
-      return { ok: false, error: "Please select a valid meeting date and time." };
+      return {
+        ok: false,
+        error: "Please select a valid meeting date and time.",
+      };
     }
 
     if (!meetingPlace) {
@@ -73,11 +83,17 @@ export async function createAdminMeetingAction(
 
   if (isCitizenMeet) {
     if (!preferredDateTime || Number.isNaN(preferredDateTime.getTime())) {
-      return { ok: false, error: "Please select a valid preferred date and time." };
+      return {
+        ok: false,
+        error: "Please select a valid preferred date and time.",
+      };
     }
 
     if (!payload.priority) {
-      return { ok: false, error: "Please select priority for citizen meeting." };
+      return {
+        ok: false,
+        error: "Please select priority for citizen meeting.",
+      };
     }
 
     if (!citizenName || !citizenMobile || !citizenArea || !citizenDetails) {
@@ -88,7 +104,10 @@ export async function createAdminMeetingAction(
     }
 
     if (!/^\d{10}$/.test(citizenMobile)) {
-      return { ok: false, error: "Please provide a valid citizen mobile number." };
+      return {
+        ok: false,
+        error: "Please provide a valid citizen mobile number.",
+      };
     }
   }
 
@@ -98,7 +117,10 @@ export async function createAdminMeetingAction(
     }
 
     if (!isOfficeMeet && !/^\d{10}$/.test(contactMobile || "")) {
-      return { ok: false, error: "Please provide a valid contact mobile number." };
+      return {
+        ok: false,
+        error: "Please provide a valid contact mobile number.",
+      };
     }
 
     if (isDepartmentVisit && (!contactDesignation || !contactDepartment)) {
@@ -123,11 +145,34 @@ export async function createAdminMeetingAction(
     };
   }
 
-  if (isInvitation && !payload.invitationSubtype) {
-    return {
-      ok: false,
-      error: "Invitation type is required for invitation meeting.",
-    };
+  if (isInvitation) {
+    if (!payload.invitationSubtype) {
+      return {
+        ok: false,
+        error: "Invitation type is required for invitation meeting.",
+      };
+    }
+
+    if (!campHeadUserId) {
+      return {
+        ok: false,
+        error: "Camp head user is required for invitation meeting.",
+      };
+    }
+
+    if (!giftToCarry) {
+      return {
+        ok: false,
+        error: "Gift to carry is required for invitation meeting.",
+      };
+    }
+
+    if (!selfDraftedLetter) {
+      return {
+        ok: false,
+        error: "Self drafted letter is required for invitation meeting.",
+      };
+    }
   }
 
   try {
@@ -140,6 +185,17 @@ export async function createAdminMeetingAction(
       return { ok: false, error: "Assigned user not found." };
     }
 
+    if (isInvitation && campHeadUserId) {
+      const campHeadUser = await prisma.user.findUnique({
+        where: { id: campHeadUserId },
+        select: { id: true },
+      });
+
+      if (!campHeadUser) {
+        return { ok: false, error: "Camp head user not found." };
+      }
+    }
+
     const approvalStatus = isCitizenMeet
       ? MEETINGAPPROVALSTATUS.PENDING
       : MEETINGAPPROVALSTATUS.NOT_REQUIRED;
@@ -148,14 +204,17 @@ export async function createAdminMeetingAction(
       data: {
         createdByUserId: auth.user.id,
         assignedToUserId,
+        campHeadUserId: isInvitation ? campHeadUserId : null,
         type: payload.type,
         invitationSubtype: payload.invitationSubtype,
+        giftToCarry: isInvitation ? giftToCarry : null,
+        selfDraftedLetter: isInvitation ? selfDraftedLetter : null,
         purpose,
         meetingDateTime,
         meetingPlace,
         approvalStatus,
         preferredDateTime,
-        priority: isCitizenMeet ? payload.priority ?? null : null,
+        priority: isCitizenMeet ? (payload.priority ?? null) : null,
         citizenName,
         citizenMobile,
         citizenArea,

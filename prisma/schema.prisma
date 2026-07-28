@@ -115,6 +115,29 @@ enum INVITATIONSUBTYPE {
   OTHER
 }
 
+enum WORKSTATUS {
+  PROPOSED
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+enum TASKSTATUS {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+enum WORKMEDIATYPE {
+  BEFORE
+  PROGRESS
+  AFTER
+  DOCUMENT
+}
+
 model user {
   id                   String                         @id @default(cuid())
   name                 String?
@@ -135,12 +158,14 @@ model user {
   notifications        notification[]
   meetingsCreated      meeting[]                      @relation("MeetingCreatedBy")
   meetingsAssigned     meeting[]                      @relation("MeetingAssignedTo")
+  meetingsCampHead     meeting[]                      @relation("MeetingCampHead")
   reviews              review[]
   disputes             dispute[]
   officerAssignments   complaint_assignment_history[] @relation("OfficerAssignedBy")
-  mlaPaMeetingsCreated mla_pa_meeting[]               @relation("MlaPaMeetingCreatedBy")
-  mlaPaMeetingsForMla  mla_pa_meeting[]               @relation("MlaPaMeetingMla")
-  mlaPaMeetingsForCamp mla_pa_meeting[]               @relation("MlaPaMeetingCampHead")
+  worksCreated         work[]                         @relation("WorkCreatedBy")
+  worksApproved        work[]                         @relation("WorkApprovedBy")
+  workUpdates          work_update[]                  @relation("WorkUpdateCreatedBy")
+  workMedia            work_media[]
   createdAt            DateTime                       @default(now())
   updatedAt            DateTime                       @updatedAt
 }
@@ -185,6 +210,7 @@ model complaint {
   createdAt             DateTime                       @default(now())
   updatedAt             DateTime                       @updatedAt
   complaintClusters     complaint_cluster[]
+  works                 work[]
 
   @@index([categoryId, subcategoryId, createdAt])
   @@index([lat, lng])
@@ -233,6 +259,7 @@ model complaint_cluster {
   areaKey        String?
   latBucket      Int
   lngBucket      Int
+  work           work?
   createdAt      DateTime  @default(now())
 
   @@index([complaintId])
@@ -253,12 +280,14 @@ model complaint_media {
 }
 
 model department {
-  id         Int        @id @default(autoincrement())
-  name       String     @unique
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
   officers   officer[]
   categories category[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  works      work[]
+  workTasks  work_task[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 }
 
 model officer {
@@ -271,6 +300,7 @@ model officer {
   department   department                     @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   assignments  assignment[]
   history      complaint_assignment_history[]
+  workTasks    work_task[]
   createdAt    DateTime                       @default(now())
   updatedAt    DateTime                       @updatedAt
 
@@ -332,11 +362,14 @@ model audit_log {
   actorUser   user?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
   complaintId Int?
   complaint   complaint? @relation(fields: [complaintId], references: [id], onDelete: SetNull)
+  workId      Int?
+  work        work?      @relation("WorkAuditLogs", fields: [workId], references: [id], onDelete: SetNull)
   action      String
   meta        Json?
   createdAt   DateTime   @default(now())
 
   @@index([complaintId, createdAt])
+  @@index([workId, createdAt])
 }
 
 model notification {
@@ -357,75 +390,45 @@ model notification {
 }
 
 model meeting {
-  id                 Int                   @id @default(autoincrement())
-  createdByUserId    String
-  createdByUser      user                  @relation("MeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
-  assignedToUserId   String
-  assignedToUser     user                  @relation("MeetingAssignedTo", fields: [assignedToUserId], references: [id], onDelete: Cascade)
-  type               MEETINGTYPE
-  invitationSubtype  INVITATIONSUBTYPE?
-  purpose            String                @db.LongText
-  meetingDateTime    DateTime?
-  meetingPlace       String?
-  approvalStatus     MEETINGAPPROVALSTATUS @default(NOT_REQUIRED)
-  approvedAt         DateTime?
-  rejectedAt         DateTime?
-  completedAt        DateTime?
-  approvalRemarks    String?               @db.LongText
-  preferredDateTime  DateTime?
-  priority           MEETINGPRIORITY?
-  citizenName        String?
-  citizenMobile      String?
-  citizenArea        String?
-  citizenDetails     String?               @db.LongText
-  contactName        String?
-  contactMobile      String?
-  contactDesignation String?
-  contactDepartment  String?
-  partyMeetDetails   String?               @db.LongText
-  selectedStaffNames String?               @db.LongText
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
+  id                     Int                   @id @default(autoincrement())
+  createdByUserId        String
+  createdByUser          user                  @relation("MeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  assignedToUserId       String
+  assignedToUser         user                  @relation("MeetingAssignedTo", fields: [assignedToUserId], references: [id], onDelete: Cascade)
+  campHeadUserId         String?
+  campHeadUser           user?                 @relation("MeetingCampHead", fields: [campHeadUserId], references: [id], onDelete: SetNull)
+  type                   MEETINGTYPE
+  invitationSubtype      INVITATIONSUBTYPE?
+  giftToCarry            String?               @db.LongText
+  selfDraftedLetter      String?               @db.LongText
+  purpose                String                @db.LongText
+  meetingDateTime        DateTime?
+  meetingPlace           String?
+  approvalStatus         MEETINGAPPROVALSTATUS @default(NOT_REQUIRED)
+  approvedAt             DateTime?
+  rejectedAt             DateTime?
+  completedAt            DateTime?
+  approvalRemarks        String?               @db.LongText
+  preferredDateTime      DateTime?
+  priority               MEETINGPRIORITY?
+  citizenName            String?
+  citizenMobile          String?
+  citizenArea            String?
+  citizenDetails         String?               @db.LongText
+  contactName            String?
+  contactMobile          String?
+  contactDesignation     String?
+  contactDepartment      String?
+  partyMeetDetails       String?               @db.LongText
+  selectedStaffNames     String?               @db.LongText
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
 
   @@index([createdByUserId, createdAt])
   @@index([assignedToUserId, createdAt])
+  @@index([campHeadUserId])
   @@index([type, approvalStatus])
   @@index([meetingDateTime])
-}
-
-model mla_pa_meeting {
-  id                     Int                        @id @default(autoincrement())
-  createdByUserId        String
-  createdByUser          user                       @relation("MlaPaMeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
-  mlaUserId              String
-  mlaUser                user                       @relation("MlaPaMeetingMla", fields: [mlaUserId], references: [id], onDelete: Restrict)
-  campHeadUserId         String
-  campHeadUser           user                       @relation("MlaPaMeetingCampHead", fields: [campHeadUserId], references: [id], onDelete: Restrict)
-  type                   MLAPAMEETINGTYPE
-  invitationSubtype      INVITATIONSUBTYPE?
-  invitationOtherPurpose String?                    @db.LongText
-  purpose                String                     @db.LongText
-  scheduledAt            DateTime
-  meetingPlace           String
-  completedAt            DateTime?
-  createdAt              DateTime                   @default(now())
-  updatedAt              DateTime                   @updatedAt
-  invitationDetail       mla_pa_invitation_details?
-
-  @@index([createdByUserId, createdAt])
-  @@index([mlaUserId, scheduledAt])
-  @@index([campHeadUserId, scheduledAt])
-  @@index([type, invitationSubtype])
-}
-
-model mla_pa_invitation_details {
-  id                Int            @id @default(autoincrement())
-  meetingId         Int            @unique
-  meeting           mla_pa_meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  giftToCarry       String?        @db.LongText
-  selfDraftedLetter String?        @db.LongText
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
 }
 
 model category {
@@ -449,4 +452,120 @@ model subcategory {
   complaints complaint[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+}
+
+model ward {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  constituency String?
+  locality_key String?
+  works        work[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([constituency])
+  @@index([locality_key])
+}
+
+model work {
+  id                     Int                @id @default(autoincrement())
+  title                  String
+  description            String             @db.LongText
+  departmentId           Int
+  department             department         @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  wardId                 Int?
+  ward                   ward?              @relation(fields: [wardId], references: [id], onDelete: SetNull)
+  status                 WORKSTATUS         @default(PROPOSED)
+  priority               Int                @default(50)
+  estimated_budget       Decimal?           @db.Decimal(12, 2)
+  approved_budget        Decimal?           @db.Decimal(12, 2)
+  utilized_budget        Decimal            @default(0) @db.Decimal(12, 2)
+  completion_percentage  Int                @default(0)
+  start_date             DateTime?
+  target_completion_date DateTime?
+  actual_completion_date DateTime?
+  created_from           String             @default("MANUAL")
+  cluster_id             Int?               @unique
+  complaint_cluster      complaint_cluster? @relation(fields: [cluster_id], references: [id], onDelete: SetNull)
+  complaint_id           Int?
+  complaint              complaint?         @relation(fields: [complaint_id], references: [id], onDelete: SetNull)
+  remarks                String?            @db.LongText
+  approved_by_user_id    String?
+  approved_by_user       user?              @relation("WorkApprovedBy", fields: [approved_by_user_id], references: [id], onDelete: SetNull)
+  approved_at            DateTime?
+  created_by_user_id     String
+  created_by_user        user               @relation("WorkCreatedBy", fields: [created_by_user_id], references: [id], onDelete: Cascade)
+
+  tasks      work_task[]
+  media      work_media[]
+  updates    work_update[]
+  audit_logs audit_log[]   @relation("WorkAuditLogs")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([departmentId, status])
+  @@index([status, target_completion_date])
+  @@index([wardId, status])
+  @@index([priority, status])
+  @@index([created_by_user_id, createdAt])
+  @@index([cluster_id])
+}
+
+model work_task {
+  id                    Int        @id @default(autoincrement())
+  work_id               Int
+  work                  work       @relation(fields: [work_id], references: [id], onDelete: Cascade)
+  title                 String
+  description           String?    @db.LongText
+  sequence_no           Int
+  officer_id            Int?
+  officer               officer?   @relation(fields: [officer_id], references: [id], onDelete: SetNull)
+  department_id         Int
+  department            department @relation(fields: [department_id], references: [id], onDelete: Restrict)
+  status                TASKSTATUS @default(PENDING)
+  completion_percentage Int        @default(0)
+  planned_date          DateTime?
+  actual_date           DateTime?
+  remarks               String?    @db.LongText
+
+  media work_media[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([work_id, sequence_no])
+  @@index([officer_id, status])
+  @@index([status, planned_date])
+}
+
+model work_media {
+  id                  Int           @id @default(autoincrement())
+  work_id             Int
+  work                work          @relation(fields: [work_id], references: [id], onDelete: Cascade)
+  task_id             Int?
+  task                work_task?    @relation(fields: [task_id], references: [id], onDelete: SetNull)
+  type                WORKMEDIATYPE
+  file_path           String
+  caption             String?
+  uploaded_by_user_id String
+  uploaded_by_user    user          @relation(fields: [uploaded_by_user_id], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([work_id, type])
+  @@index([task_id])
+}
+
+model work_update {
+  id                 Int    @id @default(autoincrement())
+  work_id            Int
+  work               work   @relation(fields: [work_id], references: [id], onDelete: Cascade)
+  message            String @db.VarChar(500)
+  created_by_user_id String
+  created_by_user    user   @relation("WorkUpdateCreatedBy", fields: [created_by_user_id], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([work_id, createdAt])
 }

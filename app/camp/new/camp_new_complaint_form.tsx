@@ -418,7 +418,7 @@ export default function CampNewComplaintForm() {
           <form onSubmit={handleSubmit(onSubmit, onFormError)}>
             <Divider>{t("camp.citizen.section")}</Divider>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-3">
               <div className="sm:col-span-2">
                 <CustomTextInput<campComplaintValidationForm>
                   name="mobile"
@@ -430,10 +430,10 @@ export default function CampNewComplaintForm() {
                   disable={citizenFieldsLocked}
                 />
               </div>
-              <div className="pt-6">
+              <div className="pt-5">
                 <Button
                   block
-                  size="large"
+                  size="medium"
                   loading={lookupLoading}
                   onClick={() => {
                     void lookupCitizen();
@@ -546,7 +546,7 @@ export default function CampNewComplaintForm() {
 
             <Divider>{t("camp.complaint.section")}</Divider>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-3">
               <div>
                 <CustomMultiSelect<campComplaintValidationForm>
                   name="categoryId"
@@ -651,10 +651,10 @@ export default function CampNewComplaintForm() {
                   numdes
                 />
               </div>
-              <div className="pt-6">
+              <div className="pt-5">
                 <Button
                   block
-                  size="large"
+                  size="medium"
                   onClick={pickLocation}
                   style={{
                     borderColor: "#1a3c6e",
