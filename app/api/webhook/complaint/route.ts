@@ -1,0 +1,262 @@
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { COMPLAINTSTATUS, ROLE } from "@prisma/client";
+
+interface ComplaintData {
+  id: string;
+  ticket_number: string;
+  customer_name: string;
+  customer_phone: string;
+  category: string;
+  subject: string;
+  description: string;
+  status: string;
+  priority: string;
+  preferred_resolution: string | null;
+  order_reference: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface WebhookPayload {
+  data: ComplaintData[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// Helper function to parse description string (pipe-separated values)
+// Format: category || subcategory || description || area || address || lat,long
+function parseDescription(description: string): {
+  category: string;
+  subcategory: string;
+  descriptionText: string;
+  area: string;
+  address: string;
+  lat: number;
+  lng: number;
+} {
+  const parts = description.split("||").map((part) => part.trim());
+
+  const category = parts[0] || "";
+  const subcategory = parts[1] || "";
+  const descriptionText = parts[2] || "";
+  const area = parts[3] || "";
+  const address = parts[4] || "";
+
+  // Parse latitude and longitude from the last part
+  let lat = 0;
+  let lng = 0;
+
+  if (parts[5]) {
+    const coords = parts[5].split(",").map((c) => parseFloat(c.trim()));
+    lat = coords[0] || 0;
+    lng = coords[1] || 0;
+  }
+
+  return {
+    category,
+    subcategory,
+    descriptionText,
+    area,
+    address,
+    lat,
+    lng,
+  };
+}
+
+// Helper function to parse priority
+function parsePriority(priority: string): number {
+  const priorityMap: { [key: string]: number } = {
+    urgent: 1,
+    high: 5,
+    medium: 10,
+    low: 20,
+  };
+  return priorityMap[priority.toLowerCase()] || 10;
+}
+
+// Helper function to map external category to internal category
+async function getOrCreateCategory(categoryName: string) {
+  // Try to find existing category (case-insensitive)
+  let category = await prisma.category.findFirst({
+    where: {
+      name: categoryName,
+    },
+  });
+
+  // If not found, create a new one
+  if (!category) {
+    // First, ensure there's a department
+    let department = await prisma.department.findFirst({
+      where: { name: "General" },
+    });
+
+    if (!department) {
+      department = await prisma.department.create({
+        data: { name: "General" },
+      });
+    }
+
+    category = await prisma.category.create({
+      data: {
+        name: categoryName,
+        departmentId: department.id,
+      },
+    });
+  }
+
+  return category;
+}
+
+// Helper function to get or create subcategory
+async function getOrCreateSubcategory(
+  categoryId: number,
+  subcategoryName: string,
+) {
+  let subcategory = await prisma.subcategory.findFirst({
+    where: {
+      categoryId,
+      name: subcategoryName,
+    },
+  });
+
+  if (!subcategory) {
+    subcategory = await prisma.subcategory.create({
+      data: {
+        name: subcategoryName,
+        categoryId,
+      },
+    });
+  }
+
+  return subcategory;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const payload: WebhookPayload = await request.json();
+
+    if (!payload.data || !Array.isArray(payload.data)) {
+      return NextResponse.json(
+        { error: 'Invalid payload format. Expected "data" array.' },
+        { status: 400 },
+      );
+    }
+
+    const createdComplaints = [];
+    const errors = [];
+
+    // Process each complaint
+    for (let i = 0; i < payload.data.length; i++) {
+      let complaintData: ComplaintData | undefined;
+      try {
+        complaintData = payload.data[i];
+
+        // Normalize phone number: if 12 digits, remove first 2 digits to make it 10 digits
+        let normalizedPhone = complaintData.customer_phone;
+        if (complaintData.customer_phone.length === 12) {
+          normalizedPhone = complaintData.customer_phone.slice(2);
+        }
+
+        // Step 1: Check if user exists by phone, if not create new user
+        let user = await prisma.user.findUnique({
+          where: { mobile: normalizedPhone },
+        });
+
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              mobile: normalizedPhone,
+              name: complaintData.customer_name,
+              role: ROLE.CITIZEN,
+            },
+          });
+        }
+
+        // Step 2: Parse description to extract all data
+        const parsedData = parseDescription(complaintData.description);
+
+        // Step 3: Get or create category
+        const category = await getOrCreateCategory(parsedData.category);
+
+        // Step 4: Get or create subcategory
+        const subcategory = await getOrCreateSubcategory(
+          category.id,
+          parsedData.subcategory,
+        );
+
+        // Step 5: Parse priority
+        const priority = parsePriority(complaintData.priority);
+
+        // Step 6: Create complaint
+        const complaint = await prisma.complaint.create({
+          data: {
+            userId: user.id,
+            categoryId: category.id,
+            subcategoryId: subcategory.id,
+            description: parsedData.descriptionText,
+            address: parsedData.address,
+            area: parsedData.area,
+            lat: parsedData.lat,
+            lng: parsedData.lng,
+            status: COMPLAINTSTATUS.PENDING,
+            priority: priority,
+            affectedCitizensCount: 1,
+          },
+          include: {
+            user: true,
+            category: true,
+            subcategory: true,
+          },
+        });
+
+        createdComplaints.push({
+          id: complaint.id,
+          externalId: complaintData.id,
+          ticketNumber: complaintData.ticket_number,
+          status: "created",
+        });
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        errors.push({
+          ticketNumber: complaintData?.ticket_number || "unknown",
+          error: errorMessage,
+        });
+      }
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: `Processed ${payload.data.length} complaints`,
+        created: createdComplaints.length,
+        failed: errors.length,
+        createdComplaints,
+        errors: errors.length > 0 ? errors : undefined,
+      },
+      { status: 201 },
+    );
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: errorMessage || "Internal server error",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+// Optional: Health check endpoint
+export async function GET() {
+  return NextResponse.json(
+    {
+      message: "Complaint webhook endpoint is active",
+      endpoint: "/api/webhook/complaint",
+      method: "POST",
+    },
+    { status: 200 },
+  );
+}
