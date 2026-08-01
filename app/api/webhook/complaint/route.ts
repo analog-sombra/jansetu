@@ -140,15 +140,35 @@ function verifyWebhookSignature(
   signature: string,
   signingSecret: string,
 ): boolean {
+  // Trim whitespace from incoming signature
+  const trimmedSignature = signature.trim();
+
   const expectedSignature = crypto
     .createHmac("sha256", signingSecret)
     .update(payload, "utf8")
     .digest("hex");
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature),
-  );
+  console.log("Expected signature length:", expectedSignature.length);
+  console.log("Received signature length (trimmed):", trimmedSignature.length);
+  console.log("Expected signature:", expectedSignature.substring(0, 20) + "...");
+  console.log("Received signature (trimmed):", trimmedSignature.substring(0, 20) + "...");
+  console.log("Full received signature:", trimmedSignature);
+
+  // Check if lengths match before using timingSafeEqual
+  if (trimmedSignature.length !== expectedSignature.length) {
+    console.error("Signature length mismatch! Expected:", expectedSignature.length, "Got:", trimmedSignature.length);
+    return false;
+  }
+
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(trimmedSignature),
+      Buffer.from(expectedSignature),
+    );
+  } catch (err) {
+    console.error("TimingSafeEqual error:", err);
+    return false;
+  }
 }
 
 export async function POST(request: NextRequest) {
