@@ -141,7 +141,12 @@ function verifyWebhookSignature(
   signingSecret: string,
 ): boolean {
   // Trim whitespace from incoming signature
-  const trimmedSignature = signature.trim();
+  let trimmedSignature = signature.trim();
+
+  // Remove 'sha256=' prefix if present
+  if (trimmedSignature.startsWith("sha256=")) {
+    trimmedSignature = trimmedSignature.substring(7);
+  }
 
   const expectedSignature = crypto
     .createHmac("sha256", signingSecret)
