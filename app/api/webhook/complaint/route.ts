@@ -168,7 +168,6 @@ export async function POST(request: NextRequest) {
     }
 
     const signingSecret = process.env.YOUGANT_WEBHOOK_SECRET;
-    console.log("Received signature:", signingSecret);
     if (!signingSecret) {
       return NextResponse.json(
         { error: "Webhook signing secret not configured", success: false },
@@ -178,6 +177,7 @@ export async function POST(request: NextRequest) {
 
     try {
       if (!verifyWebhookSignature(rawBody, signature, signingSecret)) {
+        console.error("Invalid webhook signature. Payload may have been tampered with.");
         return NextResponse.json(
           {
             error: "Invalid webhook signature. Payload may have been tampered with.",
@@ -186,7 +186,8 @@ export async function POST(request: NextRequest) {
           { status: 401 },
         );
       }
-    } catch  {
+    } catch (err) {
+      console.error("Error verifying webhook signature:", err);
       return NextResponse.json(
         { error: "Signature verification failed", success: false },
         { status: 401 },
@@ -198,6 +199,7 @@ export async function POST(request: NextRequest) {
     try {
       payload = JSON.parse(rawBody);
     } catch {
+      console.error("Failed to parse JSON payload:", rawBody);
       return NextResponse.json(
         { error: "Invalid JSON payload", success: false },
         { status: 400 },
@@ -205,6 +207,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!payload.data || !Array.isArray(payload.data)) {
+      console.error("Invalid payload format. Expected 'data' array:", payload);
       return NextResponse.json(
         { error: 'Invalid payload format. Expected "data" array.' },
         { status: 400 },
