@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { COMPLAINTSTATUS, ROLE } from "@prisma/client";
 
@@ -133,9 +134,75 @@ async function getOrCreateSubcategory(
   return subcategory;
 }
 
+// Verify webhook signature using HMAC-SHA256
+function verifyWebhookSignature(
+  payload: string,
+  signature: string,
+  signingSecret: string,
+): boolean {
+  const expectedSignature = crypto
+    .createHmac("sha256", signingSecret)
+    .update(payload, "utf8")
+    .digest("hex");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature),
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const payload: WebhookPayload = await request.json();
+    // Get raw body for signature verification
+    const rawBody = await request.text();
+    
+    // Verify webhook signature
+    const signature = request.headers.get("X-Yougant-Signature") || 
+                     request.headers.get("x-yougant-signature");
+
+    if (!signature) {
+      return NextResponse.json(
+        { error: "Missing X-Yougant-Signature header", success: false },
+        { status: 401 },
+      );
+    }
+
+    const signingSecret = process.env.YOUGANT_WEBHOOK_SECRET;
+    console.log("Received signature:", signingSecret);
+    if (!signingSecret) {
+      return NextResponse.json(
+        { error: "Webhook signing secret not configured", success: false },
+        { status: 500 },
+      );
+    }
+
+    try {
+      if (!verifyWebhookSignature(rawBody, signature, signingSecret)) {
+        return NextResponse.json(
+          {
+            error: "Invalid webhook signature. Payload may have been tampered with.",
+            success: false,
+          },
+          { status: 401 },
+        );
+      }
+    } catch  {
+      return NextResponse.json(
+        { error: "Signature verification failed", success: false },
+        { status: 401 },
+      );
+    }
+
+    // Parse verified payload
+    let payload: WebhookPayload;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON payload", success: false },
+        { status: 400 },
+      );
+    }
 
     if (!payload.data || !Array.isArray(payload.data)) {
       return NextResponse.json(
