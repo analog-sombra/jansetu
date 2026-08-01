@@ -17,13 +17,21 @@ interface ComplaintData {
   order_reference: string | null;
   created_at: string;
   updated_at: string;
+  business_id?: string;
+  conversation_id?: string;
+  resolved_at?: string | null;
+  purchase_date?: string | null;
+  resolution_notes?: string | null;
 }
 
 interface WebhookPayload {
-  data: ComplaintData[];
-  total: number;
-  limit: number;
-  offset: number;
+  id: string;
+  event: "complaint.created" | "complaint.updated";
+  data: ComplaintData;
+  created_at: string;
+  business_id: string;
+  resource_id: string;
+  resource_type: "complaint";
 }
 
 // Helper function to parse description string (pipe-separated values)
@@ -231,10 +239,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!payload.data || !Array.isArray(payload.data)) {
-      console.error("Invalid payload format. Expected 'data' array:", payload);
+    if (!payload.data) {
+      console.error("Invalid payload format. Expected 'data' object:", payload);
       return NextResponse.json(
-        { error: 'Invalid payload format. Expected "data" array.' },
+        { error: 'Invalid payload format. Expected "data" object.' },
         { status: 400 },
       );
     }
@@ -242,89 +250,87 @@ export async function POST(request: NextRequest) {
     const createdComplaints = [];
     const errors = [];
 
-    // Process each complaint
-    for (let i = 0; i < payload.data.length; i++) {
-      let complaintData: ComplaintData | undefined;
-      try {
-        complaintData = payload.data[i];
+    // Process single complaint
+    let complaintData: ComplaintData | undefined;
+    try {
+      complaintData = payload.data;
 
-        // Normalize phone number: if 12 digits, remove first 2 digits to make it 10 digits
-        let normalizedPhone = complaintData.customer_phone;
-        if (complaintData.customer_phone.length === 12) {
-          normalizedPhone = complaintData.customer_phone.slice(2);
-        }
+      // Normalize phone number: if 12 digits, remove first 2 digits to make it 10 digits
+      let normalizedPhone = complaintData.customer_phone;
+      if (complaintData.customer_phone.length === 12) {
+        normalizedPhone = complaintData.customer_phone.slice(2);
+      }
 
-        // Step 1: Check if user exists by phone, if not create new user
-        let user = await prisma.user.findUnique({
-          where: { mobile: normalizedPhone },
-        });
+      // Step 1: Check if user exists by phone, if not create new user
+      let user = await prisma.user.findUnique({
+        where: { mobile: normalizedPhone },
+      });
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              mobile: normalizedPhone,
-              name: complaintData.customer_name,
-              role: ROLE.CITIZEN,
-            },
-          });
-        }
-
-        // Step 2: Parse description to extract all data
-        const parsedData = parseDescription(complaintData.description);
-
-        // Step 3: Get or create category
-        const category = await getOrCreateCategory(parsedData.category);
-
-        // Step 4: Get or create subcategory
-        const subcategory = await getOrCreateSubcategory(
-          category.id,
-          parsedData.subcategory,
-        );
-
-        // Step 5: Parse priority
-        const priority = parsePriority(complaintData.priority);
-
-        // Step 6: Create complaint
-        const complaint = await prisma.complaint.create({
+      if (!user) {
+        user = await prisma.user.create({
           data: {
-            userId: user.id,
-            categoryId: category.id,
-            subcategoryId: subcategory.id,
-            description: parsedData.descriptionText,
-            address: parsedData.address,
-            area: parsedData.area,
-            lat: parsedData.lat,
-            lng: parsedData.lng,
-            status: COMPLAINTSTATUS.PENDING,
-            priority: priority,
-            affectedCitizensCount: 1,
+            mobile: normalizedPhone,
+            name: complaintData.customer_name,
+            role: ROLE.CITIZEN,
           },
-          include: {
-            user: true,
-            category: true,
-            subcategory: true,
-          },
-        });
-
-        createdComplaints.push({
-          id: complaint.id,
-          externalId: complaintData.id,
-          ticketNumber: complaintData.ticket_number,
-          status: "created",
-        });
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        errors.push({
-          ticketNumber: complaintData?.ticket_number || "unknown",
-          error: errorMessage,
         });
       }
+
+      // Step 2: Parse description to extract all data
+      const parsedData = parseDescription(complaintData.description);
+
+      // Step 3: Get or create category
+      const category = await getOrCreateCategory(parsedData.category);
+
+      // Step 4: Get or create subcategory
+      const subcategory = await getOrCreateSubcategory(
+        category.id,
+        parsedData.subcategory,
+      );
+
+      // Step 5: Parse priority
+      const priority = parsePriority(complaintData.priority);
+
+      // Step 6: Create complaint
+      const complaint = await prisma.complaint.create({
+        data: {
+          userId: user.id,
+          categoryId: category.id,
+          subcategoryId: subcategory.id,
+          description: parsedData.descriptionText,
+          address: parsedData.address,
+          area: parsedData.area,
+          lat: parsedData.lat,
+          lng: parsedData.lng,
+          status: COMPLAINTSTATUS.PENDING,
+          priority: priority,
+          affectedCitizensCount: 1,
+        },
+        include: {
+          user: true,
+          category: true,
+          subcategory: true,
+        },
+      });
+
+      createdComplaints.push({
+        id: complaint.id,
+        externalId: complaintData.id,
+        ticketNumber: complaintData.ticket_number,
+        status: "created",
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      errors.push({
+        ticketNumber: complaintData?.ticket_number || "unknown",
+        error: errorMessage,
+      });
     }
 
     return NextResponse.json(
       {
         success: true,
-        message: `Processed ${payload.data.length} complaints`,
+        message: `Processed complaint`,
         created: createdComplaints.length,
         failed: errors.length,
         createdComplaints,
