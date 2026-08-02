@@ -43,6 +43,7 @@ import {
   WorkMediaDTO,
   WorkUpdateDTO,
   updateWorkAction,
+  utilizeWorkBudgetAction,
   closeWorkAction,
   uploadMediaAction,
   addTaskAction,
@@ -102,6 +103,7 @@ export default function WorkDetailClient({
   const [addTaskForm] = Form.useForm();
   const [updateProgressForm] = Form.useForm();
   const [approveBudgetForm] = Form.useForm();
+  const [utilizeBudgetForm] = Form.useForm();
   const [addActivityForm] = Form.useForm();
   const [uploadMediaForm] = Form.useForm();
 
@@ -113,12 +115,15 @@ export default function WorkDetailClient({
   const [showUploadMedia, setShowUploadMedia] = useState(false);
   const [showUpdateProgress, setShowUpdateProgress] = useState(false);
   const [showApproveBudget, setShowApproveBudget] = useState(false);
+  const [showUtilizeBudget, setShowUtilizeBudget] = useState(false);
   const [showAddActivity, setShowAddActivity] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [selectedImage, setSelectedImage] = useState<WorkMediaDTO | null>(null);
 
   // Mapped complaints state
-  const [mappedComplaints, setMappedComplaints] = useState<WorkMappedComplaint[]>([]);
+  const [mappedComplaints, setMappedComplaints] = useState<
+    WorkMappedComplaint[]
+  >([]);
   const [loadingMappedComplaints, setLoadingMappedComplaints] = useState(false);
 
   const handleUpdateStatus = async (newStatus: WORKSTATUS) => {
@@ -273,6 +278,32 @@ export default function WorkDetailClient({
     }
   };
 
+  const handleUtilizeBudget = async (values: { utilized_budget: number }) => {
+    setLoading(true);
+    try {
+      const result = await utilizeWorkBudgetAction({
+        id: work.id,
+        utilized_budget: values.utilized_budget,
+      });
+
+      if (result.ok) {
+        setWork((prev) => ({
+          ...prev,
+          ...result.data,
+        }));
+        message.success("Budget utilized successfully!");
+        setShowUtilizeBudget(false);
+        utilizeBudgetForm.resetFields();
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError("Failed to utilize budget");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddActivity = async (values: { message: string }) => {
     setLoading(true);
     try {
@@ -345,7 +376,7 @@ export default function WorkDetailClient({
     try {
       // Convert file to base64
       const reader = new FileReader();
-      
+
       const fileDataPromise = new Promise<string>((resolve, reject) => {
         reader.onload = () => {
           const result = reader.result as string;
@@ -463,9 +494,7 @@ export default function WorkDetailClient({
       key: "status",
       width: "12%",
       render: (status: string) => (
-        <Tag color={status === "WORKS" ? "green" : "blue"}>
-          {status}
-        </Tag>
+        <Tag color={status === "WORKS" ? "green" : "blue"}>{status}</Tag>
       ),
     },
     {
@@ -475,13 +504,7 @@ export default function WorkDetailClient({
       width: "10%",
       render: (priority: number) => (
         <Tag
-          color={
-            priority >= 75
-              ? "red"
-              : priority >= 50
-                ? "orange"
-                : "green"
-          }
+          color={priority >= 75 ? "red" : priority >= 50 ? "orange" : "green"}
         >
           {priority}
         </Tag>
@@ -544,7 +567,7 @@ export default function WorkDetailClient({
                   </Tag>
                 </div>
                 <Space wrap>
-                  <Button
+                  {/* <Button
                     type="primary"
                     onClick={() => setShowAddTask(true)}
                     icon={<PlusOutlined />}
@@ -557,8 +580,8 @@ export default function WorkDetailClient({
                     icon={<UploadOutlined />}
                   >
                     Upload Media
-                  </Button>
-                  <Button
+                  </Button> */}
+                  {/* <Button
                     onClick={() => setShowUpdateProgress(true)}
                     icon={<EditOutlined />}
                   >
@@ -569,7 +592,7 @@ export default function WorkDetailClient({
                     icon={<EditOutlined />}
                   >
                     Approve Budget
-                  </Button>
+                  </Button> */}
                   {work.status !== WORKSTATUS.COMPLETED &&
                     work.status !== WORKSTATUS.CANCELLED && (
                       <Button
@@ -655,7 +678,30 @@ export default function WorkDetailClient({
           </Row>
 
           <Card className="mt-2">
-            <h3 className="text-base font-semibold mb-2">Progress</h3>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-base font-semibold mb-2">Progress</h3>
+              <div className="grow"></div>
+              <div>
+                <Button
+                  onClick={() => setShowUpdateProgress(true)}
+                  icon={<EditOutlined />}
+                >
+                  Update Progress
+                </Button>
+                <Button
+                  onClick={() => setShowApproveBudget(true)}
+                  icon={<EditOutlined />}
+                >
+                  Approve Budget
+                </Button>
+                <Button
+                  onClick={() => setShowUtilizeBudget(true)}
+                  icon={<EditOutlined />}
+                >
+                  Utilize Budget
+                </Button>
+              </div>
+            </div>
             <Progress
               percent={work.completion_percentage}
               status={
@@ -830,10 +876,13 @@ export default function WorkDetailClient({
                         onClick={loadMappedComplaints}
                         loading={loadingMappedComplaints}
                       >
-                        {loadingMappedComplaints ? "Loading..." : "Load Complaints"}
+                        {loadingMappedComplaints
+                          ? "Loading..."
+                          : "Load Complaints"}
                       </Button>
                     </div>
-                    {mappedComplaints.length === 0 && !loadingMappedComplaints ? (
+                    {mappedComplaints.length === 0 &&
+                    !loadingMappedComplaints ? (
                       <Empty description="No complaints mapped to this work" />
                     ) : (
                       <Spin spinning={loadingMappedComplaints}>
@@ -845,7 +894,11 @@ export default function WorkDetailClient({
                           }))}
                           rowKey="id"
                           pagination={{ pageSize: 10 }}
-                          locale={{ emptyText: <Empty description="No complaints mapped" /> }}
+                          locale={{
+                            emptyText: (
+                              <Empty description="No complaints mapped" />
+                            ),
+                          }}
                         />
                       </Spin>
                     )}
@@ -1041,6 +1094,47 @@ export default function WorkDetailClient({
           </Form>
         </Modal>
 
+        {/* Utilize Budget Modal */}
+        <Modal
+          title="Utilize Budget"
+          open={showUtilizeBudget}
+          onOk={() => utilizeBudgetForm.submit()}
+          onCancel={() => {
+            setShowUtilizeBudget(false);
+            utilizeBudgetForm.resetFields();
+          }}
+          confirmLoading={loading}
+        >
+          <Form
+            form={utilizeBudgetForm}
+            layout="vertical"
+            onFinish={handleUtilizeBudget}
+          >
+            <Form.Item label="Approved Budget">
+              <span>₹ {work.approved_budget || 0}</span>
+            </Form.Item>
+
+            <Form.Item label="Current Utilized">
+              <span>₹ {work.utilized_budget || 0}</span>
+            </Form.Item>
+
+            <Form.Item
+              name="utilized_budget"
+              label="Utilize Budget (₹)"
+              rules={[
+                { required: true, message: "Please enter utilized budget" },
+              ]}
+            >
+              <InputNumber
+                min={0}
+                max={work.approved_budget || undefined}
+                className="w-full"
+                placeholder="Enter utilized budget"
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+
         {/* Add Activity Modal */}
         <Modal
           title="Add Activity Note"
@@ -1084,19 +1178,33 @@ export default function WorkDetailClient({
           footer={null}
           width={600}
         >
-          {selectedImage && selectedImage.file_path?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+          {selectedImage &&
+          selectedImage.file_path?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
             <div className="flex flex-col items-center">
               <img
                 src={selectedImage.file_path}
                 alt={selectedImage.caption || "Media"}
-                style={{ maxWidth: "100%", maxHeight: "400px", objectFit: "contain" }}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "400px",
+                  objectFit: "contain",
+                }}
               />
               <div className="mt-2 w-full text-gray-600 text-xs">
-                <p><strong>Type:</strong> {selectedImage.type}</p>
-                <p><strong>Uploaded by:</strong> {selectedImage.uploaded_by}</p>
-                <p><strong>Date:</strong> {dayjs(selectedImage.created_at).format("DD/MM/YYYY HH:mm")}</p>
+                <p>
+                  <strong>Type:</strong> {selectedImage.type}
+                </p>
+                <p>
+                  <strong>Uploaded by:</strong> {selectedImage.uploaded_by}
+                </p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {dayjs(selectedImage.created_at).format("DD/MM/YYYY HH:mm")}
+                </p>
                 {selectedImage.caption && (
-                  <p><strong>Caption:</strong> {selectedImage.caption}</p>
+                  <p>
+                    <strong>Caption:</strong> {selectedImage.caption}
+                  </p>
                 )}
               </div>
             </div>

@@ -43,6 +43,7 @@ import {
   WorkMediaDTO,
   WorkUpdateDTO,
   updateWorkAction,
+  utilizeWorkBudgetAction,
   closeWorkAction,
   uploadMediaAction,
   addTaskAction,
@@ -101,6 +102,7 @@ export default function WorkDetailClient({
   const [addTaskForm] = Form.useForm();
   const [updateProgressForm] = Form.useForm();
   const [approveBudgetForm] = Form.useForm();
+  const [utilizeBudgetForm] = Form.useForm();
   const [addActivityForm] = Form.useForm();
   const [uploadMediaForm] = Form.useForm();
 
@@ -112,6 +114,7 @@ export default function WorkDetailClient({
   const [showUploadMedia, setShowUploadMedia] = useState(false);
   const [showUpdateProgress, setShowUpdateProgress] = useState(false);
   const [showApproveBudget, setShowApproveBudget] = useState(false);
+  const [showUtilizeBudget, setShowUtilizeBudget] = useState(false);
   const [showAddActivity, setShowAddActivity] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [selectedImage, setSelectedImage] = useState<WorkMediaDTO | null>(null);
@@ -243,6 +246,32 @@ export default function WorkDetailClient({
       }
     } catch (err) {
       setError("Failed to approve budget");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUtilizeBudget = async (values: { utilized_budget: number }) => {
+    setLoading(true);
+    try {
+      const result = await utilizeWorkBudgetAction({
+        id: work.id,
+        utilized_budget: values.utilized_budget,
+      });
+
+      if (result.ok) {
+        setWork((prev) => ({
+          ...prev,
+          ...result.data,
+        }));
+        message.success("Budget utilized successfully!");
+        setShowUtilizeBudget(false);
+        utilizeBudgetForm.resetFields();
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError("Failed to utilize budget");
     } finally {
       setLoading(false);
     }
@@ -511,7 +540,7 @@ export default function WorkDetailClient({
                   </Tag>
                 </div>
                 <Space wrap>
-                  <Button
+                  {/* <Button
                     type="primary"
                     onClick={() => setShowAddTask(true)}
                     icon={<PlusOutlined />}
@@ -536,7 +565,7 @@ export default function WorkDetailClient({
                     icon={<EditOutlined />}
                   >
                     Approve Budget
-                  </Button>
+                  </Button> */}
                   {work.status !== WORKSTATUS.COMPLETED &&
                     work.status !== WORKSTATUS.CANCELLED && (
                       <Button
@@ -622,7 +651,30 @@ export default function WorkDetailClient({
           </Row>
 
           <Card className="mt-2">
-            <h3 className="text-base font-semibold mb-2">Progress</h3>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-base font-semibold mb-2">Progress</h3>
+              <div className="grow"></div>
+              <div>
+                <Button
+                  onClick={() => setShowUpdateProgress(true)}
+                  icon={<EditOutlined />}
+                >
+                  Update Progress
+                </Button>
+                <Button
+                  onClick={() => setShowApproveBudget(true)}
+                  icon={<EditOutlined />}
+                >
+                  Approve Budget
+                </Button>
+                <Button
+                  onClick={() => setShowUtilizeBudget(true)}
+                  icon={<EditOutlined />}
+                >
+                  Utilize Budget
+                </Button>
+              </div>
+            </div>
             <Progress
               percent={work.completion_percentage}
               status={
@@ -1010,6 +1062,47 @@ export default function WorkDetailClient({
                 min={0}
                 className="w-full"
                 placeholder="Enter approved budget"
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Utilize Budget Modal */}
+        <Modal
+          title="Utilize Budget"
+          open={showUtilizeBudget}
+          onOk={() => utilizeBudgetForm.submit()}
+          onCancel={() => {
+            setShowUtilizeBudget(false);
+            utilizeBudgetForm.resetFields();
+          }}
+          confirmLoading={loading}
+        >
+          <Form
+            form={utilizeBudgetForm}
+            layout="vertical"
+            onFinish={handleUtilizeBudget}
+          >
+            <Form.Item label="Approved Budget">
+              <span>₹ {work.approved_budget || 0}</span>
+            </Form.Item>
+
+            <Form.Item label="Current Utilized">
+              <span>₹ {work.utilized_budget || 0}</span>
+            </Form.Item>
+
+            <Form.Item
+              name="utilized_budget"
+              label="Utilize Budget (₹)"
+              rules={[
+                { required: true, message: "Please enter utilized budget" },
+              ]}
+            >
+              <InputNumber
+                min={0}
+                max={work.approved_budget || undefined}
+                className="w-full"
+                placeholder="Enter utilized budget"
               />
             </Form.Item>
           </Form>

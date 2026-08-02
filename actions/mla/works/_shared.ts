@@ -58,17 +58,17 @@ export function checkWorkAccess(
   }
 
   // MLA: Can access own works
-  if (user.role === "MLA") {
-    return work.created_by_user_id === user.id;
-  }
+  // if (user.role === "MLA") {
+  //   return work.created_by_user_id === user.id;
+  // }
 
-  // MLA_PA/MLA_SECRETARY: Can access their MLA's works
-  if (["MLA_PA", "MLA_SECRETARY"].includes(user.role)) {
-    return work.created_by_user?.role === "MLA";
-  }
+  // // MLA_PA/MLA_SECRETARY: Can access their MLA's works
+  // if (["MLA_PA", "MLA_SECRETARY"].includes(user.role)) {
+  //   return work.created_by_user?.role === "MLA";
+  // }
 
   // ADMIN: Full access
-  if (user.role === "ADMIN") {
+  if (["MLA_PA", "MLA_SECRETARY","ADMIN","MLA"].includes(user.role)) {
     return true;
   }
 
@@ -88,7 +88,7 @@ export function checkTaskAccess(
   // Tasks are accessed through work ownership
   // For now, allow ADMIN access
   // Officer-specific access requires different comparison with officer table
-  if (user.role === "ADMIN") {
+  if (["MLA_PA", "MLA_SECRETARY","ADMIN","MLA"].includes(user.role)) {
     return true;
   }
 

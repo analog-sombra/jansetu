@@ -79,7 +79,7 @@ export default function CreateWorkClient({
       if (result.ok) {
         message.success("Work created successfully!");
         setTimeout(() => {
-          router.push(`/mla/works/${result.data.id}`);
+          router.push(`/admin/works/${result.data.id}`);
         }, 600);
       } else {
         setError(result.error);

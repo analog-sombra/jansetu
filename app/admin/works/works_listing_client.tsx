@@ -87,11 +87,11 @@ export default function WorksListingClient({
   };
 
   const handleViewDetail = (workId: number) => {
-    router.push(`/mla/works/${workId}`);
+    router.push(`/admin/works/${workId}`);
   };
 
   const handleCreateNew = () => {
-    router.push("/mla/works/create");
+    router.push("/admin/works/create");
   };
 
   const columns = [

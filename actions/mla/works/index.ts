@@ -3,6 +3,7 @@
 export * from "./types";
 export * from "./createWorkAction";
 export * from "./updateWorkAction";
+export * from "./utilizeWorkBudgetAction";
 export * from "./closeWorkAction";
 export * from "./addWorkUpdateAction";
 export * from "./getWorksListingAction";
