@@ -3,13 +3,33 @@
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MEETINGTYPE, INVITATIONSUBTYPE } from "@prisma/client";
-import { Alert, Button, Card, Col, Row, Typography, Tag, Skeleton } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Row,
+  Typography,
+  Tag,
+  Skeleton,
+  Statistic,
+  Table,
+} from "antd";
 import { ArrowLeftOutlined, DownloadOutlined } from "@ant-design/icons";
 
 import {
   getAdminMeetingDetailAction,
   type AdminMeetingDashboardRecord,
 } from "@/actions/admin/meeting";
+import {
+  getAreaSummaryReportAction,
+  type AreaSummaryReport,
+  type CategorySummary,
+} from "@/actions/admin";
+import {
+  getDepartmentComplaintReportAction,
+  type DepartmentComplaintReport,
+} from "@/actions/admin/getDepartmentComplaintReportAction";
 
 const { Title, Text } = Typography;
 
@@ -78,6 +98,34 @@ const PAGE_COPY = {
     giftToCarry: "Gift to Carry",
     selfDraftedLetter: "Self Drafted Letter",
     downloadLetter: "Download Letter",
+    areaSummaryReport: "Area Summary Report",
+    departmentSummaryReport: "Department Summary Report",
+    totalComplaints: "Total Complaints",
+    resolvedComplaints: "Resolved",
+    inProgressComplaints: "In Progress",
+    pendingComplaints: "Pending",
+    rejectedComplaints: "Rejected",
+    averageResolutionTime: "Avg Resolution Time",
+    days: "Days",
+    affectedCitizens: "Affected Citizens",
+    averagePriority: "Average Priority",
+    categoryWiseBreakdown: "Category-wise Breakdown",
+    category: "Category",
+    total: "Total",
+    resolved: "Resolved",
+    inProgress: "In Progress",
+    pending: "Pending",
+    rejected: "Rejected",
+    recentComplaints: "Recent Complaints",
+    complaintId: "Complaint ID",
+    subcategory: "Subcategory",
+    status: "Status",
+    officer: "Assigned Officer",
+    submittedDate: "Submitted Date",
+    loadingReport: "Loading report...",
+    overdueAssignedComplaints: "Overdue Assigned Complaints",
+    daysInProgress: "Days in Progress",
+    daysOverdue: "Days Overdue",
   },
   hi: {
     title: "मीटिंग विवरण",
@@ -132,6 +180,34 @@ const PAGE_COPY = {
     giftToCarry: "ले जाने वाली वस्तु",
     selfDraftedLetter: "स्वयं द्वारा तैयार पत्र",
     downloadLetter: "पत्र डाउनलोड करें",
+    areaSummaryReport: "क्षेत्र सारांश रिपोर्ट",
+    departmentSummaryReport: "विभाग सारांश रिपोर्ट",
+    totalComplaints: "कुल शिकायतें",
+    resolvedComplaints: "समाधान की गई",
+    inProgressComplaints: "प्रगति में",
+    pendingComplaints: "लंबित",
+    rejectedComplaints: "अस्वीकृत",
+    averageResolutionTime: "औसत समाधान समय",
+    days: "दिन",
+    affectedCitizens: "प्रभावित नागरिक",
+    averagePriority: "औसत प्राथमिकता",
+    categoryWiseBreakdown: "श्रेणी-वार विभाजन",
+    category: "श्रेणी",
+    total: "कुल",
+    resolved: "समाधान",
+    inProgress: "प्रगति में",
+    pending: "लंबित",
+    rejected: "अस्वीकृत",
+    recentComplaints: "हाल की शिकायतें",
+    complaintId: "शिकायत आईडी",
+    subcategory: "उप-श्रेणी",
+    status: "स्थिति",
+    officer: "असाइन किया गया अधिकारी",
+    submittedDate: "सबमिट किया गया दिनांक",
+    loadingReport: "रिपोर्ट लोड हो रही है...",
+    overdueAssignedComplaints: "विलंबित असाइन की गई शिकायतें",
+    daysInProgress: "प्रगति में दिन",
+    daysOverdue: "विलंबित दिन",
   },
   pa: {
     title: "ਮੀਟਿੰਗ ਵੇਰਵੇ",
@@ -186,6 +262,34 @@ const PAGE_COPY = {
     giftToCarry: "ਲਿਜਾਣ ਵਾਲਾ ਤੋਹਫਾ",
     selfDraftedLetter: "ਖੁਦ ਲਿਖਿਆ ਗਿਆ ਪੱਤਰ",
     downloadLetter: "ਪੱਤਰ ਡਾਊਨਲੋਡ ਕਰੋ",
+    areaSummaryReport: "ਖੇਤਰ ਸਾਰਾਂਸ਼ ਰਿਪੋਰਟ",
+    departmentSummaryReport: "ਵਿਭਾਗ ਸਾਰਾਂਸ਼ ਰਿਪੋਰਟ",
+    totalComplaints: "ਕੁੱਲ ਸ਼ਿਕਾਇਤਾਂ",
+    resolvedComplaints: "ਹੱਲ ਕੀਤੀਆਂ",
+    inProgressComplaints: "ਪ੍ਰਗਤੀ ਵਿੱਚ",
+    pendingComplaints: "ਲੰਬਿਤ",
+    rejectedComplaints: "ਰੱਦ ਕੀਤੀਆਂ",
+    averageResolutionTime: "ਔਸਤ ਹੱਲ ਦਾ ਸਮਾਂ",
+    days: "ਦਿਨ",
+    affectedCitizens: "ਪ੍ਰਭਾਵਿਤ ਨਾਗਰਿਕ",
+    averagePriority: "ਔਸਤ ਤਰਜੀਹ",
+    categoryWiseBreakdown: "ਸ਼੍ਰੇਣੀ-ਅਨੁਸਾਰ ਬ੍ਰੇਕਡਾਉਨ",
+    category: "ਸ਼੍ਰੇਣੀ",
+    total: "ਕੁੱਲ",
+    resolved: "ਹੱਲ",
+    inProgress: "ਪ੍ਰਗਤੀ ਵਿੱਚ",
+    pending: "ਲੰਬਿਤ",
+    rejected: "ਰੱਦ",
+    recentComplaints: "ਹਾਲੀਆ ਸ਼ਿਕਾਇਤਾਂ",
+    complaintId: "ਸ਼ਿਕਾਇਤ ID",
+    subcategory: "ਉਪ-ਸ਼੍ਰੇਣੀ",
+    status: "ਸਥਿਤੀ",
+    officer: "ਨਿਯੁਕਤ ਅਫਸਰ",
+    submittedDate: "ਜਮ੍ਹਾ ਕੀਤੀ ਤਾਰੀਖ",
+    loadingReport: "ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ...",
+    overdueAssignedComplaints: "ਦੇਰ ਨਾਲ ਨਿਯੁਕਤ ਸ਼ਿਕਾਇਤਾਂ",
+    daysInProgress: "ਪ੍ਰਗਤੀ ਵਿੱਚ ਦਿਨ",
+    daysOverdue: "ਦੇਰ ਦੇ ਦਿਨ",
   },
 };
 
@@ -262,7 +366,10 @@ export default function MeetingDetailPage() {
   const [meeting, setMeeting] = useState<AdminMeetingDashboardRecord | null>(
     null,
   );
+  const [areaReport, setAreaReport] = useState<AreaSummaryReport | null>(null);
+  const [departmentReport, setDepartmentReport] = useState<DepartmentComplaintReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reportLoading, setReportLoading] = useState(false);
   const [error, setError] = useState("");
 
   const meetingId = parseInt(params.id as string, 10);
@@ -275,11 +382,47 @@ export default function MeetingDetailPage() {
       setLoading(false);
 
       if (!result.ok) {
-        setError(result.error ?? copy.error);
+        setError(result.error ?? "Error loading meeting details");
         return;
       }
 
       setMeeting(result.meeting);
+
+      // Load area report if it's a constituency visit
+      if (
+        result.meeting.type === MEETINGTYPE.CONSTITUENCY_VISIT &&
+        result.meeting.citizenArea
+      ) {
+        void loadAreaReport(result.meeting.citizenArea);
+      }
+
+      // Load department report if it's a department visit
+      if (
+        result.meeting.type === MEETINGTYPE.DEPARTMENT_VISIT &&
+        result.meeting.contactDepartment
+      ) {
+        void loadDepartmentReport(result.meeting.contactDepartment);
+      }
+    }
+
+    async function loadAreaReport(area: string) {
+      setReportLoading(true);
+      const result = await getAreaSummaryReportAction(area);
+      setReportLoading(false);
+
+      if (result.ok) {
+        setAreaReport(result.data);
+      }
+    }
+
+    async function loadDepartmentReport(department: string) {
+      setReportLoading(true);
+      const result = await getDepartmentComplaintReportAction(department);
+      setReportLoading(false);
+
+      if (result.ok) {
+        setDepartmentReport(result.data);
+      }
     }
 
     void loadMeeting();
@@ -296,21 +439,13 @@ export default function MeetingDetailPage() {
   if (!meeting) {
     return (
       <div style={{ padding: 24 }}>
-        <Row gutter={[16, 0]} align="middle" style={{ marginBottom: 24 }}>
-          <Col>
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => router.back()}
-            >
-              {copy.back}
-            </Button>
-          </Col>
-          <Col>
-            <Title level={2} style={{ color: "#1a3c6e", margin: 0 }}>
-              {copy.title}
-            </Title>
-          </Col>
-        </Row>
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => router.back()}
+          style={{ marginBottom: 16 }}
+        >
+          {copy.back}
+        </Button>
         <Alert
           type="error"
           showIcon
@@ -333,10 +468,7 @@ export default function MeetingDetailPage() {
     <div style={{ padding: 4 }}>
       <Row gutter={[16, 0]} align="middle" style={{ marginBottom: 24 }}>
         <Col>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.back()}
-          >
+          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
             {copy.back}
           </Button>
         </Col>
@@ -411,7 +543,768 @@ export default function MeetingDetailPage() {
         </Col>
       </Row>
 
-      {/* Participant Information - varies by meeting type */}
+      {/* Area Summary Report - Only for Constituency Visit */}
+      {isConstituencyVisit && (
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          <Col xs={24}>
+            <Card
+              title={copy.areaSummaryReport}
+              style={{ borderRadius: 8 }}
+              loading={reportLoading}
+            >
+              {!reportLoading && areaReport && (
+                <Row gutter={[16, 16]}>
+                  {/* Key Statistics */}
+                  <Col xs={24}>
+                    <Row gutter={[16, 16]}>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#f0f5ff",
+                            borderRadius: 8,
+                            border: "1px solid #b3d8ff",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.totalComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#1a3c6e",
+                            }}
+                          >
+                            {areaReport.totalComplaints}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={5}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#f6ffed",
+                            borderRadius: 8,
+                            border: "1px solid #b7eb8f",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.resolvedComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#52c41a",
+                            }}
+                          >
+                            {areaReport.resolvedCount} -{" "}
+                            {areaReport.totalComplaints}
+                          </div>
+                          {/* <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>
+                            / {areaReport.totalComplaints}
+                          </div> */}
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={5}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#fffbe6",
+                            borderRadius: 8,
+                            border: "1px solid #ffe58f",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.inProgressComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#faad14",
+                            }}
+                          >
+                            {areaReport.inProgressCount} -{" "}
+                            {areaReport.totalComplaints}
+                          </div>
+                          {/* <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>
+                            / {areaReport.totalComplaints}
+                          </div> */}
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#e6f7ff",
+                            borderRadius: 8,
+                            border: "1px solid #91d5ff",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.averageResolutionTime}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#1890ff",
+                            }}
+                          >
+                            {areaReport.averageResolutionDays} - {copy.days}
+                          </div>
+                          {/* <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>
+                            {copy.days}
+                          </div> */}
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#f9f0ff",
+                            borderRadius: 8,
+                            border: "1px solid #ebadf8",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.affectedCitizens}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#722ed1",
+                            }}
+                          >
+                            {areaReport.affectedCitizens}
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                  </Col>
+
+                  {/* Category-wise Breakdown Table */}
+                  {areaReport.categorySummary.length > 0 && (
+                    <Col xs={24}>
+                      <Card
+                        title={copy.categoryWiseBreakdown}
+                        size="small"
+                        style={{ borderRadius: 4 }}
+                      >
+                        <Table
+                          dataSource={areaReport.categorySummary}
+                          columns={[
+                            {
+                              title: copy.category,
+                              dataIndex: "category",
+                              key: "category",
+                              width: "30%",
+                            },
+                            {
+                              title: copy.total,
+                              dataIndex: "count",
+                              key: "count",
+                              width: "14%",
+                              align: "center" as const,
+                            },
+                            {
+                              title: copy.resolved,
+                              dataIndex: "resolved",
+                              key: "resolved",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (
+                                value: number,
+                                record: CategorySummary,
+                              ) => (
+                                <span style={{ color: "#52c41a" }}>
+                                  {value} (
+                                  {Math.round((value / record.count) * 100)}%)
+                                </span>
+                              ),
+                            },
+                            {
+                              title: copy.inProgress,
+                              dataIndex: "inProgress",
+                              key: "inProgress",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (
+                                value: number,
+                                record: CategorySummary,
+                              ) => (
+                                <span style={{ color: "#faad14" }}>
+                                  {value} (
+                                  {Math.round((value / record.count) * 100)}%)
+                                </span>
+                              ),
+                            },
+                            {
+                              title: copy.pending,
+                              dataIndex: "pending",
+                              key: "pending",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (
+                                value: number,
+                                record: CategorySummary,
+                              ) => (
+                                <span style={{ color: "#ff4d4f" }}>
+                                  {value} (
+                                  {Math.round((value / record.count) * 100)}%)
+                                </span>
+                              ),
+                            },
+                          ]}
+                          pagination={false}
+                          size="small"
+                          rowKey="category"
+                        />
+                      </Card>
+                    </Col>
+                  )}
+
+                  {/* Recent Complaints Table */}
+                  {areaReport.recentComplaints.length > 0 && (
+                    <Col xs={24}>
+                      <Card
+                        title={copy.recentComplaints}
+                        size="small"
+                        style={{ borderRadius: 4 }}
+                      >
+                        <Table
+                          dataSource={areaReport.recentComplaints}
+                          columns={[
+                            {
+                              title: copy.complaintId,
+                              dataIndex: "id",
+                              key: "id",
+                              width: "10%",
+                            },
+                            {
+                              title: copy.category,
+                              dataIndex: "category",
+                              key: "category",
+                              width: "15%",
+                            },
+                            {
+                              title: copy.subcategory,
+                              dataIndex: "subcategory",
+                              key: "subcategory",
+                              width: "15%",
+                            },
+                            {
+                              title: copy.status,
+                              dataIndex: "status",
+                              key: "status",
+                              width: "12%",
+                              render: (status: string) => {
+                                let color = "default";
+                                if (status === "resolved") color = "green";
+                                else if (status === "in_progress")
+                                  color = "orange";
+                                else if (status === "pending") color = "red";
+                                else if (status === "rejected")
+                                  color = "volcano";
+                                return <Tag color={color}>{status}</Tag>;
+                              },
+                            },
+                            {
+                              title: copy.priority,
+                              dataIndex: "priority",
+                              key: "priority",
+                              width: "8%",
+                              align: "center" as const,
+                            },
+                            {
+                              title: copy.officer,
+                              dataIndex: "assignedOfficer",
+                              key: "assignedOfficer",
+                              width: "15%",
+                              render: (officer: string | null) =>
+                                officer || "-",
+                            },
+                            {
+                              title: copy.submittedDate,
+                              dataIndex: "createdAt",
+                              key: "createdAt",
+                              width: "15%",
+                              render: (date: Date) =>
+                                formatDateTime(date.toString()),
+                            },
+                          ]}
+                          pagination={{ pageSize: 5 }}
+                          size="small"
+                          rowKey="id"
+                        />
+                      </Card>
+                    </Col>
+                  )}
+                </Row>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Department Complaint Report - Only for Department Visit */}
+      {isDepartmentVisit && (
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          <Col xs={24}>
+            <Card
+              title={copy.departmentSummaryReport}
+              style={{ borderRadius: 8 }}
+              loading={reportLoading}
+            >
+              {!reportLoading && departmentReport && (
+                <Row gutter={[16, 16]}>
+                  {/* Key Statistics */}
+                  <Col xs={24}>
+                    <Row gutter={[16, 16]}>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#f0f5ff",
+                            borderRadius: 8,
+                            border: "1px solid #b3d8ff",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.totalComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#1a3c6e",
+                            }}
+                          >
+                            {departmentReport.totalComplaints}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#f6ffed",
+                            borderRadius: 8,
+                            border: "1px solid #b7eb8f",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.resolvedComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#52c41a",
+                            }}
+                          >
+                            {departmentReport.resolvedCount}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#fffbe6",
+                            borderRadius: 8,
+                            border: "1px solid #ffe58f",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.inProgressComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#faad14",
+                            }}
+                          >
+                            {departmentReport.inProgressCount}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#e6f7ff",
+                            borderRadius: 8,
+                            border: "1px solid #91d5ff",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.averageResolutionTime}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#1890ff",
+                            }}
+                          >
+                            {departmentReport.averageResolutionDays} - {copy.days}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#fff1f0",
+                            borderRadius: 8,
+                            border: "1px solid #ffccc7",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.overdueAssignedComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#ff4d4f",
+                            }}
+                          >
+                            {departmentReport.overdueAssignedCount}
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                  </Col>
+
+                  {/* Overdue Assigned Complaints - Priority Section */}
+                  {departmentReport.overdueAssignedComplaints.length > 0 && (
+                    <Col xs={24}>
+                      <Card
+                        title={`${copy.overdueAssignedComplaints} (${departmentReport.overdueAssignedCount})`}
+                        size="small"
+                        style={{ borderRadius: 4, borderColor: "#ff4d4f" }}
+                      >
+                        <Table
+                          dataSource={departmentReport.overdueAssignedComplaints}
+                          columns={[
+                            {
+                              title: copy.complaintId,
+                              dataIndex: "id",
+                              key: "id",
+                              width: "8%",
+                            },
+                            {
+                              title: copy.category,
+                              dataIndex: "category",
+                              key: "category",
+                              width: "12%",
+                            },
+                            {
+                              title: copy.subcategory,
+                              dataIndex: "subcategory",
+                              key: "subcategory",
+                              width: "12%",
+                            },
+                            {
+                              title: copy.daysInProgress,
+                              dataIndex: "daysInProgress",
+                              key: "daysInProgress",
+                              width: "10%",
+                              render: (days: number) => (
+                                <Tag color="blue">{days} days</Tag>
+                              ),
+                            },
+                            {
+                              title: copy.daysOverdue,
+                              dataIndex: "daysOverdue",
+                              key: "daysOverdue",
+                              width: "10%",
+                              render: (days: number) => (
+                                <Tag color="red">{days} days</Tag>
+                              ),
+                            },
+                            {
+                              title: copy.priority,
+                              dataIndex: "priority",
+                              key: "priority",
+                              width: "8%",
+                              align: "center" as const,
+                            },
+                            {
+                              title: copy.officer,
+                              dataIndex: "assignedOfficer",
+                              key: "assignedOfficer",
+                              width: "15%",
+                              render: (officer: string | null) =>
+                                officer || "-",
+                            },
+                            {
+                              title: copy.submittedDate,
+                              dataIndex: "createdAt",
+                              key: "createdAt",
+                              width: "15%",
+                              render: (date: Date) =>
+                                formatDateTime(date.toString()),
+                            },
+                          ]}
+                          pagination={{ pageSize: 5 }}
+                          size="small"
+                          rowKey="id"
+                        />
+                      </Card>
+                    </Col>
+                  )}
+
+                  {/* Category-wise Breakdown Table */}
+                  {departmentReport.categorySummary.length > 0 && (
+                    <Col xs={24}>
+                      <Card
+                        title={copy.categoryWiseBreakdown}
+                        size="small"
+                        style={{ borderRadius: 4 }}
+                      >
+                        <Table
+                          dataSource={departmentReport.categorySummary}
+                          columns={[
+                            {
+                              title: copy.category,
+                              dataIndex: "category",
+                              key: "category",
+                              width: "30%",
+                            },
+                            {
+                              title: copy.total,
+                              dataIndex: "count",
+                              key: "count",
+                              width: "14%",
+                              align: "center" as const,
+                            },
+                            {
+                              title: copy.resolved,
+                              dataIndex: "resolved",
+                              key: "resolved",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (count: number, record) => (
+                                <>
+                                  {count} (
+                                  {Math.round(
+                                    (count / (record as { count: number }).count) *
+                                      100,
+                                  )}
+                                  %)
+                                </>
+                              ),
+                            },
+                            {
+                              title: copy.inProgress,
+                              dataIndex: "inProgress",
+                              key: "inProgress",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (count: number, record) => (
+                                <>
+                                  {count} (
+                                  {Math.round(
+                                    (count / (record as { count: number }).count) *
+                                      100,
+                                  )}
+                                  %)
+                                </>
+                              ),
+                            },
+                            {
+                              title: copy.pending,
+                              dataIndex: "pending",
+                              key: "pending",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (count: number, record) => (
+                                <>
+                                  {count} (
+                                  {Math.round(
+                                    (count / (record as { count: number }).count) *
+                                      100,
+                                  )}
+                                  %)
+                                </>
+                              ),
+                            },
+                            {
+                              title: copy.rejected,
+                              dataIndex: "rejected",
+                              key: "rejected",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (count: number, record) => (
+                                <>
+                                  {count} (
+                                  {Math.round(
+                                    (count / (record as { count: number }).count) *
+                                      100,
+                                  )}
+                                  %)
+                                </>
+                              ),
+                            },
+                          ]}
+                          pagination={false}
+                          size="small"
+                          rowKey="category"
+                        />
+                      </Card>
+                    </Col>
+                  )}
+
+                  {/* Recent Complaints Table */}
+                  {departmentReport.recentComplaints.length > 0 && (
+                    <Col xs={24}>
+                      <Card
+                        title={copy.recentComplaints}
+                        size="small"
+                        style={{ borderRadius: 4 }}
+                      >
+                        <Table
+                          dataSource={departmentReport.recentComplaints}
+                          columns={[
+                            {
+                              title: copy.complaintId,
+                              dataIndex: "id",
+                              key: "id",
+                              width: "10%",
+                            },
+                            {
+                              title: copy.category,
+                              dataIndex: "category",
+                              key: "category",
+                              width: "15%",
+                            },
+                            {
+                              title: copy.subcategory,
+                              dataIndex: "subcategory",
+                              key: "subcategory",
+                              width: "15%",
+                            },
+                            {
+                              title: copy.status,
+                              dataIndex: "status",
+                              key: "status",
+                              width: "12%",
+                              render: (status: string) => {
+                                let color = "default";
+                                if (status === "resolved") color = "green";
+                                else if (status === "in_progress")
+                                  color = "orange";
+                                else if (status === "pending") color = "red";
+                                else if (status === "rejected")
+                                  color = "volcano";
+                                return <Tag color={color}>{status}</Tag>;
+                              },
+                            },
+                            {
+                              title: copy.priority,
+                              dataIndex: "priority",
+                              key: "priority",
+                              width: "8%",
+                              align: "center" as const,
+                            },
+                            {
+                              title: copy.officer,
+                              dataIndex: "assignedOfficer",
+                              key: "assignedOfficer",
+                              width: "15%",
+                              render: (officer: string | null) =>
+                                officer || "-",
+                            },
+                            {
+                              title: copy.submittedDate,
+                              dataIndex: "createdAt",
+                              key: "createdAt",
+                              width: "15%",
+                              render: (date: Date) =>
+                                formatDateTime(date.toString()),
+                            },
+                          ]}
+                          pagination={{ pageSize: 5 }}
+                          size="small"
+                          rowKey="id"
+                        />
+                      </Card>
+                    </Col>
+                  )}
+                </Row>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      )}
+
       {(isCitizenMeet || isDepartmentVisit || isPersonalMeet) && (
         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
           <Col xs={24} md={12}>

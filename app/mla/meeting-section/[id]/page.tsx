@@ -12,7 +12,6 @@ import {
   Typography,
   Tag,
   Skeleton,
-  Statistic,
   Table,
 } from "antd";
 import { ArrowLeftOutlined, DownloadOutlined } from "@ant-design/icons";
@@ -26,6 +25,10 @@ import {
   type AreaSummaryReport,
   type CategorySummary,
 } from "@/actions/admin";
+import {
+  getDepartmentComplaintReportAction,
+  type DepartmentComplaintReport,
+} from "@/actions/admin/getDepartmentComplaintReportAction";
 
 const { Title, Text } = Typography;
 
@@ -95,6 +98,7 @@ const PAGE_COPY = {
     selfDraftedLetter: "Self Drafted Letter",
     downloadLetter: "Download Letter",
     areaSummaryReport: "Area Summary Report",
+    departmentSummaryReport: "Department Summary Report",
     totalComplaints: "Total Complaints",
     resolvedComplaints: "Resolved",
     inProgressComplaints: "In Progress",
@@ -117,7 +121,10 @@ const PAGE_COPY = {
     status: "Status",
     officer: "Assigned Officer",
     submittedDate: "Submitted Date",
-    loadingReport: "Loading area report...",
+    loadingReport: "Loading report...",
+    overdueAssignedComplaints: "Overdue Assigned Complaints",
+    daysInProgress: "Days in Progress",
+    daysOverdue: "Days Overdue",
   },
   hi: {
     title: "मीटिंग विवरण",
@@ -195,7 +202,11 @@ const PAGE_COPY = {
     status: "स्थिति",
     officer: "असाइन किया गया अधिकारी",
     submittedDate: "सबमिट किया गया दिनांक",
-    loadingReport: "क्षेत्र रिपोर्ट लोड हो रही है...",
+    loadingReport: "रिपोर्ट लोड हो रही है...",
+    departmentSummaryReport: "विभाग सारांश रिपोर्ट",
+    overdueAssignedComplaints: "समय सीमा से अधिक असाइन की गई शिकायतें",
+    daysInProgress: "प्रगति में दिन",
+    daysOverdue: "समय सीमा से अधिक दिन",
   },
   pa: {
     title: "ਮੀਟਿੰਗ ਵੇਰਵੇ",
@@ -273,7 +284,11 @@ const PAGE_COPY = {
     status: "ਸਥਿਤੀ",
     officer: "ਨਿਯੁਕਤ ਅਫਸਰ",
     submittedDate: "ਜਮ੍ਹਾ ਕੀਤੀ ਤਾਰੀਖ",
-    loadingReport: "ਖੇਤਰ ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ...",
+    loadingReport: "ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ...",
+    departmentSummaryReport: "ਵਿਭਾਗ ਸਾਰ ਰਿਪੋਰਟ",
+    overdueAssignedComplaints: "ਮਿਆਦ ਵਧ ਗਈ ਨਿਯੁਕਤ ਸ਼ਿਕਾਇਤਾਂ",
+    daysInProgress: "ਅਗਰਸਰ ਦਿਨ",
+    daysOverdue: "ਮਿਆਦ ਵਧ ਗਈ ਦਿਨ",
   },
 };
 
@@ -351,6 +366,7 @@ export default function MeetingDetailPage() {
     null,
   );
   const [areaReport, setAreaReport] = useState<AreaSummaryReport | null>(null);
+  const [departmentReport, setDepartmentReport] = useState<DepartmentComplaintReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [reportLoading, setReportLoading] = useState(false);
   const [error, setError] = useState("");
@@ -378,6 +394,14 @@ export default function MeetingDetailPage() {
       ) {
         void loadAreaReport(result.meeting.citizenArea);
       }
+
+      // Load department report if it's a department visit
+      if (
+        result.meeting.type === MEETINGTYPE.DEPARTMENT_VISIT &&
+        result.meeting.contactDepartment
+      ) {
+        void loadDepartmentReport(result.meeting.contactDepartment);
+      }
     }
 
     async function loadAreaReport(area: string) {
@@ -387,6 +411,16 @@ export default function MeetingDetailPage() {
 
       if (result.ok) {
         setAreaReport(result.data);
+      }
+    }
+
+    async function loadDepartmentReport(department: string) {
+      setReportLoading(true);
+      const result = await getDepartmentComplaintReportAction(department);
+      setReportLoading(false);
+
+      if (result.ok) {
+        setDepartmentReport(result.data);
       }
     }
 
@@ -775,6 +809,431 @@ export default function MeetingDetailPage() {
                       >
                         <Table
                           dataSource={areaReport.recentComplaints}
+                          columns={[
+                            {
+                              title: copy.complaintId,
+                              dataIndex: "id",
+                              key: "id",
+                              width: "10%",
+                            },
+                            {
+                              title: copy.category,
+                              dataIndex: "category",
+                              key: "category",
+                              width: "15%",
+                            },
+                            {
+                              title: copy.subcategory,
+                              dataIndex: "subcategory",
+                              key: "subcategory",
+                              width: "15%",
+                            },
+                            {
+                              title: copy.status,
+                              dataIndex: "status",
+                              key: "status",
+                              width: "12%",
+                              render: (status: string) => {
+                                let color = "default";
+                                if (status === "resolved") color = "green";
+                                else if (status === "in_progress")
+                                  color = "orange";
+                                else if (status === "pending") color = "red";
+                                else if (status === "rejected")
+                                  color = "volcano";
+                                return <Tag color={color}>{status}</Tag>;
+                              },
+                            },
+                            {
+                              title: copy.priority,
+                              dataIndex: "priority",
+                              key: "priority",
+                              width: "8%",
+                              align: "center" as const,
+                            },
+                            {
+                              title: copy.officer,
+                              dataIndex: "assignedOfficer",
+                              key: "assignedOfficer",
+                              width: "15%",
+                              render: (officer: string | null) =>
+                                officer || "-",
+                            },
+                            {
+                              title: copy.submittedDate,
+                              dataIndex: "createdAt",
+                              key: "createdAt",
+                              width: "15%",
+                              render: (date: Date) =>
+                                formatDateTime(date.toString()),
+                            },
+                          ]}
+                          pagination={{ pageSize: 5 }}
+                          size="small"
+                          rowKey="id"
+                        />
+                      </Card>
+                    </Col>
+                  )}
+                </Row>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Department Complaint Report - Only for Department Visit */}
+      {isDepartmentVisit && (
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          <Col xs={24}>
+            <Card
+              title={copy.departmentSummaryReport}
+              style={{ borderRadius: 8 }}
+              loading={reportLoading}
+            >
+              {!reportLoading && departmentReport && (
+                <Row gutter={[16, 16]}>
+                  {/* Key Statistics */}
+                  <Col xs={24}>
+                    <Row gutter={[16, 16]}>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#f0f5ff",
+                            borderRadius: 8,
+                            border: "1px solid #b3d8ff",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.totalComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#1a3c6e",
+                            }}
+                          >
+                            {departmentReport.totalComplaints}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#f6ffed",
+                            borderRadius: 8,
+                            border: "1px solid #b7eb8f",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.resolvedComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#52c41a",
+                            }}
+                          >
+                            {departmentReport.resolvedCount}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#fffbe6",
+                            borderRadius: 8,
+                            border: "1px solid #ffe58f",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.inProgressComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#faad14",
+                            }}
+                          >
+                            {departmentReport.inProgressCount}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#e6f7ff",
+                            borderRadius: 8,
+                            border: "1px solid #91d5ff",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.averageResolutionTime}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#1890ff",
+                            }}
+                          >
+                            {departmentReport.averageResolutionDays} - {copy.days}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={12} md={4}>
+                        <div
+                          style={{
+                            padding: 16,
+                            backgroundColor: "#fff1f0",
+                            borderRadius: 8,
+                            border: "1px solid #ffccc7",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {copy.overdueAssignedComplaints}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 28,
+                              fontWeight: "bold",
+                              color: "#ff4d4f",
+                            }}
+                          >
+                            {departmentReport.overdueAssignedCount}
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                  </Col>
+
+                  {/* Overdue Assigned Complaints - Priority Section */}
+                  {departmentReport.overdueAssignedComplaints.length > 0 && (
+                    <Col xs={24}>
+                      <Card
+                        title={`${copy.overdueAssignedComplaints} (${departmentReport.overdueAssignedCount})`}
+                        size="small"
+                        style={{ borderRadius: 4, borderColor: "#ff4d4f" }}
+                      >
+                        <Table
+                          dataSource={departmentReport.overdueAssignedComplaints}
+                          columns={[
+                            {
+                              title: copy.complaintId,
+                              dataIndex: "id",
+                              key: "id",
+                              width: "8%",
+                            },
+                            {
+                              title: copy.category,
+                              dataIndex: "category",
+                              key: "category",
+                              width: "12%",
+                            },
+                            {
+                              title: copy.subcategory,
+                              dataIndex: "subcategory",
+                              key: "subcategory",
+                              width: "12%",
+                            },
+                            {
+                              title: copy.daysInProgress,
+                              dataIndex: "daysInProgress",
+                              key: "daysInProgress",
+                              width: "10%",
+                              render: (days: number) => (
+                                <Tag color="blue">{days} days</Tag>
+                              ),
+                            },
+                            {
+                              title: copy.daysOverdue,
+                              dataIndex: "daysOverdue",
+                              key: "daysOverdue",
+                              width: "10%",
+                              render: (days: number) => (
+                                <Tag color="red">{days} days</Tag>
+                              ),
+                            },
+                            {
+                              title: copy.priority,
+                              dataIndex: "priority",
+                              key: "priority",
+                              width: "8%",
+                              align: "center" as const,
+                            },
+                            {
+                              title: copy.officer,
+                              dataIndex: "assignedOfficer",
+                              key: "assignedOfficer",
+                              width: "15%",
+                              render: (officer: string | null) =>
+                                officer || "-",
+                            },
+                            {
+                              title: copy.submittedDate,
+                              dataIndex: "createdAt",
+                              key: "createdAt",
+                              width: "15%",
+                              render: (date: Date) =>
+                                formatDateTime(date.toString()),
+                            },
+                          ]}
+                          pagination={{ pageSize: 5 }}
+                          size="small"
+                          rowKey="id"
+                        />
+                      </Card>
+                    </Col>
+                  )}
+
+                  {/* Category-wise Breakdown Table */}
+                  {departmentReport.categorySummary.length > 0 && (
+                    <Col xs={24}>
+                      <Card
+                        title={copy.categoryWiseBreakdown}
+                        size="small"
+                        style={{ borderRadius: 4 }}
+                      >
+                        <Table
+                          dataSource={departmentReport.categorySummary}
+                          columns={[
+                            {
+                              title: copy.category,
+                              dataIndex: "category",
+                              key: "category",
+                              width: "30%",
+                            },
+                            {
+                              title: copy.total,
+                              dataIndex: "count",
+                              key: "count",
+                              width: "14%",
+                              align: "center" as const,
+                            },
+                            {
+                              title: copy.resolved,
+                              dataIndex: "resolved",
+                              key: "resolved",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (count: number, record) => (
+                                <>
+                                  {count} (
+                                  {Math.round(
+                                    (count / (record as { count: number }).count) *
+                                      100,
+                                  )}
+                                  %)
+                                </>
+                              ),
+                            },
+                            {
+                              title: copy.inProgress,
+                              dataIndex: "inProgress",
+                              key: "inProgress",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (count: number, record) => (
+                                <>
+                                  {count} (
+                                  {Math.round(
+                                    (count / (record as { count: number }).count) *
+                                      100,
+                                  )}
+                                  %)
+                                </>
+                              ),
+                            },
+                            {
+                              title: copy.pending,
+                              dataIndex: "pending",
+                              key: "pending",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (count: number, record) => (
+                                <>
+                                  {count} (
+                                  {Math.round(
+                                    (count / (record as { count: number }).count) *
+                                      100,
+                                  )}
+                                  %)
+                                </>
+                              ),
+                            },
+                            {
+                              title: copy.rejected,
+                              dataIndex: "rejected",
+                              key: "rejected",
+                              width: "14%",
+                              align: "center" as const,
+                              render: (count: number, record) => (
+                                <>
+                                  {count} (
+                                  {Math.round(
+                                    (count / (record as { count: number }).count) *
+                                      100,
+                                  )}
+                                  %)
+                                </>
+                              ),
+                            },
+                          ]}
+                          pagination={false}
+                          size="small"
+                          rowKey="category"
+                        />
+                      </Card>
+                    </Col>
+                  )}
+
+                  {/* Recent Complaints Table */}
+                  {departmentReport.recentComplaints.length > 0 && (
+                    <Col xs={24}>
+                      <Card
+                        title={copy.recentComplaints}
+                        size="small"
+                        style={{ borderRadius: 4 }}
+                      >
+                        <Table
+                          dataSource={departmentReport.recentComplaints}
                           columns={[
                             {
                               title: copy.complaintId,
