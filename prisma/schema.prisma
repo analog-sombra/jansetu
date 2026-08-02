@@ -39,6 +39,7 @@ enum COMPLAINTSTATUS {
   CLOSED
   ESCALATED
   AUTO_CLOSED
+  WORKS
 }
 
 enum ASIGNMENTSTATUS {
@@ -211,6 +212,7 @@ model complaint {
   updatedAt             DateTime                       @updatedAt
   complaintClusters     complaint_cluster[]
   works                 work[]
+  workMappings          complaint_work[]
 
   @@index([categoryId, subcategoryId, createdAt])
   @@index([lat, lng])
@@ -500,6 +502,7 @@ model work {
   media      work_media[]
   updates    work_update[]
   audit_logs audit_log[]   @relation("WorkAuditLogs")
+  complaintMappings complaint_work[] @relation("ComplaintWorkMapping")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -510,6 +513,20 @@ model work {
   @@index([priority, status])
   @@index([created_by_user_id, createdAt])
   @@index([cluster_id])
+}
+
+model complaint_work {
+  id          Int       @id @default(autoincrement())
+  complaintId Int
+  complaint   complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  workId      Int
+  work        work      @relation("ComplaintWorkMapping", fields: [workId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([complaintId, workId])
+  @@index([complaintId])
+  @@index([workId])
+  @@index([createdAt])
 }
 
 model work_task {

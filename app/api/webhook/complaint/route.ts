@@ -161,15 +161,15 @@ function verifyWebhookSignature(
     .update(payload, "utf8")
     .digest("hex");
 
-  console.log("Expected signature length:", expectedSignature.length);
-  console.log("Received signature length (trimmed):", trimmedSignature.length);
-  console.log("Expected signature:", expectedSignature.substring(0, 20) + "...");
-  console.log("Received signature (trimmed):", trimmedSignature.substring(0, 20) + "...");
-  console.log("Full received signature:", trimmedSignature);
 
   // Check if lengths match before using timingSafeEqual
   if (trimmedSignature.length !== expectedSignature.length) {
-    console.error("Signature length mismatch! Expected:", expectedSignature.length, "Got:", trimmedSignature.length);
+    console.error(
+      "Signature length mismatch! Expected:",
+      expectedSignature.length,
+      "Got:",
+      trimmedSignature.length,
+    );
     return false;
   }
 
@@ -188,10 +188,11 @@ export async function POST(request: NextRequest) {
   try {
     // Get raw body for signature verification
     const rawBody = await request.text();
-    
+
     // Verify webhook signature
-    const signature = request.headers.get("X-Yougant-Signature") || 
-                     request.headers.get("x-yougant-signature");
+    const signature =
+      request.headers.get("X-Yougant-Signature") ||
+      request.headers.get("x-yougant-signature");
 
     if (!signature) {
       return NextResponse.json(
@@ -210,10 +211,13 @@ export async function POST(request: NextRequest) {
 
     try {
       if (!verifyWebhookSignature(rawBody, signature, signingSecret)) {
-        console.error("Invalid webhook signature. Payload may have been tampered with.");
+        console.error(
+          "Invalid webhook signature. Payload may have been tampered with.",
+        );
         return NextResponse.json(
           {
-            error: "Invalid webhook signature. Payload may have been tampered with.",
+            error:
+              "Invalid webhook signature. Payload may have been tampered with.",
             success: false,
           },
           { status: 401 },
@@ -305,6 +309,7 @@ export async function POST(request: NextRequest) {
           status: COMPLAINTSTATUS.PENDING,
           priority: priority,
           affectedCitizensCount: 1,
+          createdByUserId: user.id,
         },
         include: {
           user: true,

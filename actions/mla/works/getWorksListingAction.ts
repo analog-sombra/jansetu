@@ -45,12 +45,12 @@ export async function getWorksListingAction(params: GetWorksListingParams): Prom
 
     // Role-based filtering
     if (auth.user.role === "MLA") {
-      whereClause.created_by_user_id = auth.user.id;
+      // whereClause.created_by_user_id = auth.user.id;
     } else if (["MLA_PA", "MLA_SECRETARY"].includes(auth.user.role)) {
       // For MLA_PA/SECRETARY, show works from their MLA (need to determine relationship)
       // For now, return empty list or all works if no relationship exists
       // TODO: Implement proper MLA_PA/SECRETARY to MLA relationship
-      whereClause.created_by_user_id = auth.user.id; // Fallback: show their own works if any
+      // whereClause.created_by_user_id = auth.user.id; // Fallback: show their own works if any
     } else if (auth.user.role === "ADMIN") {
       // ADMIN sees all works (no restriction)
     }

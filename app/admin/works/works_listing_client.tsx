@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   Button,
-  Input,
   Select,
   Space,
   Table,
@@ -14,7 +13,6 @@ import {
   Alert,
   Spin,
   Empty,
-  Form,
 } from "antd";
 import { PlusOutlined, EyeOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
@@ -55,43 +53,13 @@ export default function WorksListingClient({
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(initialError);
-  const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<WORKSTATUS | "">("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [form] = Form.useForm();
-
-  const handleSearch = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const result = await getWorksListingAction({
-        page: 1,
-        limit: pageSize,
-        search: searchText || undefined,
-        status: statusFilter || undefined,
-      });
-
-      if (result.ok) {
-        setWorks(result.data.items);
-        setTotal(result.data.total);
-        setPage(1);
-      } else {
-        setError(result.error);
-        console.error("Works fetch error:", result.error);
-      }
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Failed to fetch works";
-      setError(errorMsg);
-      console.error("Exception in handleSearch:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleTableChange = async (pagination: any) => {
     setPage(pagination.current);
+    setPageSize(pagination.pageSize);
     setLoading(true);
     setError("");
 
@@ -99,7 +67,6 @@ export default function WorksListingClient({
       const result = await getWorksListingAction({
         page: pagination.current,
         limit: pagination.pageSize,
-        search: searchText || undefined,
         status: statusFilter || undefined,
       });
 
@@ -114,7 +81,6 @@ export default function WorksListingClient({
       const errorMsg =
         err instanceof Error ? err.message : "Failed to fetch works";
       setError(errorMsg);
-      console.error("Exception in handleTableChange:", err);
     } finally {
       setLoading(false);
     }
@@ -221,16 +187,6 @@ export default function WorksListingClient({
 
         <Row gutter={[16, 16]} className="mb-4">
           <Col xs={24} sm={12} md={8}>
-            <Input.Search
-              placeholder="Search works by title..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onSearch={handleSearch}
-              enterButton
-              allowClear
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
             <Select
               placeholder="Filter by status"
               value={statusFilter}
@@ -245,11 +201,6 @@ export default function WorksListingClient({
                 })),
               ]}
             />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Button onClick={handleSearch} loading={loading} block>
-              Apply Filters
-            </Button>
           </Col>
         </Row>
 

@@ -10,7 +10,7 @@ export default async function CampUsersPage() {
     redirect("/login");
   }
 
-  if (user.role !== "CAMP_DEO" && user.role !== "CAMP_FIELD_OFFICER") {
+  if (user.role !== "CAMP_HEAD") {
     redirect("/user");
   }
 

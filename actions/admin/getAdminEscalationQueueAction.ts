@@ -103,7 +103,7 @@ export async function getAdminEscalationQueueAction(): Promise<AdminEscalationQu
           department: assignment.officer.department.name,
           ageHours,
           status: assignment.status as AdminEscalationStatus,
-          trigger: isPastDue ? "AUTO_ESCALATED_7D" : "REMINDER_48H",
+          trigger: isPastDue ? "ESCALATION_7D" : "REMINDER_48H",
           lastActionAt: assignment.updatedAt.toISOString(),
         };
       })

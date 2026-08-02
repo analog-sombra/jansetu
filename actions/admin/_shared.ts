@@ -1,7 +1,7 @@
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
 export function isAdminRole(role: string): boolean {
-  return role === "ADMIN" || role === "MLA" || role === "MLA_SECRETARY";
+  return role === "ADMIN" || role === "MLA" || role === "MLA_SECRETARY" || role === "MLA_PA";
 }
 
 export async function requireAdminUser() {

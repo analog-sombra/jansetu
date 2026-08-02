@@ -29,7 +29,7 @@ export async function completeInvitationMeetingAction(
     };
   }
 
-  if (user.role !== "MLA_PA" && user.role !== "CAMP_HEAD") {
+  if (user.role !== "CAMP_HEAD") {
     return {
       ok: false,
       error: "You are not authorized for this action.",

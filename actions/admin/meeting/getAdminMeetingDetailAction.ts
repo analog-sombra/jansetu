@@ -27,7 +27,7 @@ export async function getAdminMeetingDetailAction(
   if (!user) {
     // If not admin, check if MLA_PA user
     const currentUser = await getAuthenticatedUser();
-    if (!currentUser || (currentUser.role !== "MLA_PA" && currentUser.role !== "CAMP_HEAD")) {
+    if (!currentUser || (currentUser.role !== "CAMP_HEAD")) {
       return {
         ok: false,
         error: "You are not authorized for this section.",

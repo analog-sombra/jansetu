@@ -2,7 +2,7 @@ import { ROLE } from "@prisma/client";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
 export function isMlaPaRouteRole(role: ROLE): boolean {
-  return role === "MLA_PA" || role === "CAMP_HEAD";
+  return role === "CAMP_HEAD";
 }
 
 export async function requireMlaPaRouteUser() {
@@ -18,7 +18,6 @@ export async function requireMlaPaRouteUser() {
       error: "You are not authorized for this section.",
     } as const;
   }
-
 
   return { ok: true, user } as const;
 }

@@ -13,7 +13,8 @@ export default async function LoginPage() {
     if (
       user.role === "ADMIN" ||
       user.role === "MLA_SECRETARY" ||
-      user.role === "SYSTEM"
+      user.role === "SYSTEM" ||
+      user.role === "MLA_PA"
     ) {
       redirect("/admin");
     }

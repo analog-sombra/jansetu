@@ -130,7 +130,7 @@ export type AdminEscalationStatus =
   | "QUERY"
   | "ESCALATED";
 
-export type AdminEscalationTrigger = "REMINDER_48H" | "AUTO_ESCALATED_7D";
+export type AdminEscalationTrigger = "REMINDER_48H" | "ESCALATION_7D";
 
 export type AdminEscalationRecord = {
   id: number;

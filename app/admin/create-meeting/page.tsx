@@ -110,6 +110,22 @@ const PAGE_COPY = {
     enterSelfDraftedLetter: "Enter drafted letter text",
     campHeadUser: "CAMP_HEAD User",
     selectCampHeadUser: "Select CAMP_HEAD user",
+    husbandName: "Husband Name",
+    enterHusbandName: "Enter husband name",
+    wifeName: "Wife Name",
+    enterWifeName: "Enter wife name",
+    letterTo: "Letter To",
+    enterLetterTo: "Enter recipient name",
+    deceasedName: "Who Died",
+    enterDeceasedName: "Enter deceased name",
+    relationWithDeceased: "Relation with Deceased",
+    enterRelationWithDeceased: "Enter relation",
+    dateOfDeath: "Date of Death",
+    selectDateOfDeath: "Select date of death",
+    personName: "Person Name",
+    enterPersonName: "Enter person name",
+    relationWith: "Relation With",
+    enterRelationWith: "Enter relation",
   },
   hi: {
     title: "बैठक बनाएँ",
@@ -186,6 +202,22 @@ const PAGE_COPY = {
     enterSelfDraftedLetter: "ड्राफ्टेड पत्र दर्ज करें",
     campHeadUser: "CAMP_HEAD यूज़र",
     selectCampHeadUser: "CAMP_HEAD यूज़र चुनें",
+    husbandName: "दूल्हे का नाम",
+    enterHusbandName: "दूल्हे का नाम दर्ज करें",
+    wifeName: "दुल्हन का नाम",
+    enterWifeName: "दुल्हन का नाम दर्ज करें",
+    letterTo: "पत्र किसे",
+    enterLetterTo: "प्राप्तकर्ता का नाम दर्ज करें",
+    deceasedName: "कौन मर गया",
+    enterDeceasedName: "मृत का नाम दर्ज करें",
+    relationWithDeceased: "मृत के साथ संबंध",
+    enterRelationWithDeceased: "संबंध दर्ज करें",
+    dateOfDeath: "मृत्यु की तारीख",
+    selectDateOfDeath: "मृत्यु की तारीख चुनें",
+    personName: "व्यक्ति का नाम",
+    enterPersonName: "व्यक्ति का नाम दर्ज करें",
+    relationWith: "संबंध",
+    enterRelationWith: "संबंध दर्ज करें",
   },
   pa: {
     title: "ਮੀਟਿੰਗ ਬਣਾਓ",
@@ -261,6 +293,22 @@ const PAGE_COPY = {
     enterSelfDraftedLetter: "ਡਰਾਫਟ ਪੱਤਰ ਦਰਜ ਕਰੋ",
     campHeadUser: "CAMP_HEAD ਯੂਜ਼ਰ",
     selectCampHeadUser: "CAMP_HEAD ਯੂਜ਼ਰ ਚੁਣੋ",
+    husbandName: "ਪਤੀ ਦਾ ਨਾਮ",
+    enterHusbandName: "ਪਤੀ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",
+    wifeName: "ਪਤਨੀ ਦਾ ਨਾਮ",
+    enterWifeName: "ਪਤਨੀ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",
+    letterTo: "ਪੱਤਰ ਕੌਣ ਨੂੰ",
+    enterLetterTo: "ਪ੍ਰਾਪਤਕਰਤਾ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",
+    deceasedName: "ਕੌਣ ਮਰ ਗਿਆ",
+    enterDeceasedName: "ਮ੍ਰਿਤਕ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",
+    relationWithDeceased: "ਮ੍ਰਿਤਕ ਨਾਲ ਸਬੰਧ",
+    enterRelationWithDeceased: "ਸਬੰਧ ਦਰਜ ਕਰੋ",
+    dateOfDeath: "ਮੌਤ ਦੀ ਮਿਤੀ",
+    selectDateOfDeath: "ਮੌਤ ਦੀ ਮਿਤੀ ਚੁਣੋ",
+    personName: "ਵਿਅਕਤੀ ਦਾ ਨਾਮ",
+    enterPersonName: "ਵਿਅਕਤੀ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",
+    relationWith: "ਸਬੰਧ",
+    enterRelationWith: "ਸਬੰਧ ਦਰਜ ਕਰੋ",
   },
 } as const;
 
@@ -303,6 +351,14 @@ type FormValues = {
   contactDepartment?: string;
   partyMeetDetails?: string;
   selectedStaffNames?: string;
+  husbandName?: string;
+  wifeName?: string;
+  letterTo?: string;
+  deceasedName?: string;
+  relationWithDeceased?: string;
+  dateOfDeath?: { toISOString(): string };
+  personName?: string;
+  relationWith?: string;
 };
 
 export default function CreateMeetingPage() {
@@ -314,6 +370,7 @@ export default function CreateMeetingPage() {
   const [selectedType, setSelectedType] = useState<FormValues["type"]>(
     MEETINGTYPE.CONSTITUENCY_VISIT,
   );
+  const [selectedInvitationSubtype, setSelectedInvitationSubtype] = useState<INVITATIONSUBTYPE | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingLookup, setLoadingLookup] = useState(false);
@@ -330,6 +387,12 @@ export default function CreateMeetingPage() {
       user.role !== "ADMIN" &&
       user.role !== "CITIZEN",
   );
+
+  const campDeoUsers = users.filter((user) => user.role === "CAMP_DEO");
+  const campHeadUsers = users.filter((user) => user.role === "CAMP_HEAD");
+
+  const filteredAssignees =
+    selectedType === MEETINGTYPE.INVITATION ? campDeoUsers : reportUsers;
   const mobileRules = [
     { required: true },
     { pattern: /^\d{10}$/, message: copy.invalidMobile },
@@ -489,6 +552,50 @@ export default function CreateMeetingPage() {
 
   async function onFinish(values: FormValues) {
     setSaving(true);
+
+    // Validate invitation-specific fields
+    if (values.type === MEETINGTYPE.INVITATION) {
+      if (values.invitationSubtype === INVITATIONSUBTYPE.MARRIAGE) {
+        if (!values.husbandName || !values.wifeName || !values.letterTo) {
+          setError("Please fill in all marriage invitation fields: Husband Name, Wife Name, and Letter To");
+          setSaving(false);
+          return;
+        }
+      } else if (values.invitationSubtype === INVITATIONSUBTYPE.BIRTHDAY) {
+        if (!values.personName || !values.letterTo) {
+          setError("Please fill in all birthday invitation fields: Person Name and Letter To");
+          setSaving(false);
+          return;
+        }
+      } else if (values.invitationSubtype === INVITATIONSUBTYPE.FUNERAL) {
+        if (!values.deceasedName || !values.letterTo || !values.relationWithDeceased || !values.dateOfDeath) {
+          setError("Please fill in all funeral invitation fields: Deceased Name, Letter To, Relation with Deceased, and Date of Death");
+          setSaving(false);
+          return;
+        }
+      }
+      
+      if (!values.selfDraftedLetter || values.selfDraftedLetter.length < 20) {
+        setError("Please generate or provide a self-drafted letter (minimum 20 characters)");
+        setSaving(false);
+        return;
+      }
+    }
+
+    // Build purpose for invitation types
+    let purposeValue = values.purpose;
+    if (values.type === MEETINGTYPE.INVITATION) {
+      if (values.invitationSubtype === INVITATIONSUBTYPE.MARRIAGE) {
+        purposeValue = `${values.husbandName}, ${values.wifeName}, ${values.letterTo}`;
+      } else if (values.invitationSubtype === INVITATIONSUBTYPE.BIRTHDAY) {
+        purposeValue = `${values.personName}, ${values.letterTo}${values.relationWith ? `, ${values.relationWith}` : ""}`;
+      } else if (values.invitationSubtype === INVITATIONSUBTYPE.FUNERAL) {
+        purposeValue = `${values.deceasedName}, ${values.letterTo}, ${values.relationWithDeceased}, ${values.dateOfDeath}`;
+      } else {
+        purposeValue = values.letterTo || "Invitation";
+      }
+    }
+
     const payload = {
       assignedToUserId: values.assignedToUserId,
       campHeadUserId: values.campHeadUserId,
@@ -496,7 +603,7 @@ export default function CreateMeetingPage() {
       invitationSubtype: values.invitationSubtype,
       giftToCarry: values.giftToCarry,
       selfDraftedLetter: values.selfDraftedLetter,
-      purpose: values.purpose,
+      purpose: purposeValue,
       meetingDateTime: values.meetingDateTime?.toISOString(),
       meetingPlace: values.meetingPlace,
       preferredDateTime: values.preferredDateTime?.toISOString(),
@@ -528,6 +635,7 @@ export default function CreateMeetingPage() {
     setError("");
     form.resetFields();
     setSelectedType(MEETINGTYPE.CONSTITUENCY_VISIT);
+    setSelectedInvitationSubtype(undefined);
     setCitizenDetailsLocked(false);
     setContactDetailsLocked(false);
     setSelectedStaff(new Set());
@@ -541,10 +649,121 @@ export default function CreateMeetingPage() {
   const isPartyMeet = selectedType === MEETINGTYPE.PARTY_MEET;
   const isOfficeMeet = selectedType === MEETINGTYPE.OFFICE_MEET;
   const isInvitation = selectedType === MEETINGTYPE.INVITATION;
+  const isConstituencyVisit = selectedType === MEETINGTYPE.CONSTITUENCY_VISIT;
   const showContactFields =
     selectedType === MEETINGTYPE.DEPARTMENT_VISIT ||
     selectedType === MEETINGTYPE.PERSONAL_MEET ||
     selectedType === MEETINGTYPE.PARTY_MEET;
+
+  function generateInvitationLetter() {
+    const invitationType = form.getFieldValue("invitationSubtype");
+    const meetingDate = form.getFieldValue("meetingDateTime");
+
+    if (!invitationType || !meetingDate) {
+      setError("Please fill in Invitation Type and Date fields");
+      return;
+    }
+
+    const date = new Date(meetingDate);
+    const formattedDate = date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    let letterContent = "";
+
+    if (invitationType === INVITATIONSUBTYPE.MARRIAGE) {
+      const husbandName = form.getFieldValue("husbandName");
+      const wifeName = form.getFieldValue("wifeName");
+      const letterTo = form.getFieldValue("letterTo");
+
+      if (!husbandName || !wifeName || !letterTo) {
+        setError("Please fill in Husband Name, Wife Name, and Letter To fields");
+        return;
+      }
+
+      letterContent = `Shri ${letterTo},
+
+As Shri ${husbandName} and Shrimati ${wifeName} commence the journey of trust and togetherness for a lifetime, I extend my warmest regards and greetings to them on the auspicious occasion of their wedding. Heartfelt gratitude for inviting me to the wedding ceremony being held on ${formattedDate}.
+
+As the couple build a life together, may the joy they find in each other grow brighter every day, and may the bond between them remain unbreakable.
+
+May they journey through life as true partners, accepting each other's imperfections and growing through each other's strengths.
+
+Once again, I extend my warmest greetings and best wishes to them on this special and momentous occasion.
+
+Warm regards,
+
+`;
+    } else if (invitationType === INVITATIONSUBTYPE.BIRTHDAY) {
+      const personName = form.getFieldValue("personName");
+      const letterTo = form.getFieldValue("letterTo");
+
+      if (!personName || !letterTo) {
+        setError("Please fill in Person Name and Letter To fields");
+        return;
+      }
+
+      letterContent = `Shri ${letterTo},
+
+On this special occasion of ${personName}'s birthday, I extend my warmest regards and heartfelt wishes. It is with great pleasure that I send my warm greetings and sincere appreciation for the contributions to our community.
+
+As this special day is celebrated, may it bring good health, happiness, peace, and countless blessings. May the person continue to serve with dedication and purpose, inspiring those around them.
+
+Once again, I extend my warmest greetings and best wishes on this special occasion.
+
+Warm regards,
+
+[Signature]`;
+    } else if (invitationType === INVITATIONSUBTYPE.FUNERAL) {
+      const deceasedName = form.getFieldValue("deceasedName");
+      const letterTo = form.getFieldValue("letterTo");
+      const relationWithDeceased = form.getFieldValue("relationWithDeceased");
+      const dateOfDeath = form.getFieldValue("dateOfDeath");
+
+      if (!deceasedName || !letterTo || !relationWithDeceased || !dateOfDeath) {
+        setError("Please fill in all required fields for funeral invitation");
+        return;
+      }
+
+      const deathDate = new Date(dateOfDeath);
+      const formattedDeathDate = deathDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      letterContent = `Shri ${letterTo},
+
+It is with deep sympathy and heartfelt condolences that I reach out to you during this difficult time of loss. I have learned of the passing of your ${relationWithDeceased} ${deceasedName} on ${formattedDeathDate}, and I wish to express my sincere sympathy and deep regrets.
+
+Please accept my profound condolences to you and your family during this period of grief.
+
+May the cherished memories provide you comfort, and may you find strength and solace in the love of family and friends during this time of sorrow.
+
+With profound sympathy and regards,
+
+[Signature]`;
+    } else {
+      letterContent = `Shri [Recipient Name],
+
+I hope this letter finds you in good health and spirits. It is with great warmth and respect that I extend my regards and best wishes to you.
+
+I wish to connect with you and send my regards on ${formattedDate}, to discuss matters of mutual interest and the welfare of our community. Your continued dedication and service are deeply valued and appreciated.
+
+I extend my warm regards and best wishes.
+
+Warm regards,
+
+[Signature]`;
+    }
+
+    form.setFieldValue("selfDraftedLetter", letterContent);
+    setError("");
+  }
 
   return (
     <div>
@@ -604,7 +823,12 @@ export default function CreateMeetingPage() {
               >
                 <Select
                   options={meetingTypeOptions}
-                  onChange={(value) => setSelectedType(value)}
+                  onChange={(value) => {
+                    setSelectedType(value);
+                    if (value !== MEETINGTYPE.INVITATION) {
+                      setSelectedInvitationSubtype(undefined);
+                    }
+                  }}
                 />
               </Form.Item>
             </Col>
@@ -621,9 +845,158 @@ export default function CreateMeetingPage() {
                     <Select
                       options={invitationSubtypeOptions}
                       placeholder={copy.selectInvitationSubtype}
+                      onChange={(value) => {
+                        setSelectedInvitationSubtype(value);
+                        // Clear all invitation-specific fields when subtype changes
+                        form.setFieldsValue({
+                          husbandName: undefined,
+                          wifeName: undefined,
+                          personName: undefined,
+                          deceasedName: undefined,
+                          letterTo: undefined,
+                          relationWithDeceased: undefined,
+                          dateOfDeath: undefined,
+                          relationWith: undefined,
+                          selfDraftedLetter: undefined,
+                        });
+                      }}
                     />
                   </Form.Item>
                 </Col>
+                {selectedInvitationSubtype === INVITATIONSUBTYPE.MARRIAGE && (
+                  <>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.husbandName}
+                        name="husbandName"
+                        rules={[
+                          { required: true, message: copy.enterHusbandName },
+                          { min: 2, message: "Husband name must be at least 2 characters" },
+                          { max: 100, message: "Husband name must be at most 100 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterHusbandName} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.wifeName}
+                        name="wifeName"
+                        rules={[
+                          { required: true, message: copy.enterWifeName },
+                          { min: 2, message: "Wife name must be at least 2 characters" },
+                          { max: 100, message: "Wife name must be at most 100 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterWifeName} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.letterTo}
+                        name="letterTo"
+                        rules={[
+                          { required: true, message: copy.enterLetterTo },
+                          { min: 2, message: "Letter recipient must be at least 2 characters" },
+                          { max: 100, message: "Letter recipient must be at most 100 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterLetterTo} />
+                      </Form.Item>
+                    </Col>
+                  </>
+                )}
+                {selectedInvitationSubtype === INVITATIONSUBTYPE.FUNERAL && (
+                  <>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.deceasedName}
+                        name="deceasedName"
+                        rules={[
+                          { required: true, message: copy.enterDeceasedName },
+                          { min: 2, message: "Deceased name must be at least 2 characters" },
+                          { max: 100, message: "Deceased name must be at most 100 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterDeceasedName} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.letterTo}
+                        name="letterTo"
+                        rules={[
+                          { required: true, message: copy.enterLetterTo },
+                          { min: 2, message: "Letter recipient must be at least 2 characters" },
+                          { max: 100, message: "Letter recipient must be at most 100 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterLetterTo} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.relationWithDeceased}
+                        name="relationWithDeceased"
+                        rules={[
+                          { required: true, message: copy.enterRelationWithDeceased },
+                          { min: 1, message: "Relation must be at least 1 character" },
+                          { max: 100, message: "Relation must be at most 100 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterRelationWithDeceased} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.dateOfDeath}
+                        name="dateOfDeath"
+                        rules={[{ required: true, message: copy.selectDateOfDeath }]}
+                      >
+                        <DatePicker style={{ width: "100%" }} />
+                      </Form.Item>
+                    </Col>
+                  </>
+                )}
+                {selectedInvitationSubtype === INVITATIONSUBTYPE.BIRTHDAY && (
+                  <>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.personName}
+                        name="personName"
+                        rules={[
+                          { required: true, message: copy.enterPersonName },
+                          { min: 2, message: "Person name must be at least 2 characters" },
+                          { max: 100, message: "Person name must be at most 100 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterPersonName} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.letterTo}
+                        name="letterTo"
+                        rules={[
+                          { required: true, message: copy.enterLetterTo },
+                          { min: 2, message: "Letter recipient must be at least 2 characters" },
+                          { max: 100, message: "Letter recipient must be at most 100 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterLetterTo} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.relationWith}
+                        name="relationWith"
+                        rules={[{ max: 100, message: "Relation must be at most 100 characters" }]}
+                      >
+                        <Input placeholder={copy.enterRelationWith} />
+                      </Form.Item>
+                    </Col>
+                  </>
+                )}
               </>
             )}
             <Col xs={24} md={12}>
@@ -636,7 +1009,7 @@ export default function CreateMeetingPage() {
                   showSearch
                   loading={loadingUsers}
                   notFoundContent={copy.noReportUsers}
-                  options={reportUsers.map((user) => ({
+                  options={filteredAssignees.map((user) => ({
                     label: `${user.name ?? "Unnamed User"} (${user.mobile})`,
                     value: user.id,
                   }))}
@@ -654,7 +1027,7 @@ export default function CreateMeetingPage() {
                     showSearch
                     loading={loadingUsers}
                     placeholder={copy.selectCampHeadUser}
-                    options={reportUsers.map((user) => ({
+                    options={campHeadUsers.map((user) => ({
                       label: `${user.name ?? "Unnamed User"} (${user.mobile})`,
                       value: user.id,
                     }))}
@@ -662,49 +1035,106 @@ export default function CreateMeetingPage() {
                 </Form.Item>
               </Col>
             )}
-            <Col xs={24}>
-              <Form.Item
-                label={copy.purpose}
-                name="purpose"
-                rules={[{ required: true, message: copy.enterPurpose }]}
-              >
-                <Input.TextArea rows={4} placeholder={copy.meetingPurpose} />
-              </Form.Item>
-            </Col>
+            {!isInvitation && (
+              <Col xs={24}>
+                <Form.Item
+                  label={copy.purpose}
+                  name="purpose"
+                  rules={[{ required: true, message: copy.enterPurpose }]}
+                >
+                  <Input.TextArea rows={4} placeholder={copy.meetingPurpose} />
+                </Form.Item>
+              </Col>
+            )}
+
+            {isConstituencyVisit && (
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label={copy.citizenArea}
+                  name="citizenArea"
+                  rules={[
+                    { required: true, message: copy.selectCitizenArea },
+                  ]}
+                >
+                  <Select
+                    showSearch
+                    options={areaOptions}
+                    placeholder={copy.selectCitizenArea}
+                  />
+                </Form.Item>
+              </Col>
+            )}
 
             {!isCitizenMeet && (
               <>
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    label={copy.meetingDateTime}
-                    name="meetingDateTime"
-                    rules={[
-                      { required: true, message: copy.selectMeetingDateTime },
-                    ]}
-                  >
-                    <DatePicker
-                      showTime={{
-                        use12Hours: true,
-                        format: "hh:mm A",
-                        minuteStep: 5,
-                      }}
-                      needConfirm={false}
-                      style={{ width: "100%" }}
-                      format={DATE_TIME_FORMAT}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    label={copy.meetingPlace}
-                    name="meetingPlace"
-                    rules={[
-                      { required: true, message: copy.enterMeetingPlace },
-                    ]}
-                  >
-                    <Input placeholder={copy.enterMeetingPlace} />
-                  </Form.Item>
-                </Col>
+                {!isInvitation && (
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      label={copy.meetingDateTime}
+                      name="meetingDateTime"
+                      rules={[
+                        { required: true, message: copy.selectMeetingDateTime },
+                      ]}
+                    >
+                      <DatePicker
+                        showTime={{
+                          use12Hours: true,
+                          format: "hh:mm A",
+                          minuteStep: 5,
+                        }}
+                        needConfirm={false}
+                        style={{ width: "100%" }}
+                        format={DATE_TIME_FORMAT}
+                      />
+                    </Form.Item>
+                  </Col>
+                )}
+                {!isInvitation && (
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      label={copy.meetingPlace}
+                      name="meetingPlace"
+                      rules={[
+                        { required: true, message: copy.enterMeetingPlace },
+                        { min: 3, message: "Meeting place must be at least 3 characters" },
+                        { max: 500, message: "Meeting place must be at most 500 characters" },
+                      ]}
+                    >
+                      <Input placeholder={copy.enterMeetingPlace} />
+                    </Form.Item>
+                  </Col>
+                )}
+                {isInvitation && (
+                  <>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.meetingDateTime}
+                        name="meetingDateTime"
+                        rules={[
+                          { required: true, message: copy.selectMeetingDateTime },
+                        ]}
+                      >
+                        <DatePicker
+                          style={{ width: "100%" }}
+                          format="DD-MM-YYYY"
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label={copy.meetingPlace}
+                        name="meetingPlace"
+                        rules={[
+                          { required: true, message: copy.enterMeetingPlace },
+                          { min: 3, message: "Meeting place must be at least 3 characters" },
+                          { max: 500, message: "Meeting place must be at most 500 characters" },
+                        ]}
+                      >
+                        <Input placeholder={copy.enterMeetingPlace} />
+                      </Form.Item>
+                    </Col>
+                  </>
+                )}
                 {isInvitation && (
                   <>
                     <Col xs={24}>
@@ -713,6 +1143,8 @@ export default function CreateMeetingPage() {
                         name="giftToCarry"
                         rules={[
                           { required: true, message: copy.enterGiftToCarry },
+                          { min: 3, message: "Gift details must be at least 3 characters" },
+                          { max: 500, message: "Gift details must be at most 500 characters" },
                         ]}
                       >
                         <Input.TextArea
@@ -730,6 +1162,14 @@ export default function CreateMeetingPage() {
                             required: true,
                             message: copy.enterSelfDraftedLetter,
                           },
+                          {
+                            min: 20,
+                            message: "Letter must be at least 20 characters",
+                          },
+                          {
+                            max: 2000,
+                            message: "Letter must be at most 2000 characters",
+                          },
                         ]}
                       >
                         <Input.TextArea
@@ -737,6 +1177,19 @@ export default function CreateMeetingPage() {
                           placeholder={copy.enterSelfDraftedLetter}
                         />
                       </Form.Item>
+                      <div style={{ marginTop: -16, marginBottom: 16 }}>
+                        <Button
+                          type="default"
+                          onClick={generateInvitationLetter}
+                          style={{
+                            borderColor: "#1a3c6e",
+                            color: "#1a3c6e",
+                            fontWeight: 600,
+                          }}
+                        >
+                          ✨ Generate Letter
+                        </Button>
+                      </div>
                     </Col>
                   </>
                 )}

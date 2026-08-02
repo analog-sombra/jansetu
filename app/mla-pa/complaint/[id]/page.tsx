@@ -11,7 +11,9 @@ import {
   Col,
   Divider,
   Image,
+  Modal,
   Row,
+  Select,
   Skeleton,
   Space,
   Steps,
@@ -23,8 +25,11 @@ import {
   getAdminComplaintDetailAction,
   raiseAdminComplaintQueryAction,
   rejectComplaintAction,
+  getAvailableWorksAction,
+  convertComplaintToWorkAction,
   type AdminComplaintDetail,
   type AdminOfficerSummary,
+  type GetAvailableWorksResult,
 } from "@/actions/admin";
 import { useLanguage } from "@/components/provider/language_provider";
 import { CustomMultiSelect } from "@/components/inputfields/multiselect";
@@ -78,6 +83,20 @@ export default function AdminComplaintDetailPage() {
   const [querying, setQuerying] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [assignedOfficerToken, setAssignedOfficerToken] = useState("");
+  const [convertToWorkModalOpen, setConvertToWorkModalOpen] = useState(false);
+  const [convertingToWork, setConvertingToWork] = useState(false);
+  const [selectedWorkId, setSelectedWorkId] = useState<number | null>(null);
+  const [availableWorks, setAvailableWorks] = useState<
+    Array<{
+      id: number;
+      title: string;
+      description: string;
+      departmentId: number;
+      status: string;
+      departmentName: string;
+    }>
+  >([]);
+  const [loadingWorks, setLoadingWorks] = useState(false);
   const [alert, setAlert] = useState<{
     type: "error" | "success" | "warning" | "info";
     text: string;
@@ -390,6 +409,56 @@ export default function AdminComplaintDetailPage() {
     rejectMethods.reset();
     setAlert({ type: "success", text: "Complaint rejected successfully" });
 
+    await loadData();
+  }
+
+  async function openConvertToWorkModal() {
+    setConvertToWorkModalOpen(true);
+    setLoadingWorks(true);
+    setSelectedWorkId(null);
+
+    const result = await getAvailableWorksAction();
+
+    setLoadingWorks(false);
+
+    if (!result.ok) {
+      setAlert({
+        type: "error",
+        text: result.error ?? "Failed to load available works",
+      });
+      return;
+    }
+
+    setAvailableWorks(result.works);
+  }
+
+  async function submitConvertToWork() {
+    if (!complaint || !selectedWorkId) {
+      setAlert({
+        type: "error",
+        text: "Please select a work",
+      });
+      return;
+    }
+
+    setConvertingToWork(true);
+    setAlert(null);
+
+    const result = await convertComplaintToWorkAction(complaint.id, selectedWorkId);
+
+    setConvertingToWork(false);
+
+    if (!result.ok) {
+      setAlert({
+        type: "error",
+        text: result.error ?? "Failed to convert complaint to work",
+      });
+      return;
+    }
+
+    setAlert({ type: "success", text: result.message });
+    setConvertToWorkModalOpen(false);
+    setSelectedWorkId(null);
     await loadData();
   }
 
@@ -1234,6 +1303,80 @@ export default function AdminComplaintDetailPage() {
                 </form>
               </FormProvider>
             </Card>
+
+            <Card
+              title={
+                <span style={{ color: "#7c3aed", fontWeight: 700 }}>
+                  Convert to Works
+                </span>
+              }
+              style={{ borderRadius: 6, borderTop: "3px solid #7c3aed" }}
+              size="small"
+            >
+              <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>
+                Convert this complaint to a work and map it with an existing or new work.
+              </div>
+              <Button
+                block
+                onClick={openConvertToWorkModal}
+                style={{
+                  background: "#7c3aed",
+                  borderColor: "#7c3aed",
+                  color: "#fff",
+                  fontWeight: 700,
+                }}
+              >
+                Convert to Works
+              </Button>
+            </Card>
+
+            <Modal
+              title="Select Work to Convert Complaint"
+              open={convertToWorkModalOpen}
+              onCancel={() => {
+                setConvertToWorkModalOpen(false);
+                setSelectedWorkId(null);
+              }}
+              onOk={submitConvertToWork}
+              confirmLoading={convertingToWork}
+              okText="Convert"
+              okButtonProps={{
+                disabled: !selectedWorkId,
+                loading: convertingToWork,
+              }}
+              width={700}
+            >
+              {loadingWorks ? (
+                <Skeleton active paragraph={{ rows: 4 }} />
+              ) : availableWorks.length === 0 ? (
+                <Alert
+                  type="info"
+                  message="No available works found"
+                  description="Please create a work first before converting this complaint."
+                  showIcon
+                />
+              ) : (
+                <Select
+                  placeholder="Select a work to convert this complaint to..."
+                  value={selectedWorkId}
+                  onChange={setSelectedWorkId}
+                  style={{ width: "100%", marginBottom: 16 }}
+                  options={availableWorks.map((work) => ({
+                    label: (
+                      <div>
+                        <div style={{ fontWeight: 700, color: "#1a3c6e" }}>
+                          {work.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#6b7280" }}>
+                          {work.departmentName} - {work.status}
+                        </div>
+                      </div>
+                    ),
+                    value: work.id,
+                  }))}
+                />
+              )}
+            </Modal>
 
             {workflowState && (
               <Card

@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Alert,
   Button,
@@ -18,6 +19,7 @@ import {
   Tag,
   Typography,
 } from "antd";
+import { EyeOutlined } from "@ant-design/icons";
 import {
   Area,
   AreaChart,
@@ -93,6 +95,7 @@ const PROOF_PANEL_STYLE = {
 };
 
 export default function ReportDashboardPage() {
+  const router = useRouter();
   const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>("30d");
@@ -831,9 +834,20 @@ export default function ReportDashboardPage() {
       <Card
         style={{ borderRadius: 6 }}
         title={
-          <Text strong style={{ color: "#1a3c6e" }}>
-            {t("report.section.noticeHub")}
-          </Text>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Text strong style={{ color: "#1a3c6e" }}>
+              {t("report.section.noticeHub")}
+            </Text>
+            <Button
+              type="primary"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => router.push("/admin/complaints-by-area")}
+              style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}
+            >
+              View
+            </Button>
+          </div>
         }
       >
         <Paragraph type="secondary" style={{ marginBottom: 14 }}>

@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -93,6 +94,7 @@ const PROOF_PANEL_STYLE = {
 };
 
 export default function ReportDashboardPage() {
+  const router = useRouter();
   const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>("30d");
@@ -914,9 +916,18 @@ export default function ReportDashboardPage() {
           </Text>
         }
       >
-        <Paragraph type="secondary" style={{ marginBottom: 14 }}>
-          {t("report.noticeHubDesc")}
-        </Paragraph>
+        <Row gutter={[16, 0]} align="middle" style={{ marginBottom: 14 }}>
+          <Col flex="auto">
+            <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+              {t("report.noticeHubDesc")}
+            </Paragraph>
+          </Col>
+          <Col>
+            <Button type="primary" onClick={() => router.push("/mla/complaints-by-subcategory")}>
+              {t("report.view") || "View"}
+            </Button>
+          </Col>
+        </Row>
 
         <Row gutter={[16, 16]}>
           {filteredWards.map((item) => (

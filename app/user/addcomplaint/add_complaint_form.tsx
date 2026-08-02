@@ -46,7 +46,6 @@ export default function AddComplaintForm() {
       subcategoryId: "0",
       description: "",
       address: "",
-      affectedCitizensCount: "1",
       area: "",
       lat: "",
       lng: "",
@@ -227,7 +226,7 @@ export default function AddComplaintForm() {
         ...values,
         categoryId: Number(values.categoryId),
         subcategoryId: Number(values.subcategoryId),
-        affectedCitizensCount: Number(values.affectedCitizensCount),
+        affectedCitizensCount: 1,
       });
 
       if (!result.ok) {
@@ -266,7 +265,6 @@ export default function AddComplaintForm() {
         subcategoryId: String(firstCategory?.subcategories[0]?.id ?? 0),
         description: "",
         address: "",
-        affectedCitizensCount: "1",
         area: "",
         lat: "",
         lng: "",
@@ -377,16 +375,6 @@ export default function AddComplaintForm() {
                     placeholder="Enter complete address (e.g., House No. 123, Street Name, Area, City)"
                     required
                     maxlength={500}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <CustomTextInput<complaintValidationForm>
-                    name="affectedCitizensCount"
-                    title={t("newComplaint.affectedCitizensCount")}
-                    placeholder="e.g. 25"
-                    required
-                    numdes
                   />
                 </div>
 

@@ -1,5 +1,4 @@
 import { ROLE } from "@prisma/client";
-import { Prisma } from "@prisma/client";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
 // Type for authenticated user returned from session

@@ -19,12 +19,12 @@ const CITIZEN_NAV_LINKS = [
 const CAMP_NAV_LINKS = [
   { href: "/camp/complaints", labelKey: "nav.campComplaints" },
   { href: "/camp/new", labelKey: "nav.campNewComplaint" },
-  { href: "/camp/users", labelKey: "nav.campUsers" },
 ];
 
 const ADMIN_NAV_LINKS = [
   { href: "/admin/dashboard", labelKey: "nav.adminDashboard" },
   { href: "/admin/complaint", labelKey: "nav.adminComplaint" },
+  { href: "/admin/works", labelKey: "nav.works" },
   { href: "/admin/department", labelKey: "nav.adminDepartment" },
   { href: "/admin/category", labelKey: "nav.adminCategory" },
   { href: "/admin/escalation", labelKey: "nav.adminEscalation" },
@@ -52,6 +52,7 @@ const MLA_PA_NAV_LINKS = [
   { href: "/mla-pa/complaint", labelKey: "nav.mlaPaComplaint" },
   { href: "/mla-pa/cluster-complaints", labelKey: "nav.mlaPaClusters" },
   { href: "/mla-pa/invitation", labelKey: "nav.mlaPaInvitation" },
+  { href: "/mla-pa/users", labelKey: "nav.campUsers" },
 ];
 
 interface AppShellProps {
@@ -113,7 +114,47 @@ export function AppShell({ children, user }: AppShellProps) {
   }
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
+    <>
+      <style>{`
+        @media (max-width: 768px) {
+          .header-brand-title {
+            font-size: 14px !important;
+          }
+          .header-brand-subtitle {
+            font-size: 8px !important;
+          }
+          .header-emblem {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 18px !important;
+          }
+          .header-user-box {
+            display: none !important;
+          }
+          .header-button-space {
+            gap: 4px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .header-brand-title {
+            font-size: 12px !important;
+          }
+          .header-brand-subtitle {
+            font-size: 7px !important;
+          }
+          .header-emblem {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 16px !important;
+          }
+          .header-button-space button {
+            font-size: 11px !important;
+            padding: 4px 8px !important;
+            height: auto !important;
+          }
+        }
+      `}</style>
+      <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
       {/* Tricolor Strip */}
       <div
         style={{
@@ -135,12 +176,13 @@ export function AppShell({ children, user }: AppShellProps) {
           flexShrink: 0,
         }}
       >
-        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "10px 16px" }}>
-          <Row align="middle" justify="space-between" wrap={false}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "8px 16px" }}>
+          <Row align="middle" justify="space-between" wrap={true} gutter={[12, 8]}>
             <Col flex="auto" style={{ minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 {/* Government Emblem Area */}
                 <div
+                  className="header-emblem"
                   style={{
                     width: 44,
                     height: 44,
@@ -155,25 +197,26 @@ export function AppShell({ children, user }: AppShellProps) {
                 >
                   <span style={{ fontSize: 22, lineHeight: 1 }}>⚖️</span>
                 </div>
-                <div style={{ minWidth: 0 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
                   <Link href="/">
                     <Title
                       level={4}
+                      className="header-brand-title"
                       style={{
                         color: "#ffffff",
                         margin: 0,
                         letterSpacing: "0.08em",
                         fontWeight: 800,
                         lineHeight: 1.2,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        whiteSpace: "normal",
+                        wordBreak: "break-word",
                       }}
                     >
                       {t("shell.brand")}
                     </Title>
                   </Link>
                   <Text
+                    className="header-brand-subtitle"
                     style={{
                       color: "rgba(255,255,255,0.8)",
                       fontSize: 10,
@@ -181,9 +224,8 @@ export function AppShell({ children, user }: AppShellProps) {
                       letterSpacing: "0.04em",
                       fontWeight: 600,
                       lineHeight: 1.4,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
+                      whiteSpace: "normal",
+                      wordBreak: "break-word",
                     }}
                   >
                     {t("shell.subtitle")}
@@ -193,7 +235,7 @@ export function AppShell({ children, user }: AppShellProps) {
             </Col>
 
             <Col flex="none">
-              <Space size="small">
+              <Space size="small" className="header-button-space">
                 {isHomePage && (
                   <Link href="/adminlogin">
                     <Button
@@ -226,10 +268,10 @@ export function AppShell({ children, user }: AppShellProps) {
                 )}
               </Space>
             </Col>
-            <div className="w-6"></div>
+
             {/* User Info Box - Only show if logged in */}
             {showPrivateNav && user?.name && (
-              <Col flex="none" style={{ marginRight: 16 }}>
+              <Col flex="none" className="header-user-box" style={{ marginRight: 16 }}>
                 <div
                   style={{
                     background: "rgba(255, 255, 255, 0.1)",
@@ -242,22 +284,6 @@ export function AppShell({ children, user }: AppShellProps) {
                     backdropFilter: "blur(8px)",
                   }}
                 >
-                  {/* <div
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: "50%",
-                      background: "#FF9933",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: 14,
-                    }}
-                  >
-                    {user.name?.charAt(0).toUpperCase()}
-                  </div> */}
                   <div
                     style={{ display: "flex", flexDirection: "column", gap: 2 }}
                   >
@@ -299,6 +325,8 @@ export function AppShell({ children, user }: AppShellProps) {
             background: "#1f4d8a",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
             flexShrink: 0,
+            overflowX: "auto",
+            overflowY: "hidden",
           }}
         >
           <div
@@ -320,8 +348,8 @@ export function AppShell({ children, user }: AppShellProps) {
                 >
                   <div
                     style={{
-                      padding: "11px 16px",
-                      fontSize: 13,
+                      padding: "11px 12px",
+                      fontSize: "calc(8px + 0.4vw)",
                       fontWeight: 600,
                       color: isActive ? "#FF9933" : "rgba(255,255,255,0.82)",
                       borderBottom: isActive
@@ -332,6 +360,7 @@ export function AppShell({ children, user }: AppShellProps) {
                       transition: "all 0.2s",
                       userSelect: "none",
                       whiteSpace: "nowrap",
+                      minWidth: "fit-content",
                     }}
                   >
                     {t(link.labelKey)}
@@ -362,7 +391,7 @@ export function AppShell({ children, user }: AppShellProps) {
         className="no-print"
         style={{
           background: "#12294a",
-          padding: "20px 16px",
+          padding: "16px",
           textAlign: "center",
           flexShrink: 0,
         }}
@@ -371,7 +400,7 @@ export function AppShell({ children, user }: AppShellProps) {
           <Text
             style={{
               color: "rgba(255,255,255,0.75)",
-              fontSize: 12,
+              fontSize: "clamp(11px, 2.5vw, 12px)",
               display: "block",
               fontWeight: 600,
             }}
@@ -381,7 +410,7 @@ export function AppShell({ children, user }: AppShellProps) {
           <Text
             style={{
               color: "rgba(255,255,255,0.45)",
-              fontSize: 11,
+              fontSize: "clamp(10px, 2vw, 11px)",
               display: "block",
               marginTop: 4,
             }}
@@ -431,5 +460,7 @@ export function AppShell({ children, user }: AppShellProps) {
         </div>
       </Footer>
     </Layout>
+    </>
   );
+  
 }

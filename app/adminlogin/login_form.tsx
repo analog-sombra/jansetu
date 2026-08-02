@@ -87,7 +87,8 @@ export default function LoginForm() {
     if (
       result.role === "ADMIN" ||
       result.role === "MLA_SECRETARY" ||
-      result.role === "SYSTEM"
+      result.role === "SYSTEM" ||
+      result.role === "MLA_PA"
     ) {
       router.push("/admin");
       return;
@@ -98,7 +99,8 @@ export default function LoginForm() {
       return;
     }
 
-    if (result.role === "MLA_PA" || result.role === "CAMP_HEAD") {
+    // if (result.role === "MLA_PA" || result.role === "CAMP_HEAD") {
+    if (result.role === "CAMP_HEAD") {
       router.push("/mla-pa");
       return;
     }
@@ -169,6 +171,7 @@ export default function LoginForm() {
               onClose={() => setAlert(null)}
             />
           )}
+          <div className="h-4"></div>
 
           {sentOtp && (
             <Alert
@@ -184,6 +187,7 @@ export default function LoginForm() {
               className="mb-4"
             />
           )}
+          <div className="h-4"></div>
 
           <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit, onFormError)}>
@@ -212,30 +216,31 @@ export default function LoginForm() {
                   />
                 </div>
               )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="rounded bg-[#1a3c6e] px-3 py-3 text-white transition hover:bg-[#16335d] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {otpSent ? t("login.verifyButton") : t("login.sendButton")}
-              </button>
-
-              {otpSent && (
+              <div className="flex flex-row items-center justify-start gap-4">
                 <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setAlert(null);
-                    setSentOtp("");
-                    setValue("otp", "");
-                    setValue("mobile", getValues("mobile"));
-                  }}
-                  className="mt-2 cursor-pointer border-none bg-transparent text-[#1a3c6e]"
+                  type="submit"
+                  disabled={loading}
+                  className="rounded bg-[#1a3c6e] px-3 py-3 text-white transition hover:bg-[#16335d] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
                 >
-                  {t("login.changeMobile")}
+                  {otpSent ? t("login.verifyButton") : t("login.sendButton")}
                 </button>
-              )}
+
+                {otpSent && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setAlert(null);
+                      setSentOtp("");
+                      setValue("otp", "");
+                      setValue("mobile", getValues("mobile"));
+                    }}
+                    className="mt-2 cursor-pointer border-none bg-transparent text-[#1a3c6e]"
+                  >
+                    {t("login.changeMobile")}
+                  </button>
+                )}
+              </div>
             </form>
           </FormProvider>
         </Card>

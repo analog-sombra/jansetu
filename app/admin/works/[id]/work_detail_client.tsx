@@ -51,9 +51,10 @@ import {
 } from "@/actions/mla/works";
 import {
   getWorkMappedComplaintsAction,
+  type GetWorkMappedComplaintsResult,
   type WorkMappedComplaint,
 } from "@/actions/admin";
-import { WORKSTATUS } from "@prisma/client";
+import { WORKSTATUS, WORKMEDIATYPE } from "@prisma/client";
 import dayjs from "dayjs";
 
 interface WorkDetailClientProps {
@@ -117,10 +118,34 @@ export default function WorkDetailClient({
   const [selectedImage, setSelectedImage] = useState<WorkMediaDTO | null>(null);
 
   // Mapped complaints state
-  const [mappedComplaints, setMappedComplaints] = useState<
-    WorkMappedComplaint[]
-  >([]);
+  const [mappedComplaints, setMappedComplaints] = useState<WorkMappedComplaint[]>([]);
   const [loadingMappedComplaints, setLoadingMappedComplaints] = useState(false);
+
+  const handleUpdateStatus = async (newStatus: WORKSTATUS) => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await updateWorkAction({
+        id: work.id,
+        status: newStatus,
+      });
+
+      if (result.ok) {
+        setWork((prev) => ({
+          ...prev,
+          ...result.data,
+        }));
+        message.success(`Work status updated to ${statusLabels[newStatus]}`);
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError("Failed to update work");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCloseWork = () => {
     Modal.confirm({
@@ -320,7 +345,7 @@ export default function WorkDetailClient({
     try {
       // Convert file to base64
       const reader = new FileReader();
-
+      
       const fileDataPromise = new Promise<string>((resolve, reject) => {
         reader.onload = () => {
           const result = reader.result as string;
@@ -438,7 +463,9 @@ export default function WorkDetailClient({
       key: "status",
       width: "12%",
       render: (status: string) => (
-        <Tag color={status === "WORKS" ? "green" : "blue"}>{status}</Tag>
+        <Tag color={status === "WORKS" ? "green" : "blue"}>
+          {status}
+        </Tag>
       ),
     },
     {
@@ -448,7 +475,13 @@ export default function WorkDetailClient({
       width: "10%",
       render: (priority: number) => (
         <Tag
-          color={priority >= 75 ? "red" : priority >= 50 ? "orange" : "green"}
+          color={
+            priority >= 75
+              ? "red"
+              : priority >= 50
+                ? "orange"
+                : "green"
+          }
         >
           {priority}
         </Tag>
@@ -695,7 +728,7 @@ export default function WorkDetailClient({
                           key={type}
                           type="inner"
                           className="mb-2"
-                          title={type.toLocaleUpperCase()}
+                          title={type}
                           size="small"
                         >
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -797,13 +830,10 @@ export default function WorkDetailClient({
                         onClick={loadMappedComplaints}
                         loading={loadingMappedComplaints}
                       >
-                        {loadingMappedComplaints
-                          ? "Loading..."
-                          : "Load Complaints"}
+                        {loadingMappedComplaints ? "Loading..." : "Load Complaints"}
                       </Button>
                     </div>
-                    {mappedComplaints.length === 0 &&
-                    !loadingMappedComplaints ? (
+                    {mappedComplaints.length === 0 && !loadingMappedComplaints ? (
                       <Empty description="No complaints mapped to this work" />
                     ) : (
                       <Spin spinning={loadingMappedComplaints}>
@@ -815,11 +845,7 @@ export default function WorkDetailClient({
                           }))}
                           rowKey="id"
                           pagination={{ pageSize: 10 }}
-                          locale={{
-                            emptyText: (
-                              <Empty description="No complaints mapped" />
-                            ),
-                          }}
+                          locale={{ emptyText: <Empty description="No complaints mapped" /> }}
                         />
                       </Spin>
                     )}
@@ -1058,33 +1084,19 @@ export default function WorkDetailClient({
           footer={null}
           width={600}
         >
-          {selectedImage &&
-          selectedImage.file_path?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+          {selectedImage && selectedImage.file_path?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
             <div className="flex flex-col items-center">
               <img
                 src={selectedImage.file_path}
                 alt={selectedImage.caption || "Media"}
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "400px",
-                  objectFit: "contain",
-                }}
+                style={{ maxWidth: "100%", maxHeight: "400px", objectFit: "contain" }}
               />
               <div className="mt-2 w-full text-gray-600 text-xs">
-                <p>
-                  <strong>Type:</strong> {selectedImage.type}
-                </p>
-                <p>
-                  <strong>Uploaded by:</strong> {selectedImage.uploaded_by}
-                </p>
-                <p>
-                  <strong>Date:</strong>{" "}
-                  {dayjs(selectedImage.created_at).format("DD/MM/YYYY HH:mm")}
-                </p>
+                <p><strong>Type:</strong> {selectedImage.type}</p>
+                <p><strong>Uploaded by:</strong> {selectedImage.uploaded_by}</p>
+                <p><strong>Date:</strong> {dayjs(selectedImage.created_at).format("DD/MM/YYYY HH:mm")}</p>
                 {selectedImage.caption && (
-                  <p>
-                    <strong>Caption:</strong> {selectedImage.caption}
-                  </p>
+                  <p><strong>Caption:</strong> {selectedImage.caption}</p>
                 )}
               </div>
             </div>

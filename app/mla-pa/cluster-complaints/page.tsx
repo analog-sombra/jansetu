@@ -3,7 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth/session";
 import MlaPaClusterComplaintsClient from "./cluster-complaints-client";
 
 function isMlaRouteRole(role: string) {
-  return role === "MLA_PA" || role === "CAMP_HEAD";
+  return role === "CAMP_HEAD";
 }
 
 export default async function MlaPaClusterComplaintsPage() {

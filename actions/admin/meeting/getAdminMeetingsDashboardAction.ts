@@ -15,7 +15,7 @@ export async function getAdminMeetingsDashboardAction(): Promise<AdminMeetingsDa
     const currentUser = await getAuthenticatedUser();
     if (
       !currentUser ||
-      (currentUser.role !== "MLA_PA" && currentUser.role !== "CAMP_HEAD")
+      (currentUser.role !== "CAMP_HEAD")
     ) {
       return {
         ok: false,

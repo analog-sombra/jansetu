@@ -87,7 +87,8 @@ export default function LoginForm() {
     if (
       result.role === "ADMIN" ||
       result.role === "MLA_SECRETARY" ||
-      result.role === "SYSTEM"
+      result.role === "SYSTEM" ||
+      result.role === "MLA_PA"
     ) {
       router.push("/admin");
       return;
@@ -97,7 +98,7 @@ export default function LoginForm() {
       return;
     }
 
-    if (result.role === "MLA_PA" || result.role === "CAMP_HEAD") {
+    if (result.role === "CAMP_HEAD") {
       router.push("/mla-pa");
       return;
     }
