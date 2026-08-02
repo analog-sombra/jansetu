@@ -411,6 +411,8 @@ export type AdminReportOverview = {
     afterLabel: string;
     beforeTone: string;
     afterTone: string;
+    beforeImage?: string;
+    afterImage?: string;
   }>;
   systemicCrises: Array<{
     key: string;

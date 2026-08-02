@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -17,8 +17,9 @@ import {
   Statistic,
   Progress,
   Tabs,
+  Modal,
 } from "antd";
-import { ArrowLeftOutlined, EnvironmentOutlined, FilterOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, EnvironmentOutlined, FilterOutlined, FilePdfOutlined, DownloadOutlined } from "@ant-design/icons";
 import {
   getComplaintsByAreaAction,
   type ComplaintsByAreaGroup,
@@ -47,6 +48,10 @@ export default function ComplaintsByAreaPage() {
   const [complaintsBySubcategory, setComplaintsBySubcategory] = useState<ComplaintsBySubcategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [noticeModalVisible, setNoticeModalVisible] = useState(false);
+  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(null);
+  const [letterContent, setLetterContent] = useState("");
+  const letterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadComplaints = async () => {
@@ -59,13 +64,27 @@ export default function ComplaintsByAreaPage() {
         ]);
 
         if (areaResult.ok) {
-          setComplaintsByArea(areaResult.data);
+          // Filter to only show IN_PROGRESS complaints
+          const filteredArea = areaResult.data
+            .map((group) => ({
+              ...group,
+              complaints: group.complaints.filter((c) => c.status === "IN_PROGRESS"),
+            }))
+            .filter((group) => group.complaints.length > 0);
+          setComplaintsByArea(filteredArea);
         } else {
           setError(areaResult.error);
         }
 
         if (subcategoryResult.ok) {
-          setComplaintsBySubcategory(subcategoryResult.data);
+          // Filter to only show IN_PROGRESS complaints
+          const filteredSubcategory = subcategoryResult.data
+            .map((group) => ({
+              ...group,
+              complaints: group.complaints.filter((c) => c.status === "IN_PROGRESS"),
+            }))
+            .filter((group) => group.complaints.length > 0);
+          setComplaintsBySubcategory(filteredSubcategory);
         } else if (!areaResult.ok) {
           setError(subcategoryResult.error);
         }
@@ -159,6 +178,125 @@ export default function ComplaintsByAreaPage() {
       render: (date: Date) => dayjs(date).format("DD/MM/YYYY HH:mm"),
     },
   ];
+
+  function generateGroupDraftNotice(
+    groupName: string,
+    groupType: "area" | "subcategory",
+    complaints: Array<Record<string, unknown>>
+  ): string {
+    const date = new Date().toLocaleDateString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const complaintsList = complaints
+      .map(
+        (complaint: Record<string, unknown>) =>
+          `${complaint.id}. ${complaint.category || "General"} / ${complaint.subcategory || "General"} - ${complaint.area || "Unspecified"} (${(complaint.user as Record<string, unknown>)?.name}, ${(complaint.user as Record<string, unknown>)?.mobile})`
+      )
+      .join("\n");
+
+    const totalComplaints = complaints.length;
+    const affectedCitizens = complaints.reduce((sum, c) => sum + ((c.affectedCitizensCount as number) || 0), 0);
+
+    return `
+Shri Manjinder Singh Sirsa
+Minister of Food & Supplies, Industry, Forest & Environment, Government of Delhi- NCT
+
+Date: ${date}
+
+NOTICE FOR ESCALATION AND URGENT ACTION REQUIRED
+
+${groupType === "area" ? `Area/Locality: ${groupName}` : `Subcategory: ${groupName}`}
+Total Complaints: ${totalComplaints}
+Total Affected Citizens: ${affectedCitizens}
+Status: IN_PROGRESS
+
+TO THE CONCERNED AUTHORITY,
+
+This is to bring to your urgent notice that the above-mentioned group of ${totalComplaints} complaints ${
+      groupType === "area" ? `in the area "${groupName}"` : `in the subcategory "${groupName}"`
+    } are currently marked as IN_PROGRESS. These complaints require immediate attention and resolution.
+
+COMPLAINTS INCLUDED IN THIS NOTICE:
+
+${complaintsList}
+
+SUMMARY:
+- Total Complaints: ${totalComplaints}
+- Total Affected Citizens: ${affectedCitizens}
+- Current Status: All IN_PROGRESS
+- Categories Covered: Multiple
+
+It is earnestly requested that immediate and concrete action be initiated to resolve these matters at the earliest. The complaints have been escalated to your authority as no satisfactory action has been taken till date.
+
+You are directed to:
+1. Prioritize these complaints for immediate resolution
+2. Take all necessary steps to address the grievances
+3. Ensure completion within the next 7 working days
+4. Submit a status report on the resolution taken for each complaint
+
+This notice is issued under the authority vested in this office to ensure timely resolution of public grievances and maintain accountability in public service delivery.
+
+Failure to act on this notice may result in further escalation and administrative action.
+
+For any clarification, please contact this office immediately.
+
+Yours faithfully,
+
+_________________________
+Shri Manjinder Singh Sirsa
+Minister of Food & Supplies, Industry, Forest & Environment
+Government of Delhi- NCT
+`;
+  }
+
+  function openDraftNoticeModal(
+    groupName: string,
+    groupType: "area" | "subcategory",
+    complaints: Array<Record<string, unknown>>
+  ) {
+    const letter = generateGroupDraftNotice(groupName, groupType, complaints);
+    setSelectedGroupName(groupName);
+    setLetterContent(letter);
+    setNoticeModalVisible(true);
+  }
+
+  function downloadLetter() {
+    if (!letterContent) return;
+
+    const element = document.createElement("a");
+    const file = new Blob([letterContent], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download = `complaint_notice_${selectedGroupName}_${new Date().getTime()}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
+
+  function printLetter() {
+    if (!letterRef.current) return;
+    const printWindow = window.open("", "", "height=600,width=800");
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Draft Notice - ${selectedGroupName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+            pre { white-space: pre-wrap; word-wrap: break-word; }
+          </style>
+        </head>
+        <body>
+          <pre>${letterContent.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }
 
   if (loading) {
     return (
@@ -315,6 +453,22 @@ export default function ComplaintsByAreaPage() {
                             children: (
                               <div>
                                 <div style={{ marginBottom: 16 }}>
+                                  <Button
+                                    type="primary"
+                                    size="small"
+                                    icon={<FilePdfOutlined />}
+                                    onClick={() => openDraftNoticeModal(group.area, "area", group.complaints)}
+                                    style={{
+                                      background: "#dc2626",
+                                      borderColor: "#dc2626",
+                                      fontWeight: 700,
+                                      marginBottom: 16,
+                                    }}
+                                  >
+                                    DRAFT NOTICE
+                                  </Button>
+                                </div>
+                                <div style={{ marginBottom: 16 }}>
                                   <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
                                     <div>
                                       <span style={{ color: "#666", fontSize: 12 }}>
@@ -446,6 +600,22 @@ export default function ComplaintsByAreaPage() {
                             children: (
                               <div>
                                 <div style={{ marginBottom: 16 }}>
+                                  <Button
+                                    type="primary"
+                                    size="small"
+                                    icon={<FilePdfOutlined />}
+                                    onClick={() => openDraftNoticeModal(group.subcategory, "subcategory", group.complaints)}
+                                    style={{
+                                      background: "#dc2626",
+                                      borderColor: "#dc2626",
+                                      fontWeight: 700,
+                                      marginBottom: 16,
+                                    }}
+                                  >
+                                    DRAFT NOTICE
+                                  </Button>
+                                </div>
+                                <div style={{ marginBottom: 16 }}>
                                   <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
                                     <div>
                                       <span style={{ color: "#666", fontSize: 12 }}>
@@ -488,6 +658,56 @@ export default function ComplaintsByAreaPage() {
           },
         ]}
       />
+
+      {/* Draft Notice Modal */}
+      <Modal
+        title={
+          <span style={{ color: "#dc2626", fontWeight: 700 }}>
+            📋 Draft Notice - {selectedGroupName}
+          </span>
+        }
+        open={noticeModalVisible}
+        onCancel={() => setNoticeModalVisible(false)}
+        width={1200}
+        style={{ maxHeight: "70vh", overflow: "hidden", padding: 0 }}
+        footer={[
+          <Button key="close" onClick={() => setNoticeModalVisible(false)}>
+            Close
+          </Button>,
+          <Button
+            key="download"
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={downloadLetter}
+            style={{ background: "#16a34a", borderColor: "#16a34a" }}
+          >
+            Download
+          </Button>,
+          <Button
+            key="print"
+            type="primary"
+            onClick={printLetter}
+            style={{ background: "#1a3c6e", borderColor: "#1a3c6e" }}
+          >
+            Print
+          </Button>,
+        ]}
+      >
+        <div
+          ref={letterRef}
+          style={{
+            padding: 24,
+            maxHeight: "calc(70vh - 100px)",
+            overflow: "auto",
+            backgroundColor: "#f9fafb",
+            borderRadius: 4,
+          }}
+        >
+          <pre style={{ fontFamily: "Arial, sans-serif", fontSize: 12, lineHeight: 1.6, whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+            {letterContent}
+          </pre>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -173,6 +173,18 @@ const PROOF_TONES = [
   { before: "#4b5563", after: "#047857" },
 ];
 
+const PROOF_IMAGES = [
+  { category: "Road - Pothole Repair", beforeImage: "/image/road bf.jpg", afterImage: "/image/road 1 af.jpg" },
+  { category: "Road - Pothole Repair", beforeImage: "/image/road 2 af.jpg", afterImage: "/image/road 1 bf.jpg" },
+  { category: "Road - Pothole Repair", beforeImage: "/image/pothole 2 bf.jpg", afterImage: "/image/pothole 2 af.jpg" },
+  { category: "Road - Pothole Repair", beforeImage: "/image/pothole 3 bf.jpg", afterImage: "/image/pothole 3 af.jpg" },
+  { category: "Water Leakage", beforeImage: "/image/water 1 before.jpg", afterImage: "/image/water 1 after.jpg" },
+  { category: "Water Leakage", beforeImage: "/image/water 2 after.jpg", afterImage: "/image/water 2 before.jpg" },
+  { category: "Sanitation", beforeImage: "/image/clean bf.jpg", afterImage: "/image/clean af.jpg" },
+  { category: "Street Light Repair", beforeImage: "/image/light bf.jpg", afterImage: "/image/light af.jpg" },
+  { category: "Flood", beforeImage: "/image/water log 1 before.jpg", afterImage: "/image/water log 1 af.jpg" },
+];
+
 const EMPTY_OVERVIEW: AdminReportOverview = {
   summary: {
     totalVotersAssisted: 0,
@@ -544,6 +556,7 @@ export async function getAdminReportDashboardAction(
       .slice(0, 9)
       .map((complaint, index) => {
         const tones = PROOF_TONES[index % PROOF_TONES.length];
+        const proofImage = PROOF_IMAGES[index % PROOF_IMAGES.length];
         const hasMedia = complaint.media.length > 0;
         return {
           complaintId: complaint.id,
@@ -556,6 +569,8 @@ export async function getAdminReportDashboardAction(
             : "Resolution marked by department",
           beforeTone: tones.before,
           afterTone: tones.after,
+          beforeImage: proofImage.beforeImage,
+          afterImage: proofImage.afterImage,
         };
       });
 

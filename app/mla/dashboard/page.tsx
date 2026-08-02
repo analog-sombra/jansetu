@@ -18,6 +18,7 @@ import {
   Table,
   Tag,
   Typography,
+  Image as AntImage,
 } from "antd";
 import {
   Area,
@@ -130,6 +131,8 @@ export default function ReportDashboardPage() {
         setLoading(false);
         return;
       }
+
+      console.log("Dashboard overview:", result.overview);
 
       setOverview(result.overview);
       setErrorMessage(null);
@@ -862,43 +865,103 @@ export default function ReportDashboardPage() {
               <Card
                 size="small"
                 title={`#${item.complaintId} - ${item.category}`}
+                bordered
+                style={{ height: "100%" }}
               >
                 <Row gutter={10}>
                   <Col span={12}>
-                    <Text strong style={{ display: "block", marginBottom: 6 }}>
+                    <Text strong style={{ display: "block", marginBottom: 8, fontSize: 12 }}>
                       {t("report.before")}
                     </Text>
                     <div
                       style={{
-                        ...PROOF_PANEL_STYLE,
-                        background: `linear-gradient(140deg, ${item.beforeTone}, #111827)`,
+                        borderRadius: 4,
+                        overflow: "hidden",
+                        background: "#f0f0f0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                        height: 200,
                       }}
                     >
-                      <Text style={{ color: "#fff", fontWeight: 700 }}>
-                        {item.beforeLabel}
-                      </Text>
-                      <Text style={{ color: "rgba(255,255,255,0.8)" }}>
-                        {item.area}
-                      </Text>
+                      {item.beforeImage ? (
+                        <AntImage
+                          src={item.beforeImage}
+                          alt="Before"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                          preview={{
+                            mask: "View",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            ...PROOF_PANEL_STYLE,
+                            background: `linear-gradient(140deg, ${item.beforeTone}, #111827)`,
+                            width: "100%",
+                          }}
+                        >
+                          <Text style={{ color: "#fff", fontWeight: 700 }}>
+                            {item.beforeLabel}
+                          </Text>
+                          <Text style={{ color: "rgba(255,255,255,0.8)" }}>
+                            {item.area}
+                          </Text>
+                        </div>
+                      )}
                     </div>
                   </Col>
                   <Col span={12}>
-                    <Text strong style={{ display: "block", marginBottom: 6 }}>
+                    <Text strong style={{ display: "block", marginBottom: 8, fontSize: 12 }}>
                       {t("report.after")}
                     </Text>
                     <div
                       style={{
-                        ...PROOF_PANEL_STYLE,
-                        background: `linear-gradient(140deg, ${item.afterTone}, #0f172a)`,
+                        borderRadius: 4,
+                        overflow: "hidden",
+                        background: "#f0f0f0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                        height: 200,
                       }}
                     >
-                      <Text style={{ color: "#fff", fontWeight: 700 }}>
-                        {item.afterLabel}
-                      </Text>
-                      <Text style={{ color: "rgba(255,255,255,0.8)" }}>
-                        {t("report.resolvedOn")}{" "}
-                        {new Date(item.resolvedAt).toLocaleDateString("en-IN")}
-                      </Text>
+                      {item.afterImage ? (
+                        <AntImage
+                          src={item.afterImage}
+                          alt="After"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                          preview={{
+                            mask: "View",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            ...PROOF_PANEL_STYLE,
+                            background: `linear-gradient(140deg, ${item.afterTone}, #0f172a)`,
+                            width: "100%",
+                          }}
+                        >
+                          <Text style={{ color: "#fff", fontWeight: 700 }}>
+                            {item.afterLabel}
+                          </Text>
+                          <Text style={{ color: "rgba(255,255,255,0.8)" }}>
+                            {t("report.resolvedOn")}{" "}
+                            {new Date(item.resolvedAt).toLocaleDateString("en-IN")}
+                          </Text>
+                        </div>
+                      )}
                     </div>
                   </Col>
                 </Row>
@@ -923,8 +986,11 @@ export default function ReportDashboardPage() {
             </Paragraph>
           </Col>
           <Col>
-            <Button type="primary" onClick={() => router.push("/mla/complaints-by-subcategory")}>
-              {t("report.view") || "View"}
+            <Button
+              type="primary"
+              onClick={() => router.push("/mla/complaints-by-subcategory")}
+            >
+              View
             </Button>
           </Col>
         </Row>
