@@ -33,7 +33,7 @@ export type AdminOfficerDirectorySummary = {
   id: number;
   name: string;
   designation: string;
-  email: string;
+  email: string | null;
   phone: string;
   createdAt: string;
   department: {
@@ -86,7 +86,17 @@ export type AdminComplaintDetail = {
   lat: number;
   lng: number;
   area: string | null;
-  media: Array<{ id: number; fileUrl: string; type: string }>;
+  media: Array<{
+    id: number;
+    fileUrl: string;
+    type: string;
+    caption: string | null;
+    uploadedByUser: {
+      name: string | null;
+      id: string;
+    };
+    createdAt: string;
+  }>;
   assignments: AdminComplaintAssignmentSummary[];
   officerAssignmentHistory: AdminOfficerAssignmentHistorySummary[];
   categoryDepartment: {

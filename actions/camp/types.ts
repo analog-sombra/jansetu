@@ -125,6 +125,59 @@ export type GetCitizenByMobileResult =
     }
   | CampAuthResult;
 
+export type GetCitizenComplaintSummaryResult =
+  | {
+      ok: true;
+      found: true;
+      summary: {
+        total: number;
+        resolved: number;
+        pending: number;
+        closed: number;
+      };
+    }
+  | {
+      ok: true;
+      found: false;
+      summary: {
+        total: 0;
+        resolved: 0;
+        pending: 0;
+        closed: 0;
+      };
+    }
+  | CampAuthResult
+  | {
+      ok: false;
+      error: string;
+    };
+
+export type CitizenComplaintListItem = {
+  id: number;
+  category: string;
+  subcategory: string | null;
+  status: string;
+  area: string;
+  createdAt: string;
+};
+
+export type GetCitizenComplaintsByMobileResult =
+  | {
+      ok: true;
+      found: true;
+      complaints: CitizenComplaintListItem[];
+    }
+  | {
+      ok: true;
+      found: false;
+      complaints: [];
+    }
+  | CampAuthResult
+  | {
+      ok: false;
+      error: string;
+    };
+
 export type CreateCampComplaintResult =
   | {
       ok: true;

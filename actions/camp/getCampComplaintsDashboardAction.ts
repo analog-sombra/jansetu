@@ -12,9 +12,6 @@ export async function getCampComplaintsDashboardAction(): Promise<CampComplaints
 
   try {
     const complaints = await prisma.complaint.findMany({
-      where: {
-        createdByUserId: auth.user.id,
-      },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

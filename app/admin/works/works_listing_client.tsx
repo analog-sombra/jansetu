@@ -13,8 +13,9 @@ import {
   Alert,
   Spin,
   Empty,
+  type TablePaginationConfig,
 } from "antd";
-import { PlusOutlined, EyeOutlined } from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, WalletOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { WorkDTO, getWorksListingAction } from "@/actions/mla/works";
 import { WORKSTATUS } from "@prisma/client";
@@ -57,16 +58,19 @@ export default function WorksListingClient({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  const handleTableChange = async (pagination: any) => {
-    setPage(pagination.current);
-    setPageSize(pagination.pageSize);
+  const handleTableChange = async (pagination: TablePaginationConfig) => {
+    const currentPage = pagination.current ?? 1;
+    const nextPageSize = pagination.pageSize ?? pageSize;
+
+    setPage(currentPage);
+    setPageSize(nextPageSize);
     setLoading(true);
     setError("");
 
     try {
       const result = await getWorksListingAction({
-        page: pagination.current,
-        limit: pagination.pageSize,
+        page: currentPage,
+        limit: nextPageSize,
         status: statusFilter || undefined,
       });
 
@@ -92,6 +96,10 @@ export default function WorksListingClient({
 
   const handleCreateNew = () => {
     router.push("/admin/works/create");
+  };
+
+  const handleOpenMlaBudget = () => {
+    router.push("/admin/works/budget");
   };
 
   const columns = [
@@ -141,7 +149,7 @@ export default function WorksListingClient({
       title: "Actions",
       key: "actions",
       width: "20%",
-      render: (_: any, record: WorkDTO) => (
+      render: (_: unknown, record: WorkDTO) => (
         <Space>
           <Button
             type="primary"
@@ -163,14 +171,23 @@ export default function WorksListingClient({
           <Col span={24}>
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-2xl font-bold">Works Management</h1>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleCreateNew}
-                size="large"
-              >
-                Create New Work
-              </Button>
+              <Space>
+                <Button
+                  icon={<WalletOutlined />}
+                  onClick={handleOpenMlaBudget}
+                  size="large"
+                >
+                  MLA Budget
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleCreateNew}
+                  size="large"
+                >
+                  Create New Work
+                </Button>
+              </Space>
             </div>
           </Col>
         </Row>

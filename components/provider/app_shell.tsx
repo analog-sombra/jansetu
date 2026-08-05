@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Layout, Button, Typography, Space, Divider, Row, Col } from "antd";
+import { Layout, Button, Typography, Space, Divider, Row, Col, Image } from "antd";
 import { useLanguage } from "./language_provider";
 import { LanguageToggle } from "../language_toggle";
 import { logoutAction } from "@/actions/auth";
@@ -193,9 +193,20 @@ export function AppShell({ children, user }: AppShellProps) {
                     justifyContent: "center",
                     border: "2px solid rgba(255,255,255,0.25)",
                     flexShrink: 0,
+                    overflow: "hidden",
                   }}
                 >
-                  <span style={{ fontSize: 22, lineHeight: 1 }}>⚖️</span>
+                  <Image
+                    src="/image/profile.jpeg"
+                    alt="Logo"
+                    preview={false}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "50%",
+                    }}
+                  />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <Link href="/">

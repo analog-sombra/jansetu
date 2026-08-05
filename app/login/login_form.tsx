@@ -87,6 +87,7 @@ export default function LoginForm() {
     if (
       result.role === "ADMIN" ||
       result.role === "MLA_SECRETARY" ||
+      result.role === "CAMP_HEAD" ||
       result.role === "SYSTEM" ||
       result.role === "MLA_PA"
     ) {
@@ -98,10 +99,10 @@ export default function LoginForm() {
       return;
     }
 
-    if (result.role === "CAMP_HEAD") {
-      router.push("/mla-pa");
-      return;
-    }
+    // if (result.role === "CAMP_HEAD") {
+    //   router.push("/mla-pa");
+    //   return;
+    // }
 
     if (!result.firstLoginComplete) {
       router.push("/user/register");

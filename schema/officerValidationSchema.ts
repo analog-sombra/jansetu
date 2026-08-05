@@ -4,6 +4,7 @@ import {
   maxLength,
   minLength,
   object,
+  optional,
   pipe,
   string,
   trim,
@@ -22,11 +23,13 @@ const officerValidationSchema = object({
     minLength(2, "Designation must be at least 2 characters"),
     maxLength(80, "Designation must be at most 80 characters"),
   ),
-  email: pipe(
-    string(),
-    trim(),
-    email("Please enter a valid email address"),
-    maxLength(120, "Email must be at most 120 characters"),
+  email: optional(
+    pipe(
+      string(),
+      trim(),
+      email("Please enter a valid email address"),
+      maxLength(120, "Email must be at most 120 characters"),
+    )
   ),
   phone: pipe(
     string(),

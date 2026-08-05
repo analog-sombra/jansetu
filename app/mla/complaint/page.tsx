@@ -4,7 +4,13 @@ import { getAuthenticatedUser } from "@/lib/auth/session";
 import AdminComplaintsClient from "./admin_complaints_client";
 
 function isAdminRouteRole(role: string) {
-  return role === "ADMIN" || role === "MLA" || role === "MLA_SECRETARY" || role === "MLA_PA";
+  return (
+    role === "ADMIN" ||
+    role === "MLA" ||
+    role === "MLA_SECRETARY" ||
+    role === "MLA_PA" ||
+    role === "CAMP_HEAD"
+  );
 }
 
 export default async function AdminComplaintListPage() {

@@ -10,7 +10,7 @@ export type UpdateAdminOfficerResult =
         id: number;
         name: string;
         designation: string;
-        email: string;
+        email: string | null;
         phone: string;
         createdAt: string;
         department: {
@@ -28,7 +28,7 @@ export async function updateAdminOfficerAction(payload: {
   id: number;
   name: string;
   designation: string;
-  email: string;
+  email?: string;
   phone: string;
   departmentId: number;
 }): Promise<UpdateAdminOfficerResult> {
@@ -41,7 +41,7 @@ export async function updateAdminOfficerAction(payload: {
   const departmentId = Number(payload.departmentId);
   const name = payload.name.trim();
   const designation = payload.designation.trim();
-  const email = payload.email.trim();
+  const email = payload.email ? payload.email.trim() : undefined;
   const phone = payload.phone.trim();
 
   if (!Number.isInteger(officerId) || officerId <= 0) {
@@ -68,11 +68,11 @@ export async function updateAdminOfficerAction(payload: {
     return { ok: false, error: "Designation must not exceed 80 characters." };
   }
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { ok: false, error: "Please enter a valid email." };
   }
 
-  if (email.length > 120) {
+  if (email && email.length > 120) {
     return { ok: false, error: "Email must not exceed 120 characters." };
   }
 

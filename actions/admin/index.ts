@@ -84,3 +84,8 @@ export { getComplaintsBySubcategoryAction } from "./getComplaintsBySubcategoryAc
 export type { GetComplaintsBySubcategoryResult, ComplaintsBySubcategoryGroup } from "./getComplaintsBySubcategoryAction";
 export { getAreaSummaryReportAction } from "./getAreaSummaryReportAction";
 export type { GetAreaSummaryReportResult, AreaSummaryReport, CategorySummary } from "./getAreaSummaryReportAction";
+export { createAdminComplaintMediaAction } from "./createAdminComplaintMediaAction";
+export { getAdminTotalBudgetAction } from "./getAdminTotalBudgetAction";
+export type { GetAdminTotalBudgetResult } from "./getAdminTotalBudgetAction";
+export { upsertAdminTotalBudgetAction } from "./upsertAdminTotalBudgetAction";
+export type { UpsertAdminTotalBudgetResult } from "./upsertAdminTotalBudgetAction";

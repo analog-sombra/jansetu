@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Card, Divider, Spin, Typography, Upload } from "antd";
+import { Alert, Button, Card, Divider, Spin, Table, Tag, Typography, Upload } from "antd";
 import { InboxOutlined } from "@ant-design/icons";
 import type { UploadFile, UploadProps } from "antd";
+import type { TableColumnsType } from "antd";
 import type { RcFile } from "antd/es/upload/interface";
 import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
@@ -14,7 +15,10 @@ import {
 } from "@/lib/constants";
 import {
   addCampComplaintMediaAction,
+  CitizenComplaintListItem,
   createCampComplaintAction,
+  getCitizenComplaintsByMobileAction,
+  getCitizenComplaintSummaryAction,
   getCitizenByMobileAction,
 } from "@/actions/camp";
 import {
@@ -36,6 +40,18 @@ const { Dragger } = Upload;
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 const MAX_IMAGE_COUNT = 10;
 
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "orange",
+  IN_PROGRESS: "blue",
+  WORK_IN_PROGRESS: "cyan",
+  QUERY_RAISED: "volcano",
+  RESOLVED: "green",
+  REJECTED: "red",
+  ESCALATED: "purple",
+  CLOSED: "default",
+  AUTO_CLOSED: "default",
+};
+
 export default function CampNewComplaintForm() {
   const router = useRouter();
   const { t } = useLanguage();
@@ -45,7 +61,17 @@ export default function CampNewComplaintForm() {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [citizenFound, setCitizenFound] = useState<null | boolean>(null);
   const [citizenFieldsLocked, setCitizenFieldsLocked] = useState(false);
-  const [citizenMissingBasicInfo, setCitizenMissingBasicInfo] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [complaintsLoading, setComplaintsLoading] = useState(false);
+  const [complaintSummary, setComplaintSummary] = useState<{
+    total: number;
+    resolved: number;
+    pending: number;
+    closed: number;
+  } | null>(null);
+  const [citizenComplaints, setCitizenComplaints] = useState<
+    CitizenComplaintListItem[]
+  >([]);
   const [mediaFiles, setMediaFiles] = useState<UploadFile[]>([]);
   const [alert, setAlert] = useState<{
     type: "error" | "success" | "info";
@@ -132,9 +158,72 @@ export default function CampNewComplaintForm() {
 
   const selectedCategoryIdRaw = useWatch({ control: methods.control, name: "categoryId" });
   const selectedSubcategoryIdRaw = useWatch({ control: methods.control, name: "subcategoryId" });
+  const watchedName = useWatch({ control: methods.control, name: "name" });
+  const watchedAddress = useWatch({ control: methods.control, name: "address" });
+  const watchedVoterId = useWatch({ control: methods.control, name: "voterId" });
   
   const selectedCategoryId: string = String(selectedCategoryIdRaw || "0");
   const selectedSubcategoryId: string = String(selectedSubcategoryIdRaw || "0");
+  const citizenMissingBasicInfo =
+    citizenFound === true &&
+    (!(watchedName ?? "").trim() ||
+      !(watchedAddress ?? "").trim() ||
+      !(watchedVoterId ?? "").trim());
+
+  const complaintColumns: TableColumnsType<CitizenComplaintListItem> = [
+    {
+      title: t("dashboard.table.refNo"),
+      dataIndex: "id",
+      key: "id",
+      width: 92,
+      render: (id: number) => <Text strong>#{id}</Text>,
+    },
+    {
+      title: t("dashboard.table.category"),
+      dataIndex: "category",
+      key: "category",
+      width: 140,
+    },
+    {
+      title: t("newComplaint.subcategory"),
+      dataIndex: "subcategory",
+      key: "subcategory",
+      width: 140,
+      render: (value: string | null) => value ?? "-",
+    },
+    {
+      title: t("dashboard.table.status"),
+      dataIndex: "status",
+      key: "status",
+      width: 130,
+      render: (status: string) => (
+        <Tag color={STATUS_COLORS[status] ?? "default"}>
+          {status.replaceAll("_", " ")}
+        </Tag>
+      ),
+    },
+    {
+      title: t("dashboard.table.filedOn"),
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 130,
+      render: (createdAt: string) => new Date(createdAt).toLocaleDateString("en-IN"),
+    },
+    {
+      title: t("dashboard.table.action"),
+      key: "action",
+      width: 100,
+      render: (_, record) => (
+        <Button
+          size="small"
+          onClick={() => router.push(`/camp/complaints/${record.id}`)}
+          style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+        >
+          {t("mlaCluster.view")}
+        </Button>
+      ),
+    },
+  ];
 
   // Load categories on mount
   useEffect(() => {
@@ -204,6 +293,31 @@ export default function CampNewComplaintForm() {
     }
   }, [selectedCategoryId, selectedSubcategoryId, selectedCategoryObj, setValue]);
 
+  function handleFillBasicDetails() {
+    setCitizenFieldsLocked(false);
+
+    const name = (getValues("name") ?? "").trim();
+    const address = (getValues("address") ?? "").trim();
+    const voterId = (getValues("voterId") ?? "").trim();
+
+    if (!name) {
+      setFocus("name");
+      return;
+    }
+
+    if (!address) {
+      setFocus("address");
+      return;
+    }
+
+    if (!voterId) {
+      setFocus("voterId");
+      return;
+    }
+
+    setFocus("name");
+  }
+
   function pickLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setAlert({ type: "error", text: t("newComplaint.error.geoUnsupported") });
@@ -250,7 +364,8 @@ export default function CampNewComplaintForm() {
     if (!result.ok) {
       setCitizenFound(null);
       setCitizenFieldsLocked(false);
-      setCitizenMissingBasicInfo(false);
+      setComplaintSummary(null);
+      setCitizenComplaints([]);
       setAlert({ type: "error", text: result.error });
       return;
     }
@@ -258,7 +373,8 @@ export default function CampNewComplaintForm() {
     if (!result.found) {
       setCitizenFound(false);
       setCitizenFieldsLocked(false);
-      setCitizenMissingBasicInfo(false);
+      setComplaintSummary(null);
+      setCitizenComplaints([]);
       setValue("name", "");
       setValue("address", "");
       setValue("aadhaar", "");
@@ -273,7 +389,6 @@ export default function CampNewComplaintForm() {
       !result.user.address.trim() ||
       !result.user.voterId.trim();
 
-    setCitizenMissingBasicInfo(missingBasicInfo);
     setCitizenFieldsLocked(!missingBasicInfo);
     setValue("name", result.user.name, { shouldValidate: true });
     setValue("address", result.user.address, { shouldValidate: true });
@@ -283,6 +398,27 @@ export default function CampNewComplaintForm() {
       type: missingBasicInfo ? "info" : "success",
       text: missingBasicInfo ? t("camp.lookup.basicMissing") : t("camp.lookup.found"),
     });
+
+    setSummaryLoading(true);
+    setComplaintsLoading(true);
+    const [summaryResult, complaintsResult] = await Promise.all([
+      getCitizenComplaintSummaryAction(mobile),
+      getCitizenComplaintsByMobileAction(mobile),
+    ]);
+    setSummaryLoading(false);
+    setComplaintsLoading(false);
+
+    if (summaryResult.ok && summaryResult.found) {
+      setComplaintSummary(summaryResult.summary);
+    } else {
+      setComplaintSummary(null);
+    }
+
+    if (complaintsResult.ok && complaintsResult.found) {
+      setCitizenComplaints(complaintsResult.complaints);
+    } else {
+      setCitizenComplaints([]);
+    }
   }
 
   async function onSubmit(values: campComplaintValidationForm) {
@@ -350,7 +486,8 @@ export default function CampNewComplaintForm() {
 
     setCitizenFound(null);
     setCitizenFieldsLocked(false);
-    setCitizenMissingBasicInfo(false);
+    setComplaintSummary(null);
+    setCitizenComplaints([]);
     
     // Reset form with first category and subcategory
     const firstCategory = categories[0];
@@ -374,7 +511,7 @@ export default function CampNewComplaintForm() {
   }
 
   return (
-    <div style={{ maxWidth: 760, margin: "0 auto" }}>
+    <div style={{ maxWidth: 1280, margin: "0 auto" }}>
       <div
         style={{
           background: "linear-gradient(135deg, #12294a 0%, #1a3c6e 100%)",
@@ -414,12 +551,15 @@ export default function CampNewComplaintForm() {
               />
             )}
 
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+          <div className="xl:col-span-8">
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onFormError)}>
             <Divider>{t("camp.citizen.section")}</Divider>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-3">
-              <div className="sm:col-span-2">
+            <div className="mb-3" style={{ overflowX: "auto" }}>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "nowrap", width: "100%" }}>
+              <div style={{ flex: "1.3 1 0" }}>
                 <CustomTextInput<campComplaintValidationForm>
                   name="mobile"
                   title={t("camp.citizen.mobile")}
@@ -430,7 +570,7 @@ export default function CampNewComplaintForm() {
                   disable={citizenFieldsLocked}
                 />
               </div>
-              <div className="pt-5">
+              <div style={{ flex: "0.9 1 0", paddingTop: 20 }}>
                 <Button
                   block
                   size="medium"
@@ -447,9 +587,7 @@ export default function CampNewComplaintForm() {
                   {t("camp.lookup.button")}
                 </Button>
               </div>
-            </div>
-
-            <div className="mb-3">
+              <div style={{ flex: "1.4 1 0" }}>
               <CustomTextInput<campComplaintValidationForm>
                 name="name"
                 title={t("register.nameLabel")}
@@ -457,6 +595,29 @@ export default function CampNewComplaintForm() {
                 maxlength={120}
                 disable={citizenFieldsLocked}
               />
+              </div>
+
+              <div style={{ flex: "1 1 0" }}>
+                <CustomTextInput<campComplaintValidationForm>
+                  name="aadhaar"
+                  title={t("register.aadhaarLabel")}
+                  placeholder={t("register.aadhaarPlaceholder")}
+                  onlynumber
+                  maxlength={12}
+                  disable={citizenFieldsLocked}
+                />
+              </div>
+
+              <div style={{ flex: "1 1 0" }}>
+                <CustomTextInput<campComplaintValidationForm>
+                  name="voterId"
+                  title={t("register.voterIdLabel")}
+                  placeholder={t("register.voterIdPlaceholder")}
+                  maxlength={30}
+                  disable={citizenFieldsLocked}
+                />
+              </div>
+              </div>
             </div>
 
             <div className="mb-3">
@@ -468,29 +629,6 @@ export default function CampNewComplaintForm() {
                 maxlength={500}
                 disable={citizenFieldsLocked}
               />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="mb-3">
-                <CustomTextInput<campComplaintValidationForm>
-                  name="aadhaar"
-                  title={t("register.aadhaarLabel")}
-                  placeholder={t("register.aadhaarPlaceholder")}
-                  onlynumber
-                  maxlength={12}
-                  disable={citizenFieldsLocked}
-                />
-              </div>
-
-              <div className="mb-3">
-                <CustomTextInput<campComplaintValidationForm>
-                  name="voterId"
-                  title={t("register.voterIdLabel")}
-                  placeholder={t("register.voterIdPlaceholder")}
-                  maxlength={30}
-                  disable={citizenFieldsLocked}
-                />
-              </div>
             </div>
 
             {citizenFieldsLocked && (
@@ -516,10 +654,7 @@ export default function CampNewComplaintForm() {
                 <Button
                   size="small"
                   type="primary"
-                  onClick={() => {
-                    setCitizenFieldsLocked(false);
-                    setFocus("name");
-                  }}
+                  onClick={handleFillBasicDetails}
                 >
                   {t("camp.lookup.fillBasic")}
                 </Button>
@@ -546,8 +681,9 @@ export default function CampNewComplaintForm() {
 
             <Divider>{t("camp.complaint.section")}</Divider>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-3">
-              <div>
+            <div className="mb-3" style={{ overflowX: "auto" }}>
+              <div style={{ display: "flex", gap: 12, flexWrap: "nowrap", width: "100%" }}>
+              <div style={{ flex: "1 1 0" }}>
                 <CustomMultiSelect<campComplaintValidationForm>
                   name="categoryId"
                   title={t("newComplaint.category")}
@@ -557,7 +693,7 @@ export default function CampNewComplaintForm() {
                 />
               </div>
 
-              <div>
+              <div style={{ flex: "1 1 0" }}>
                 <CustomMultiSelect<campComplaintValidationForm>
                   name="subcategoryId"
                   title={t("newComplaint.subcategory")}
@@ -565,6 +701,17 @@ export default function CampNewComplaintForm() {
                   required
                   options={subcategoryOptions}
                 />
+              </div>
+
+              <div style={{ flex: "1 1 0" }}>
+                <CustomTextInput<campComplaintValidationForm>
+                  name="affectedCitizensCount"
+                  title={t("newComplaint.affectedCitizensCount")}
+                  placeholder="e.g. 12"
+                  required
+                  onlynumber
+                />
+              </div>
               </div>
             </div>
 
@@ -588,27 +735,56 @@ export default function CampNewComplaintForm() {
               />
             </div>
 
-            <div className="mb-3">
-              <CustomTextInput<campComplaintValidationForm>
-                name="affectedCitizensCount"
-                title={t("newComplaint.affectedCitizensCount")}
-                placeholder="e.g. 12"
-                required
-                onlynumber
-              />
-            </div>
+            <div className="mb-3" style={{ overflowX: "auto" }}>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "nowrap", width: "100%" }}>
+              <div style={{ flex: "1.4 1 0" }}>
+                <CustomMultiSelect<campComplaintValidationForm>
+                  name="area"
+                  title={t("newComplaint.area")}
+                  placeholder={t("newComplaint.areaPlaceholder")}
+                  required={false}
+                  options={areaOptions}
+                />
+                {errors.area && (
+                  <p className="text-xs text-red-500">{errors.area.message?.toString()}</p>
+                )}
+              </div>
 
-            <div className="mb-3">
-              <CustomMultiSelect<campComplaintValidationForm>
-                name="area"
-                title={t("newComplaint.area")}
-                placeholder={t("newComplaint.areaPlaceholder")}
-                required={false}
-                options={areaOptions}
-              />
-              {errors.area && (
-                <p className="text-xs text-red-500">{errors.area.message?.toString()}</p>
-              )}
+              <div style={{ flex: "1 1 0" }}>
+                <CustomTextInput<campComplaintValidationForm>
+                  name="lat"
+                  title={t("newComplaint.latitude")}
+                  placeholder="e.g. 28.6139"
+                  required
+                  numdes
+                />
+              </div>
+
+              <div style={{ flex: "1 1 0" }}>
+                <CustomTextInput<campComplaintValidationForm>
+                  name="lng"
+                  title={t("newComplaint.longitude")}
+                  placeholder="e.g. 77.2090"
+                  required
+                  numdes
+                />
+              </div>
+
+              <div style={{ flex: "0.9 1 0", paddingTop: 20 }}>
+                <Button
+                  block
+                  size="medium"
+                  onClick={pickLocation}
+                  style={{
+                    borderColor: "#1a3c6e",
+                    color: "#1a3c6e",
+                    fontWeight: 600,
+                  }}
+                >
+                  {t("newComplaint.autoDetect")}
+                </Button>
+              </div>
+              </div>
             </div>
 
             <Divider plain style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}>
@@ -628,45 +804,6 @@ export default function CampNewComplaintForm() {
               </Text>
             </div>
 
-            <Divider plain style={{ fontSize: 13, color: "#888", margin: "4px 0 16px" }}>
-              {t("newComplaint.gps")}
-            </Divider>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div>
-                <CustomTextInput<campComplaintValidationForm>
-                  name="lat"
-                  title={t("newComplaint.latitude")}
-                  placeholder="e.g. 28.6139"
-                  required
-                  numdes
-                />
-              </div>
-              <div>
-                <CustomTextInput<campComplaintValidationForm>
-                  name="lng"
-                  title={t("newComplaint.longitude")}
-                  placeholder="e.g. 77.2090"
-                  required
-                  numdes
-                />
-              </div>
-              <div className="pt-5">
-                <Button
-                  block
-                  size="medium"
-                  onClick={pickLocation}
-                  style={{
-                    borderColor: "#1a3c6e",
-                    color: "#1a3c6e",
-                    fontWeight: 600,
-                  }}
-                >
-                  {t("newComplaint.autoDetect")}
-                </Button>
-              </div>
-            </div>
-
             {citizenFound !== null && (
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {citizenFound ? t("camp.lookup.willUpdate") : t("camp.lookup.willCreate")}
@@ -682,6 +819,86 @@ export default function CampNewComplaintForm() {
             </button>
           </form>
         </FormProvider>
+          </div>
+
+          <div className="xl:col-span-4">
+            <Card
+              size="small"
+              style={{
+                background: "#f8fbff",
+                border: "1px solid #d6e4f5",
+                position: "sticky",
+                top: 16,
+              }}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <Text strong>{t("camp.lookup.summaryTitle")}</Text>
+                {(summaryLoading || complaintsLoading) && <Spin size="small" />}
+              </div>
+
+              {citizenFound === null && (
+                <Text type="secondary">{t("camp.lookup.summaryHint")}</Text>
+              )}
+
+              {citizenFound === false && (
+                <Text type="secondary">{t("camp.lookup.notFound")}</Text>
+              )}
+
+              {citizenFound && (
+                <>
+                  <div className="mb-4" style={{ display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto" }}>
+                    <Card size="small" bodyStyle={{ padding: 8 }} style={{ minWidth: 88, flex: "1 0 0" }}>
+                      <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                        {t("camp.lookup.summary.total")}
+                      </Text>
+                      <Text strong style={{ fontSize: 16 }}>
+                        {complaintSummary?.total ?? 0}
+                      </Text>
+                    </Card>
+                    <Card size="small" bodyStyle={{ padding: 8 }} style={{ minWidth: 88, flex: "1 0 0" }}>
+                      <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                        {t("camp.lookup.summary.resolved")}
+                      </Text>
+                      <Text strong style={{ fontSize: 16, color: "#1f8a34" }}>
+                        {complaintSummary?.resolved ?? 0}
+                      </Text>
+                    </Card>
+                    <Card size="small" bodyStyle={{ padding: 8 }} style={{ minWidth: 88, flex: "1 0 0" }}>
+                      <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                        {t("camp.lookup.summary.pending")}
+                      </Text>
+                      <Text strong style={{ fontSize: 16, color: "#b26a00" }}>
+                        {complaintSummary?.pending ?? 0}
+                      </Text>
+                    </Card>
+                    <Card size="small" bodyStyle={{ padding: 8 }} style={{ minWidth: 88, flex: "1 0 0" }}>
+                      <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                        {t("camp.lookup.summary.closed")}
+                      </Text>
+                      <Text strong style={{ fontSize: 16 }}>
+                        {complaintSummary?.closed ?? 0}
+                      </Text>
+                    </Card>
+                  </div>
+
+                  <Divider style={{ margin: "10px 0" }} />
+                  <Text strong style={{ display: "block", marginBottom: 8 }}>
+                    {t("camp.lookup.historyTitle")}
+                  </Text>
+                  <Table<CitizenComplaintListItem>
+                    columns={complaintColumns}
+                    dataSource={citizenComplaints}
+                    loading={complaintsLoading}
+                    rowKey="id"
+                    pagination={{ pageSize: 5, showSizeChanger: false }}
+                    size="small"
+                    scroll={{ x: 650 }}
+                  />
+                </>
+              )}
+            </Card>
+          </div>
+        </div>
         </>
         )}
       </Card>

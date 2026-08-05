@@ -140,35 +140,36 @@ enum WORKMEDIATYPE {
 }
 
 model user {
-  id                   String                         @id @default(cuid())
-  name                 String?
-  mobile               String                         @unique
-  role                 ROLE                           @default(CITIZEN)
-  address              String?
-  aadhaar              String?
-  voterId              String?
-  pan                  String?
-  partySupporter       String?
-  pollingBooth         String?
-  locality             String?
-  isPartOfParty        Boolean?                       @default(false)
-  firstLoginComplete   Boolean                        @default(false)
-  complaints           complaint[]
-  complaintsCreated    complaint[]                    @relation("ComplaintCreatedBy")
-  auditLogs            audit_log[]
-  notifications        notification[]
-  meetingsCreated      meeting[]                      @relation("MeetingCreatedBy")
-  meetingsAssigned     meeting[]                      @relation("MeetingAssignedTo")
-  meetingsCampHead     meeting[]                      @relation("MeetingCampHead")
-  reviews              review[]
-  disputes             dispute[]
-  officerAssignments   complaint_assignment_history[] @relation("OfficerAssignedBy")
-  worksCreated         work[]                         @relation("WorkCreatedBy")
-  worksApproved        work[]                         @relation("WorkApprovedBy")
-  workUpdates          work_update[]                  @relation("WorkUpdateCreatedBy")
-  workMedia            work_media[]
-  createdAt            DateTime                       @default(now())
-  updatedAt            DateTime                       @updatedAt
+  id                 String                         @id @default(cuid())
+  name               String?
+  mobile             String                         @unique
+  role               ROLE                           @default(CITIZEN)
+  address            String?
+  aadhaar            String?
+  voterId            String?
+  pan                String?
+  partySupporter     String?
+  pollingBooth       String?
+  locality           String?
+  isPartOfParty      Boolean?                       @default(false)
+  firstLoginComplete Boolean                        @default(false)
+  complaints         complaint[]
+  complaintsCreated  complaint[]                    @relation("ComplaintCreatedBy")
+  auditLogs          audit_log[]
+  notifications      notification[]
+  meetingsCreated    meeting[]                      @relation("MeetingCreatedBy")
+  meetingsAssigned   meeting[]                      @relation("MeetingAssignedTo")
+  meetingsCampHead   meeting[]                      @relation("MeetingCampHead")
+  reviews            review[]
+  disputes           dispute[]
+  officerAssignments complaint_assignment_history[] @relation("OfficerAssignedBy")
+  worksCreated       work[]                         @relation("WorkCreatedBy")
+  worksApproved      work[]                         @relation("WorkApprovedBy")
+  workUpdates        work_update[]                  @relation("WorkUpdateCreatedBy")
+  workMedia          work_media[]
+  complaintMedia     complaint_media[]              @relation("ComplaintMediaUploadedBy")
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
 }
 
 model otp_code {
@@ -271,14 +272,18 @@ model complaint_cluster {
 }
 
 model complaint_media {
-  id          Int       @id @default(autoincrement())
-  complaintId Int
-  complaint   complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
-  fileUrl     String
-  type        MEDIATYPE
-  createdAt   DateTime  @default(now())
+  id                  Int           @id @default(autoincrement())
+  complaintId         Int
+  complaint           complaint     @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  fileUrl             String
+  caption             String?
+  type                WORKMEDIATYPE
+  uploaded_by_user_id String
+  uploaded_by_user    user          @relation("ComplaintMediaUploadedBy", fields: [uploaded_by_user_id], references: [id], onDelete: Restrict)
+  createdAt           DateTime      @default(now())
 
-  @@index([complaintId])
+  @@index([complaintId, type])
+  @@index([uploaded_by_user_id])
 }
 
 model department {
@@ -296,7 +301,7 @@ model officer {
   id           Int                            @id @default(autoincrement())
   name         String
   designation  String
-  email        String                         @unique
+  email        String?
   phone        String
   departmentId Int
   department   department                     @relation(fields: [departmentId], references: [id], onDelete: Restrict)
@@ -392,39 +397,39 @@ model notification {
 }
 
 model meeting {
-  id                     Int                   @id @default(autoincrement())
-  createdByUserId        String
-  createdByUser          user                  @relation("MeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
-  assignedToUserId       String
-  assignedToUser         user                  @relation("MeetingAssignedTo", fields: [assignedToUserId], references: [id], onDelete: Cascade)
-  campHeadUserId         String?
-  campHeadUser           user?                 @relation("MeetingCampHead", fields: [campHeadUserId], references: [id], onDelete: SetNull)
-  type                   MEETINGTYPE
-  invitationSubtype      INVITATIONSUBTYPE?
-  giftToCarry            String?               @db.LongText
-  selfDraftedLetter      String?               @db.LongText
-  purpose                String                @db.LongText
-  meetingDateTime        DateTime?
-  meetingPlace           String?
-  approvalStatus         MEETINGAPPROVALSTATUS @default(NOT_REQUIRED)
-  approvedAt             DateTime?
-  rejectedAt             DateTime?
-  completedAt            DateTime?
-  approvalRemarks        String?               @db.LongText
-  preferredDateTime      DateTime?
-  priority               MEETINGPRIORITY?
-  citizenName            String?
-  citizenMobile          String?
-  citizenArea            String?
-  citizenDetails         String?               @db.LongText
-  contactName            String?
-  contactMobile          String?
-  contactDesignation     String?
-  contactDepartment      String?
-  partyMeetDetails       String?               @db.LongText
-  selectedStaffNames     String?               @db.LongText
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
+  id                 Int                   @id @default(autoincrement())
+  createdByUserId    String
+  createdByUser      user                  @relation("MeetingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  assignedToUserId   String
+  assignedToUser     user                  @relation("MeetingAssignedTo", fields: [assignedToUserId], references: [id], onDelete: Cascade)
+  campHeadUserId     String?
+  campHeadUser       user?                 @relation("MeetingCampHead", fields: [campHeadUserId], references: [id], onDelete: SetNull)
+  type               MEETINGTYPE
+  invitationSubtype  INVITATIONSUBTYPE?
+  giftToCarry        String?               @db.LongText
+  selfDraftedLetter  String?               @db.LongText
+  purpose            String                @db.LongText
+  meetingDateTime    DateTime?
+  meetingPlace       String?
+  approvalStatus     MEETINGAPPROVALSTATUS @default(NOT_REQUIRED)
+  approvedAt         DateTime?
+  rejectedAt         DateTime?
+  completedAt        DateTime?
+  approvalRemarks    String?               @db.LongText
+  preferredDateTime  DateTime?
+  priority           MEETINGPRIORITY?
+  citizenName        String?
+  citizenMobile      String?
+  citizenArea        String?
+  citizenDetails     String?               @db.LongText
+  contactName        String?
+  contactMobile      String?
+  contactDesignation String?
+  contactDepartment  String?
+  partyMeetDetails   String?               @db.LongText
+  selectedStaffNames String?               @db.LongText
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
 
   @@index([createdByUserId, createdAt])
   @@index([assignedToUserId, createdAt])
@@ -498,10 +503,10 @@ model work {
   created_by_user_id     String
   created_by_user        user               @relation("WorkCreatedBy", fields: [created_by_user_id], references: [id], onDelete: Cascade)
 
-  tasks      work_task[]
-  media      work_media[]
-  updates    work_update[]
-  audit_logs audit_log[]   @relation("WorkAuditLogs")
+  tasks             work_task[]
+  media             work_media[]
+  updates           work_update[]
+  audit_logs        audit_log[]      @relation("WorkAuditLogs")
   complaintMappings complaint_work[] @relation("ComplaintWorkMapping")
 
   createdAt DateTime @default(now())
@@ -585,4 +590,13 @@ model work_update {
   createdAt DateTime @default(now())
 
   @@index([work_id, createdAt])
+}
+
+model total_budget {
+  id        Int      @id @default(autoincrement())
+  scope     String   @default("GLOBAL")
+  purpose   String   @default("General")
+  amount    Decimal  @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

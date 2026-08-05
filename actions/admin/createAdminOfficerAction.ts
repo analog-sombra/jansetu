@@ -8,7 +8,7 @@ import { AdminOfficerCreateResult } from "./types";
 export async function createAdminOfficerAction(payload: {
   name: string;
   designation: string;
-  email: string;
+  email?: string;
   phone: string;
   departmentId: number;
 }): Promise<AdminOfficerCreateResult> {
@@ -19,7 +19,7 @@ export async function createAdminOfficerAction(payload: {
 
   const name = payload.name.trim();
   const designation = payload.designation.trim();
-  const email = payload.email.trim().toLowerCase();
+  const email = payload.email ? payload.email.trim().toLowerCase() : undefined;
   const phone = payload.phone.trim();
   const departmentId = Number(payload.departmentId);
 
@@ -31,7 +31,7 @@ export async function createAdminOfficerAction(payload: {
     return { ok: false, error: "Designation must be at least 2 characters." };
   }
 
-  if (!email.includes("@")) {
+  if (email && !email.includes("@")) {
     return { ok: false, error: "Please provide a valid email." };
   }
 

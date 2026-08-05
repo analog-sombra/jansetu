@@ -13,14 +13,21 @@ import {
   Form,
   Image,
   Input,
+  Modal,
   Row,
   Select,
   Skeleton,
   Space,
   Steps,
+  Upload,
+  message,
 } from "antd";
+import type { UploadFile } from "antd";
+import type { RcFile } from "antd/es/upload/interface";
+import { UploadOutlined, EyeOutlined } from "@ant-design/icons";
 import {
   assignAdminComplaintOfficerAction,
+  createAdminComplaintMediaAction,
   getAdminComplaintDetailAction,
   raiseAdminComplaintQueryAction,
   updateAdminComplaintPriorityAction,
@@ -69,6 +76,11 @@ export default function AdminComplaintDetailPage() {
   const [assigning, setAssigning] = useState(false);
   const [querying, setQuerying] = useState(false);
   const [updatingPriority, setUpdatingPriority] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [showUploadMedia, setShowUploadMedia] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<UploadFile[]>([]);
+  const [mediaType, setMediaType] = useState<"BEFORE" | "PROGRESS" | "AFTER" | "DOCUMENT">("PROGRESS");
+  const [mediaCaption, setMediaCaption] = useState("");
   const [assignedOfficerToken, setAssignedOfficerToken] = useState("");
   const [alert, setAlert] = useState<{
     type: "error" | "success" | "warning" | "info";
@@ -76,6 +88,7 @@ export default function AdminComplaintDetailPage() {
   } | null>(null);
 
   const complaintId = Number(params.id);
+  const MAX_MEDIA_FILES = 10;
 
   async function loadData() {
     if (!Number.isInteger(complaintId) || complaintId <= 0) {
@@ -295,6 +308,49 @@ export default function AdminComplaintDetailPage() {
       text: `${t("adminDetail.success.assign")} ${t("adminDetail.assignmentToken")}: ${result.token}`,
     });
 
+    await loadData();
+  }
+
+  async function uploadComplaintMedia() {
+    if (!complaint) {
+      return;
+    }
+
+    const files: RcFile[] = mediaFiles.flatMap((item) =>
+      item.originFileObj ? [item.originFileObj as RcFile] : [],
+    );
+
+    if (files.length === 0) {
+      setAlert({ type: "warning", text: "Please select at least one image." });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("complaintId", String(complaint.id));
+    formData.append("mediaType", mediaType);
+    if (mediaCaption.trim()) {
+      formData.append("caption", mediaCaption.trim());
+    }
+    for (const file of files) {
+      formData.append("files", file);
+    }
+
+    setUploadingMedia(true);
+    setAlert(null);
+
+    const result = await createAdminComplaintMediaAction(formData);
+
+    setUploadingMedia(false);
+
+    if (!result.ok) {
+      setAlert({ type: "error", text: result.error });
+      return;
+    }
+
+    message.success(`Uploaded ${result.createdCount} image(s) successfully.`);
+    setMediaFiles([]);
+    setMediaCaption("");
+    setShowUploadMedia(false);
     await loadData();
   }
 
@@ -928,76 +984,125 @@ export default function AdminComplaintDetailPage() {
               </>
             )}
 
-            {complaint.media.length > 0 && (
-              <>
-                <Divider
-                  plain
-                  style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
-                >
-                  {t("adminDetail.evidence")}
-                </Divider>
-                <Image.PreviewGroup>
-                  <Row gutter={[12, 12]}>
-                    {complaint.media.map((item) => (
-                      <Col key={item.id} xs={24} sm={12} md={8}>
-                        <Card
-                          size="small"
+            <Divider
+              plain
+              style={{ fontSize: 13, color: "#888", margin: "16px 0 12px" }}
+            >
+              {t("adminDetail.evidence")}
+            </Divider>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
+              <div style={{ color: "#6b7280", fontSize: 12 }}>
+                {complaint.media.length} item(s)
+              </div>
+              <Button
+                icon={<UploadOutlined />}
+                style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}
+                onClick={() => setShowUploadMedia(true)}
+              >
+                Upload Media
+              </Button>
+            </div>
+
+            {complaint.media.length === 0 ? (
+              <Card size="small" style={{ borderStyle: "dashed" }}>
+                No media uploaded yet.
+              </Card>
+            ) : (
+              <Image.PreviewGroup>
+                <Row gutter={[12, 12]}>
+                  {complaint.media.map((item) => (
+                    <Col key={item.id} xs={24} sm={12} md={8}>
+                      <Card
+                        size="small"
+                        style={{
+                          borderRadius: 6,
+                          borderLeft: "3px solid #1a3c6e",
+                        }}
+                        styles={{
+                          body: {
+                            padding: 10,
+                          },
+                        }}
+                      >
+                        <Image
+                          src={item.fileUrl}
+                          alt={item.caption || item.fileUrl.split("/").pop() || "Complaint media"}
+                          width="100%"
                           style={{
-                            borderRadius: 6,
-                            borderLeft: "3px solid #1a3c6e",
+                            borderRadius: 4,
+                            objectFit: "cover",
+                            aspectRatio: "4 / 3",
+                            maxHeight: "140px",
                           }}
-                          styles={{
-                            body: {
-                              padding: 10,
-                            },
+                          preview={{
+                            mask: (
+                              <Space>
+                                <EyeOutlined />
+                                View
+                              </Space>
+                            ),
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            marginTop: 8,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "#1a3c6e",
                           }}
                         >
-                          {item.type === "IMAGE" ? (
-                            <Image
-                              src={item.fileUrl}
-                              alt={
-                                item.fileUrl.split("/").pop() ||
-                                "Complaint image"
-                              }
-                              width="100%"
-                              style={{
-                                borderRadius: 4,
-                                objectFit: "cover",
-                                aspectRatio: "4 / 3",
-                              }}
-                            />
-                          ) : (
-                            <a
-                              href={item.fileUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <Button
-                                block
-                                style={{
-                                  borderColor: "#1a3c6e",
-                                  color: "#1a3c6e",
-                                }}
-                              >
-                                {t("adminDetail.viewProof")}
-                              </Button>
-                            </a>
-                          )}
+                          {item.type}
+                        </div>
+
+                        {item.caption && (
                           <div
                             style={{
-                              marginTop: 8,
+                              marginTop: 4,
                               fontSize: 11,
-                              color: "#6b7280",
+                              fontWeight: 500,
+                              color: "#374151",
+                              fontStyle: "italic",
                             }}
                           >
-                            {item.fileUrl.split("/").pop()}
+                            {item.caption}
                           </div>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                </Image.PreviewGroup>
-              </>
+                        )}
+
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontSize: 10,
+                            color: "#6b7280",
+                          }}
+                        >
+                          by {item.uploadedByUser.name || "Admin"}
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontSize: 10,
+                            color: "#6b7280",
+                          }}
+                        >
+                          {new Date(item.createdAt).toLocaleString("en-IN")}
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Image.PreviewGroup>
             )}
           </Card>
         </Col>
@@ -1245,6 +1350,67 @@ export default function AdminComplaintDetailPage() {
           </Space>
         </Col>
       </Row>
+
+      <Modal
+        title="Upload Complaint Media"
+        open={showUploadMedia}
+        onOk={() => void uploadComplaintMedia()}
+        okText="Upload"
+        confirmLoading={uploadingMedia}
+        onCancel={() => {
+          setShowUploadMedia(false);
+          setMediaFiles([]);
+          setMediaType("PROGRESS");
+          setMediaCaption("");
+        }}
+      >
+        <Space orientation="vertical" style={{ width: "100%" }} size="middle">
+          <Form.Item label="Media Type" style={{ marginBottom: 12 }}>
+            <Select
+              value={mediaType}
+              onChange={(val) => setMediaType(val as "BEFORE" | "PROGRESS" | "AFTER" | "DOCUMENT")}
+              options={[
+                { label: "Before", value: "BEFORE" },
+                { label: "Progress", value: "PROGRESS" },
+                { label: "After", value: "AFTER" },
+                { label: "Document", value: "DOCUMENT" },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item label="Caption (Optional)" style={{ marginBottom: 12 }}>
+            <Input
+              placeholder="Enter media caption"
+              value={mediaCaption}
+              onChange={(e) => setMediaCaption(e.target.value)}
+              maxLength={255}
+            />
+          </Form.Item>
+
+          <Upload
+            multiple
+            accept="image/*"
+            fileList={mediaFiles}
+            beforeUpload={() => false}
+            onChange={({ fileList }) => {
+              const limitedFiles = fileList.slice(0, MAX_MEDIA_FILES);
+              if (fileList.length > MAX_MEDIA_FILES) {
+                setAlert({
+                  type: "warning",
+                  text: `You can upload up to ${MAX_MEDIA_FILES} images at a time.`,
+                });
+              }
+              setMediaFiles(limitedFiles);
+            }}
+            onRemove={(file) => {
+              setMediaFiles((prev) => prev.filter((item) => item.uid !== file.uid));
+            }}
+            listType="picture-card"
+          >
+            {mediaFiles.length >= MAX_MEDIA_FILES ? null : "+ Add"}
+          </Upload>
+        </Space>
+      </Modal>
     </div>
   );
 }

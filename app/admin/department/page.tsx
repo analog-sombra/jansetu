@@ -194,7 +194,7 @@ export default function AdminDepartmentPage() {
 		officerMethods.reset({
 			name: officer.name,
 			designation: officer.designation,
-			email: officer.email,
+			email: officer.email ?? undefined,
 			phone: officer.phone,
 			departmentId: String(officer.department.id),
 		});
@@ -331,7 +331,7 @@ export default function AdminDepartmentPage() {
 				officer.department.name,
 			];
 
-			return searchableFields.some((value) => value.toLowerCase().includes(searchTerm));
+			return searchableFields.some((value) => value?.toLowerCase().includes(searchTerm));
 		});
 	}, [officerDepartmentFilter, officerSearch, officers]);
 
@@ -435,14 +435,14 @@ export default function AdminDepartmentPage() {
 				id: editingOfficer.id, 
 				name: values.name,
 				designation: values.designation,
-				email: values.email,
+				email: values.email || undefined,
 				phone: values.phone,
 				departmentId: Number(values.departmentId),
 			})
 			: await createAdminOfficerAction({
 				name: values.name,
 				designation: values.designation,
-				email: values.email,
+				email: values.email || undefined,
 				phone: values.phone,
 				departmentId: Number(values.departmentId),
 			});
@@ -749,33 +749,32 @@ export default function AdminDepartmentPage() {
 							name="email"
 							title="Email"
 							placeholder="officer@example.com"
-							required
-							maxlength={120}
-						/>
-					</div>
+						maxlength={120}
+					/>
+				</div>
 
-					<div className="mb-4">
-						<CustomTextInput<officerValidationForm>
-							name="phone"
-							title="Phone"
-							placeholder="Enter phone number"
-							required
-							maxlength={10}
-						/>
-					</div>
+				<div className="mb-4">
+					<CustomTextInput<officerValidationForm>
+						name="phone"
+						title="Phone"
+						placeholder="Enter phone number"
+						required
+						maxlength={20}
+					/>
+				</div>
 
-					<div className="mb-4">
-						<CustomMultiSelect<officerValidationForm>
-							name="departmentId"
-							title="Department"
-							placeholder="Select department"
-							required
-							options={departments.map((department) => ({
-								label: department.name,
-								value: String(department.id),
-							}))}
-						/>
-					</div>
+				<div className="mb-4">
+					<CustomMultiSelect<officerValidationForm>
+						name="departmentId"
+						title="Department"
+						placeholder="Select department"
+						required
+						options={departments.map((department) => ({
+							label: department.name,
+							value: String(department.id),
+						}))}
+					/>
+				</div>
 
 					<Button
 						type="primary"

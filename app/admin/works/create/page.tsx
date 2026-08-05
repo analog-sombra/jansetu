@@ -10,7 +10,7 @@ export default async function CreateWorkPage() {
     redirect("/login");
   }
 
-  const allowedRoles = ["MLA", "MLA_PA", "MLA_SECRETARY", "ADMIN"];
+  const allowedRoles = ["MLA", "MLA_PA", "MLA_SECRETARY", "ADMIN", "CAMP_HEAD"];
   if (!allowedRoles.includes(user.role)) {
     redirect("/user");
   }
@@ -26,10 +26,5 @@ export default async function CreateWorkPage() {
     }),
   ]);
 
-  return (
-    <CreateWorkClient
-      departments={departments}
-      wards={wards}
-    />
-  );
+  return <CreateWorkClient departments={departments} wards={wards} />;
 }

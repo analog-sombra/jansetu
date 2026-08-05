@@ -6,6 +6,9 @@ export type {
   CampComplaintSummary,
   CampAuthResult,
   GetCitizenByMobileResult,
+  GetCitizenComplaintSummaryResult,
+  GetCitizenComplaintsByMobileResult,
+  CitizenComplaintListItem,
   CreateCampComplaintResult,
   CampComplaintsDashboardResult,
   CampComplaintDetail,
@@ -16,6 +19,8 @@ export type {
 } from "./types";
 
 export { getCitizenByMobileAction } from "./getCitizenByMobileAction";
+export { getCitizenComplaintSummaryAction } from "./getCitizenComplaintSummaryAction";
+export { getCitizenComplaintsByMobileAction } from "./getCitizenComplaintsByMobileAction";
 export { createCampComplaintAction } from "./createCampComplaintAction";
 export { addCampComplaintMediaAction } from "./addCampComplaintMediaAction";
 export { getCampComplaintsDashboardAction } from "./getCampComplaintsDashboardAction";

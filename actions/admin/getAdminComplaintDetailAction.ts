@@ -69,6 +69,14 @@ export async function getAdminComplaintDetailAction(
               id: true,
               fileUrl: true,
               type: true,
+              caption: true,
+              uploaded_by_user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              createdAt: true,
             },
             orderBy: { id: "asc" },
           },
@@ -239,7 +247,24 @@ export async function getAdminComplaintDetailAction(
         lat: complaint.lat,
         lng: complaint.lng,
         area: complaint.area,
-        media: complaint.media,
+        media: complaint.media.map((item) => {
+          const createdAtStr = item.createdAt instanceof Date
+            ? item.createdAt.toISOString()
+            : typeof item.createdAt === 'string'
+            ? item.createdAt
+            : new Date().toISOString();
+          return {
+            id: item.id,
+            fileUrl: item.fileUrl,
+            type: item.type,
+            caption: item.caption ?? null,
+            uploadedByUser: {
+              id: item.uploaded_by_user.id,
+              name: item.uploaded_by_user.name,
+            },
+            createdAt: createdAtStr,
+          };
+        }),
         assignments: complaint.assignments.map((assignment) => ({
           id: assignment.id,
           status: assignment.status,
@@ -268,8 +293,16 @@ export async function getAdminComplaintDetailAction(
       officers,
     };
   } catch (e) {
-    console.error("Error fetching complaint details:", e);
+    const errorMsg = e instanceof Error ? e.message : String(e);
+    console.error("[getAdminComplaintDetailAction] Error fetching complaint details:", {
+      error: errorMsg,
+      complaintId,
+      stack: e instanceof Error ? e.stack : undefined,
+    });
 
-    return { ok: false, error: "Unable to fetch complaint details." };
+    return {
+      ok: false,
+      error: `Unable to fetch complaint details. ${errorMsg.substring(0, 100)}`,
+    };
   }
 }
