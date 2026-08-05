@@ -1,17 +1,11 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireCampUser } from "./_shared";
 import { CampComplaintDetailResult } from "./types";
 
 export async function getCampComplaintDetailAction(
   complaintIdInput: number,
 ): Promise<CampComplaintDetailResult> {
-  const auth = await requireCampUser();
-  if (!auth.ok) {
-    return auth;
-  }
-
   const complaintId = Number(complaintIdInput);
   if (!Number.isInteger(complaintId) || complaintId <= 0) {
     return { ok: false, error: "Invalid complaint selected." };
@@ -21,7 +15,6 @@ export async function getCampComplaintDetailAction(
     const complaint = await prisma.complaint.findFirst({
       where: {
         id: complaintId,
-        createdByUserId: auth.user.id,
       },
       select: {
         id: true,

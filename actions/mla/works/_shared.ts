@@ -5,11 +5,15 @@ import { getAuthenticatedUser } from "@/lib/auth/session";
 type AuthUser = Awaited<ReturnType<typeof getAuthenticatedUser>>;
 
 export function isWorksManagerRole(role: ROLE): boolean {
-  return ["MLA", "MLA_PA", "MLA_SECRETARY", "ADMIN"].includes(role);
+  return ["MLA", "MLA_PA", "MLA_SECRETARY", "ADMIN", "CAMP_HEAD"].includes(
+    role,
+  );
 }
 
 export function isBudgetApproverRole(role: ROLE): boolean {
-  return ["MLA", "MLA_PA", "MLA_SECRETARY", "ADMIN"].includes(role);
+  return ["MLA", "MLA_PA", "MLA_SECRETARY", "ADMIN", "CAMP_HEAD"].includes(
+    role,
+  );
 }
 
 export async function requireWorksManagerUser() {
@@ -51,7 +55,7 @@ export function checkWorkAccess(
     created_by_user_id: string;
     created_by_user?: { role: string } | null;
   },
-  user: AuthUser
+  user: AuthUser,
 ): boolean {
   if (!user) {
     return false;
@@ -68,7 +72,7 @@ export function checkWorkAccess(
   // }
 
   // ADMIN: Full access
-  if (["MLA_PA", "MLA_SECRETARY","ADMIN","MLA"].includes(user.role)) {
+  if (["MLA_PA", "MLA_SECRETARY", "ADMIN", "MLA"].includes(user.role)) {
     return true;
   }
 
@@ -79,7 +83,7 @@ export function checkTaskAccess(
   task: {
     officer_id: number | null;
   },
-  user: AuthUser
+  user: AuthUser,
 ): boolean {
   if (!user) {
     return false;
@@ -88,7 +92,7 @@ export function checkTaskAccess(
   // Tasks are accessed through work ownership
   // For now, allow ADMIN access
   // Officer-specific access requires different comparison with officer table
-  if (["MLA_PA", "MLA_SECRETARY","ADMIN","MLA"].includes(user.role)) {
+  if (["MLA_PA", "MLA_SECRETARY", "ADMIN", "MLA"].includes(user.role)) {
     return true;
   }
 
