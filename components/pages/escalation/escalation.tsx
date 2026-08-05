@@ -27,8 +27,6 @@ import {
   updateEscalationPrioritiesAction,
 } from "@/actions/admin";
 import { useLanguage } from "@/components/provider/language_provider";
-import { complaint } from "@prisma/client";
-import { EscalationRecord } from "@/actions/admin/getAdminEscalationQueueAction";
 
 const { Title, Text } = Typography;
 
@@ -129,15 +127,13 @@ const EscalationPage = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const [escalations, setEscalations] = useState<EscalationRecord[]>([]);
+  const [escalations, setEscalations] = useState<AdminEscalationRecord[]>([]);
 
   useEffect(() => {
     const init = async () => {
       const result = await getAdminEscalationQueueAction();
-      if (result.status) {
-        setEscalations(result.data);
-      } else {
-        // toast.error(result.message);
+      if (result.ok) {
+        setEscalations(result.escalations);
       }
       setIsLoading(false);
     };
@@ -195,7 +191,7 @@ const EscalationPage = () => {
   }
 
   const filteredEscalations = useMemo(() => {
-    return initialEscalations.filter((item) => {
+    return escalations.filter((item: AdminEscalationRecord) => {
       if (appliedFilter.status && item.status !== appliedFilter.status) {
         return false;
       }
@@ -215,7 +211,7 @@ const EscalationPage = () => {
       }
       return true;
     });
-  }, [appliedFilter, initialEscalations]);
+  }, [appliedFilter, escalations]);
 
   async function handleUpdatePriority() {
     setUpdatingPriority(true);
@@ -329,13 +325,13 @@ const EscalationPage = () => {
   }
 
   const escalatedCount = filteredEscalations.filter(
-    (row) => row.trigger === "ESCALATION_7D",
+    (row: AdminEscalationRecord) => row.trigger === "ESCALATION_7D",
   ).length;
   const reminderCount = filteredEscalations.filter(
-    (row) => row.trigger === "REMINDER_48H",
+    (row: AdminEscalationRecord) => row.trigger === "REMINDER_48H",
   ).length;
   const oldestHours = filteredEscalations.reduce(
-    (acc, row) => Math.max(acc, row.ageHours),
+    (acc: number, row: AdminEscalationRecord) => Math.max(acc, row.ageHours),
     0,
   );
   const oldestDays = Math.floor(oldestHours / 24);

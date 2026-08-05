@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { MEDIATYPE } from "@prisma/client";
+import { WORKMEDIATYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { attachComplaintToCluster } from "@/lib/complaintCluster";
@@ -370,7 +370,7 @@ export async function addComplaintMediaAction(
 
     await mkdir(targetDir, { recursive: true });
 
-    const mediaRows: Array<{ complaintId: number; fileUrl: string; type: MEDIATYPE }> = [];
+    const mediaRows: Array<{ complaintId: number; fileUrl: string; type: WORKMEDIATYPE; uploaded_by_user_id: string }> = [];
 
     for (const file of files) {
       const extension = getFileExtension(file);
@@ -383,7 +383,8 @@ export async function addComplaintMediaAction(
       mediaRows.push({
         complaintId,
         fileUrl: `/uploads/complaints/${complaintId}/${filename}`,
-        type: "IMAGE",
+        type: "PROGRESS",
+        uploaded_by_user_id: user.id,
       });
     }
 

@@ -3,9 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { MEDIATYPE } from "@prisma/client";
+import { WORKMEDIATYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
-import { requireCampUser } from "./_shared";
 
 type AddCampComplaintMediaActionResult = {
   ok: boolean;
@@ -40,11 +39,6 @@ function getFileExtension(file: File): string {
 export async function addCampComplaintMediaAction(
   formData: FormData,
 ): Promise<AddCampComplaintMediaActionResult> {
-  const auth = await requireCampUser();
-  if (!auth.ok) {
-    return auth;
-  }
-
   const complaintIdRaw = formData.get("complaintId");
   const complaintId = Number(complaintIdRaw);
 
@@ -76,7 +70,6 @@ export async function addCampComplaintMediaAction(
     const complaint = await prisma.complaint.findFirst({
       where: {
         id: complaintId,
-        createdByUserId: auth.user.id,
       },
       select: { id: true },
     });
@@ -95,7 +88,7 @@ export async function addCampComplaintMediaAction(
 
     await mkdir(targetDir, { recursive: true });
 
-    const mediaRows: Array<{ complaintId: number; fileUrl: string; type: MEDIATYPE }> = [];
+    const mediaRows: Array<{ complaintId: number; fileUrl: string; type: WORKMEDIATYPE; uploaded_by_user_id: string }> = [];
 
     for (const file of files) {
       const extension = getFileExtension(file);
@@ -108,7 +101,8 @@ export async function addCampComplaintMediaAction(
       mediaRows.push({
         complaintId,
         fileUrl: `/uploads/complaints/${complaintId}/${filename}`,
-        type: "IMAGE",
+        type: "PROGRESS",
+        uploaded_by_user_id: "system",
       });
     }
 
