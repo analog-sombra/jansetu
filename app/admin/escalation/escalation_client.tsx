@@ -85,7 +85,7 @@ Date: ${date}
 NOTICE FOR ESCALATION AND URGENT ACTION REQUIRED
 
 Complaint Reference No.: ${row.complaintId}
-Area/Locality: ${row.area}
+Area/Locality: ${row.sublocality}
 Category: ${row.category}
 Sub-Category: ${row.subcategory || "General"}
 Days Open: ${daysOpen} days
@@ -97,7 +97,7 @@ This is to bring to your urgent notice that the above-mentioned complaint has be
 
 CATEGORY OF COMPLAINT: ${row.category}
 SUB-CATEGORY: ${row.subcategory || "General"}
-AREA/LOCALITY: ${row.area}
+AREA/LOCALITY: ${row.sublocality}
 
 OFFICER RESPONSIBLE: ${row.officer}
 DEPARTMENT: ${row.department}
@@ -145,12 +145,12 @@ export default function EscalationClient({
   const [triggerFilter, setTriggerFilter] = useState<string | undefined>(
     undefined,
   );
-  const [areaFilter, setAreaFilter] = useState("");
+  const [sublocalityFilter, setSublocalityFilter] = useState("");
   const [appliedFilter, setAppliedFilter] = useState<{
     status?: string;
     category?: string;
     trigger?: string;
-    area?: string;
+    sublocality?: string;
   }>({});
   const [noticeModalVisible, setNoticeModalVisible] = useState(false);
   const [selectedEscalation, setSelectedEscalation] = useState<AdminEscalationRecord | null>(null);
@@ -177,7 +177,7 @@ export default function EscalationClient({
       status: statusFilter,
       category: categoryFilter,
       trigger: triggerFilter,
-      area: areaFilter.trim() || undefined,
+      sublocality: sublocalityFilter.trim() || undefined,
     });
   }
 
@@ -193,10 +193,10 @@ export default function EscalationClient({
         return false;
       }
       if (
-        appliedFilter.area &&
-        !(item.area ?? "")
+        appliedFilter.sublocality &&
+        !(item.sublocality ?? "")
           .toLowerCase()
-          .includes(appliedFilter.area.toLowerCase())
+          .includes(appliedFilter.sublocality.toLowerCase())
       ) {
         return false;
       }
@@ -236,7 +236,7 @@ export default function EscalationClient({
       `Complaint ID: ${row.complaintId}`,
       `Category: ${row.category}`,
       `Subcategory: ${row.subcategory || "General"}`,
-      `Area: ${row.area}`,
+      `Area: ${row.sublocality}`,
       `Status: ${formatLabel(row.status)}`,
       `Escalation Trigger: ${formatLabel(row.trigger)}`,
       `Open Since: ${Math.floor(row.ageHours / 24)} days`,
@@ -350,9 +350,9 @@ export default function EscalationClient({
       ),
     },
     {
-      title: t("admin.table.area"),
-      dataIndex: "area",
-      key: "area",
+      title: t("admin.table.sublocality"),
+      dataIndex: "sublocality",
+      key: "sublocality",
     },
     {
       title: t("admin.table.officer"),
@@ -601,9 +601,9 @@ export default function EscalationClient({
                 Area/Locality
               </Text>
               <Input
-                value={areaFilter}
-                onChange={(e) => setAreaFilter(e.target.value)}
-                placeholder="Search by area"
+                value={sublocalityFilter}
+                onChange={(e) => setSublocalityFilter(e.target.value)}
+                placeholder="Search by sublocality"
                 style={{ marginTop: 4 }}
               />
             </div>
@@ -706,9 +706,9 @@ export default function EscalationClient({
                   </Text>
                 </div>
                 <div style={{ marginBottom: 8 }}>
-                  <Text strong>Area:</Text>
+                  <Text strong>Sublocality:</Text>
                   <br />
-                  <Text>{selectedEscalation?.area}</Text>
+                  <Text>{selectedEscalation?.sublocality}</Text>
                 </div>
                 <div style={{ marginBottom: 8 }}>
                   <Text strong>Category:</Text>

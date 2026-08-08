@@ -2,6 +2,7 @@ import { FieldErrors, FieldValues } from "react-hook-form";
 
 export const onFormError = <T extends FieldValues>(error: FieldErrors<T>) => {
   const firstErrorMessage = Object.values(error)[0]?.message;
+  console.error("Form submission error:", firstErrorMessage);
 
   setTimeout(() => {
     if (firstErrorMessage) {

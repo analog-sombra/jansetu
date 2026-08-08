@@ -55,7 +55,16 @@ export async function getAdminComplaintDetailAction(
           plannedCompletionDate: true,
           lat: true,
           lng: true,
-          area: true,
+          sublocality: {
+            select: {
+              name: true,
+              locality: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
           createdAt: true,
           user: {
             select: {
@@ -189,7 +198,16 @@ export async function getAdminComplaintDetailAction(
               },
               subcategory: true,
               status: true,
-              area: true,
+              sublocality: {
+                select: {
+                  name: true,
+                  locality: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
               affectedCitizensCount: true,
               createdAt: true,
             },
@@ -209,7 +227,8 @@ export async function getAdminComplaintDetailAction(
           category: entry.complaint.category.name,
           subcategory: entry.complaint.subcategory?.name ?? null,
           status: entry.complaint.status,
-          area: entry.complaint.area,
+          locality: entry.complaint.sublocality?.locality?.name ?? null,
+          sublocality: entry.complaint.sublocality?.name ?? null,
           affectedCitizensCount: entry.complaint.affectedCitizensCount,
           createdAt: entry.complaint.createdAt.toISOString(),
           isCurrentComplaint: entry.complaint.id === complaint.id,
@@ -246,7 +265,8 @@ export async function getAdminComplaintDetailAction(
           complaint.plannedCompletionDate?.toISOString() ?? null,
         lat: complaint.lat,
         lng: complaint.lng,
-        area: complaint.area,
+        locality: complaint.sublocality?.locality?.name ?? null,
+        sublocality: complaint.sublocality?.name ?? null,
         media: complaint.media.map((item) => {
           const createdAtStr = item.createdAt instanceof Date
             ? item.createdAt.toISOString()

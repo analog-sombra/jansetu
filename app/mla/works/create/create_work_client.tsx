@@ -28,7 +28,6 @@ interface Department {
 interface Ward {
   id: number;
   name: string;
-  constituency: string | null;
 }
 
 interface CreateWorkFormValues {
@@ -171,7 +170,7 @@ export default function CreateWorkClient({
                     placeholder="Select ward"
                     allowClear
                     options={wards.map((ward) => ({
-                      label: `${ward.name} (${ward.constituency})`,
+                      label: ward.name,
                       value: ward.id,
                     }))}
                   />

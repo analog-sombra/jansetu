@@ -21,7 +21,7 @@ export default async function CreateWorkPage() {
       orderBy: { name: "asc" },
     }),
     prisma.ward.findMany({
-      select: { id: true, name: true, constituency: true },
+      select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
   ]);

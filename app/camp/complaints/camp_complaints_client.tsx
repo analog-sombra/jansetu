@@ -100,11 +100,18 @@ export default function CampComplaintsClient({
       ),
     },
     {
-      title: t("newComplaint.area"),
-      dataIndex: "area",
-      key: "area",
+      title: "Locality",
+      dataIndex: "locality",
+      key: "locality",
+      width: 150,
+      render: (locality: string | null) => locality || "-",
+    },
+    {
+      title: "Sublocality",
+      dataIndex: "sublocality",
+      key: "sublocality",
       width: 160,
-      render: (area: string) => area || "-",
+      render: (sublocality: string | null) => sublocality || "-",
     },
     {
       title: t("dashboard.table.filedOn"),

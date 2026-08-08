@@ -11,9 +11,6 @@ import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useLanguage } from "@/components/provider/language_provider";
 import { OptionValue } from "@/model/main";
 import {
-  RAJOURI_GARDEN_AREAS,
-} from "@/lib/constants";
-import {
   addCampComplaintMediaAction,
   CitizenComplaintListItem,
   createCampComplaintAction,
@@ -25,6 +22,10 @@ import {
   CategoryWithSubcategories,
   getCategoriesWithSubcategoriesAction,
 } from "@/actions/user/getCategoriesAction";
+import {
+  SubLocalityWithLocality,
+  getSublocalitieslAction,
+} from "@/actions/user/getSublocalitieslAction";
 import {
   campComplaintValidationForm,
   campComplaintValidationSchema,
@@ -56,7 +57,9 @@ export default function CampNewComplaintForm() {
   const router = useRouter();
   const { t } = useLanguage();
   const [categories, setCategories] = useState<CategoryWithSubcategories[]>([]);
+  const [sublocalities, setSublocalities] = useState<SubLocalityWithLocality[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingSublocalities, setLoadingSublocalities] = useState(true);
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [citizenFound, setCitizenFound] = useState<null | boolean>(null);
@@ -138,7 +141,7 @@ export default function CampNewComplaintForm() {
       description: "",
       complaintAddress: "",
       affectedCitizensCount: "1",
-      area: "",
+      sublocalityId: "0",
       lat: "",
       lng: "",
     },
@@ -192,6 +195,20 @@ export default function CampNewComplaintForm() {
       render: (value: string | null) => value ?? "-",
     },
     {
+      title: t("dashboard.table.locality"),
+      dataIndex: "locality",
+      key: "locality",
+      width: 120,
+      render: (value: string | null) => value ?? "-",
+    },
+    {
+      title: t("dashboard.table.sublocality"),
+      dataIndex: "sublocality",
+      key: "sublocality",
+      width: 120,
+      render: (value: string | null) => value ?? "-",
+    },
+    {
       title: t("dashboard.table.status"),
       dataIndex: "status",
       key: "status",
@@ -225,34 +242,51 @@ export default function CampNewComplaintForm() {
     },
   ];
 
-  // Load categories on mount
+  // Load categories and sublocalities on mount
   useEffect(() => {
     let disposed = false;
 
-    async function loadCategories() {
+    async function loadData() {
       setLoadingCategories(true);
+      setLoadingSublocalities(true);
       try {
-        const result = await getCategoriesWithSubcategoriesAction();
-        if (!disposed && result.ok) {
-          setCategories(result.categories);
-          
-          // Set default category and subcategory
-          if (result.categories.length > 0) {
-            const firstCategory = result.categories[0];
-            setValue("categoryId", String(firstCategory.id));
-            if (firstCategory.subcategories.length > 0) {
-              setValue("subcategoryId", String(firstCategory.subcategories[0].id));
+        const [categoriesResult, sublocalitieslResult] = await Promise.all([
+          getCategoriesWithSubcategoriesAction(),
+          getSublocalitieslAction(),
+        ]);
+
+        if (!disposed) {
+          if (categoriesResult.ok) {
+            setCategories(categoriesResult.categories);
+            
+            // Set default category and subcategory
+            if (categoriesResult.categories.length > 0) {
+              const firstCategory = categoriesResult.categories[0];
+              setValue("categoryId", String(firstCategory.id));
+              if (firstCategory.subcategories.length > 0) {
+                setValue("subcategoryId", String(firstCategory.subcategories[0].id));
+              }
+            }
+          }
+
+          if (sublocalitieslResult.ok) {
+            setSublocalities(sublocalitieslResult.sublocalities);
+            
+            // Set default sublocality
+            if (sublocalitieslResult.sublocalities.length > 0) {
+              setValue("sublocalityId", String(sublocalitieslResult.sublocalities[0].id));
             }
           }
         }
       } finally {
         if (!disposed) {
           setLoadingCategories(false);
+          setLoadingSublocalities(false);
         }
       }
     }
 
-    void loadCategories();
+    void loadData();
 
     return () => {
       disposed = true;
@@ -276,9 +310,9 @@ export default function CampNewComplaintForm() {
     label: subcategory.name,
   }));
 
-  const areaOptions: OptionValue[] = RAJOURI_GARDEN_AREAS.map((area) => ({
-    value: area,
-    label: area,
+  const sublocalityOptions: OptionValue[] = sublocalities.map((sublocality) => ({
+    value: String(sublocality.id),
+    label: `${sublocality.name} (${sublocality.locality.name})`,
   }));
 
   useEffect(() => {
@@ -439,7 +473,7 @@ export default function CampNewComplaintForm() {
         description: values.description,
         complaintAddress: values.complaintAddress,
         affectedCitizensCount: values.affectedCitizensCount,
-        area: values.area,
+        sublocalityId: Number(values.sublocalityId),
         lat: values.lat,
         lng: values.lng,
       },
@@ -491,6 +525,7 @@ export default function CampNewComplaintForm() {
     
     // Reset form with first category and subcategory
     const firstCategory = categories[0];
+    const firstSublocality = sublocalities[0];
     reset({
       mobile: "",
       name: "",
@@ -502,7 +537,7 @@ export default function CampNewComplaintForm() {
       description: "",
       complaintAddress: "",
       affectedCitizensCount: "1",
-      area: "",
+      sublocalityId: String(firstSublocality?.id ?? 0),
       lat: "",
       lng: "",
     });
@@ -534,9 +569,9 @@ export default function CampNewComplaintForm() {
           boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
         }}
       >
-        {loadingCategories ? (
+        {loadingCategories || loadingSublocalities ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
-            <Spin size="large" description="Loading categories..." />
+            <Spin size="large" description="Loading data..." />
           </div>
         ) : (
           <>
@@ -739,14 +774,14 @@ export default function CampNewComplaintForm() {
               <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "nowrap", width: "100%" }}>
               <div style={{ flex: "1.4 1 0" }}>
                 <CustomMultiSelect<campComplaintValidationForm>
-                  name="area"
-                  title={t("newComplaint.area")}
-                  placeholder={t("newComplaint.areaPlaceholder")}
-                  required={false}
-                  options={areaOptions}
+                  name="sublocalityId"
+                  title="Sublocality"
+                  placeholder="Select a sublocality"
+                  required
+                  options={sublocalityOptions}
                 />
-                {errors.area && (
-                  <p className="text-xs text-red-500">{errors.area.message?.toString()}</p>
+                {errors.sublocalityId && (
+                  <p className="text-xs text-red-500">{errors.sublocalityId.message?.toString()}</p>
                 )}
               </div>
 

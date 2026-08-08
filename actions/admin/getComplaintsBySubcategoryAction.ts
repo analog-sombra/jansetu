@@ -62,6 +62,11 @@ export async function getComplaintsBySubcategoryAction(): Promise<GetComplaintsB
             name: true,
           },
         },
+        sublocality: {
+          select: {
+            name: true,
+          },
+        },
         user: {
           select: {
             name: true,
@@ -124,7 +129,7 @@ export async function getComplaintsBySubcategoryAction(): Promise<GetComplaintsB
           affectedCitizens: totalAffectedCitizens,
           complaints: subCategoryComplaints.map((c) => ({
             id: c.id,
-            area: c.area,
+            area: c.sublocality?.name || null,
             status: c.status,
             priority: c.priority,
             affectedCitizensCount: c.affectedCitizensCount,

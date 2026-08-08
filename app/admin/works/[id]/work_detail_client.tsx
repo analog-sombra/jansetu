@@ -489,6 +489,13 @@ export default function WorkDetailClient({
       render: (text: string | null) => text || "-",
     },
     {
+      title: "Sublocality",
+      dataIndex: ["complaint", "sublocality"],
+      key: "sublocality",
+      width: "12%",
+      render: (text: string | null) => text || "-",
+    },
+    {
       title: "Status",
       dataIndex: ["complaint", "status"],
       key: "status",
@@ -514,7 +521,7 @@ export default function WorkDetailClient({
       title: "Citizen",
       key: "citizen",
       width: "20%",
-      render: (_: any, record: WorkMappedComplaint) => (
+      render: (record: WorkMappedComplaint) => (
         <div>
           <div className="font-medium">
             {record.complaint.user.name || "N/A"}

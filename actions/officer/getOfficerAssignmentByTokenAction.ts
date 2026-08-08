@@ -37,7 +37,16 @@ export async function getOfficerAssignmentByTokenAction(
             plannedCompletionDate: true,
             lat: true,
             lng: true,
-            area: true,
+            sublocality: {
+              select: {
+                name: true,
+                locality: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
             user: {
               select: {
                 name: true,
@@ -124,7 +133,16 @@ export async function getOfficerAssignmentByTokenAction(
           select: {
             category: true,
             subcategory: true,
-            area: true,
+            sublocality: {
+              select: {
+                name: true,
+                locality: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
             address: true,
             status: true,
           },
@@ -190,7 +208,8 @@ export async function getOfficerAssignmentByTokenAction(
           media: assignment.complaint.media,
           lat: assignment.complaint.lat,
           lng: assignment.complaint.lng,
-          area: assignment.complaint.area,
+          locality: assignment.complaint.sublocality?.locality?.name ?? null,
+          sublocality: assignment.complaint.sublocality?.name ?? null,
           user: assignment.complaint.user,
         },
         officer: {
@@ -211,7 +230,8 @@ export async function getOfficerAssignmentByTokenAction(
           complaintId: item.complaintId,
           category: item.complaint.category.name,
           subcategory: item.complaint.subcategory?.name ?? null,
-          area: item.complaint.area,
+          locality: item.complaint.sublocality?.locality?.name ?? null,
+          sublocality: item.complaint.sublocality?.name ?? null,
           address: item.complaint.address ?? null,
           status: item.complaint.status,
           completedAt: item.updatedAt.toISOString(),

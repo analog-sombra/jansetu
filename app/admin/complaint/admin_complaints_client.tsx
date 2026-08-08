@@ -196,7 +196,7 @@ export default function AdminComplaintsClient({
       }
       if (
         appliedFilter.locality &&
-        !(complaint.area ?? "")
+        !(complaint.locality ?? "")
           .toLowerCase()
           .includes(appliedFilter.locality.toLowerCase())
       ) {
@@ -218,8 +218,8 @@ export default function AdminComplaintsClient({
       if (complaint.status === "PENDING" || complaint.status === "IN_PROGRESS") {
         pending += 1;
       }
-      if (complaint.area?.trim()) {
-        uniqueLocalities.add(complaint.area.trim().toLowerCase());
+      if (complaint.sublocality?.trim()) {
+        uniqueLocalities.add(complaint.sublocality.trim().toLowerCase());
       }
     }
 
@@ -306,8 +306,13 @@ export default function AdminComplaintsClient({
         ),
         sortingFn: "alphanumeric",
       }),
-      complaintColumnHelper.accessor("area", {
-        header: t("admin.table.area"),
+      complaintColumnHelper.accessor("locality", {
+        header: "Locality",
+        cell: (info) => info.getValue() || "-",
+        sortingFn: "alphanumeric",
+      }),
+      complaintColumnHelper.accessor("sublocality", {
+        header: "Sublocality",
         cell: (info) => info.getValue() || "-",
         sortingFn: "alphanumeric",
       }),

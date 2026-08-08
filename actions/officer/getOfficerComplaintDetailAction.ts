@@ -75,7 +75,11 @@ export async function getOfficerComplaintDetailAction(
         plannedCompletionDate: true,
         lat: true,
         lng: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+          },
+        },
         createdAt: true,
         user: {
           select: {
@@ -191,7 +195,7 @@ export async function getOfficerComplaintDetailAction(
           : null,
         lat: complaint.lat,
         lng: complaint.lng,
-        area: complaint.area,
+        sublocality: complaint.sublocality?.name ?? null,
         media: complaint.media,
         assignments: complaint.assignments.map((assignment) => ({
           id: assignment.id,

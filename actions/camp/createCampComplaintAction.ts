@@ -40,7 +40,7 @@ export async function createCampComplaintAction(
   const complaintAddress = payload.complaint.complaintAddress.trim() || null;
   const affectedCitizensCount = Number(payload.complaint.affectedCitizensCount);
   const priority = getComplaintPriority(affectedCitizensCount);
-  const area = payload.complaint.area?.trim() || null;
+  const sublocalityId = payload.complaint.sublocalityId ? Number(payload.complaint.sublocalityId) : null;
   const lat = Number(payload.complaint.lat);
   const lng = Number(payload.complaint.lng);
 
@@ -106,6 +106,19 @@ export async function createCampComplaintAction(
         throw new Error("Subcategory not found");
       }
 
+      // Validate sublocality exists if provided
+      let sublocalityRecord: { id: number; name: string } | null = null;
+      if (sublocalityId) {
+        sublocalityRecord = await tx.sublocality.findUnique({
+          where: { id: sublocalityId },
+          select: { id: true, name: true },
+        });
+
+        if (!sublocalityRecord) {
+          throw new Error("Selected sublocality not found");
+        }
+      }
+
       const complaint = await tx.complaint.create({
         data: {
           userId: citizen.id,
@@ -116,7 +129,7 @@ export async function createCampComplaintAction(
           address: complaintAddress,
           affectedCitizensCount,
           priority,
-          area,
+          sublocalityId,
           lat,
           lng,
         },
@@ -129,7 +142,7 @@ export async function createCampComplaintAction(
         categoryName: category.name,
         subcategoryId,
         subcategoryName: subcategory.name,
-        area,
+        area: sublocalityRecord?.name || null,
         lat,
         lng,
         status: "PENDING",

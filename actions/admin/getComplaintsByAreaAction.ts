@@ -14,6 +14,7 @@ export type ComplaintsByAreaGroup = {
   affectedCitizens: number;
   complaints: Array<{
     id: number;
+    area: string | null;
     category: string;
     subcategory: string | null;
     status: string;
@@ -62,6 +63,11 @@ export async function getComplaintsByAreaAction(): Promise<GetComplaintsByAreaRe
             name: true,
           },
         },
+        sublocality: {
+          select: {
+            name: true,
+          },
+        },
         user: {
           select: {
             name: true,
@@ -75,11 +81,11 @@ export async function getComplaintsByAreaAction(): Promise<GetComplaintsByAreaRe
     });
 
 
-    // Group by area
+    // Group by area (sublocality)
     const groupedByArea = new Map<string, typeof complaints>();
 
     complaints.forEach((complaint) => {
-      const area = complaint.area || "Unspecified Area";
+      const area = complaint.sublocality?.name || "Unspecified Area";
       if (!groupedByArea.has(area)) {
         groupedByArea.set(area, []);
       }
@@ -121,6 +127,7 @@ export async function getComplaintsByAreaAction(): Promise<GetComplaintsByAreaRe
           affectedCitizens: totalAffectedCitizens,
           complaints: areaComplaints.map((c) => ({
             id: c.id,
+            area: c.sublocality?.name || null,
             category: c.category.name,
             subcategory: c.subcategory?.name || null,
             status: c.status,

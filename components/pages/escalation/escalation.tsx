@@ -81,7 +81,7 @@ Date: ${date}
 NOTICE FOR ESCALATION AND URGENT ACTION REQUIRED
 
 Complaint Reference No.: ${row.complaintId}
-Area/Locality: ${row.area}
+Area/Locality: ${row.sublocality}
 Category: ${row.category}
 Sub-Category: ${row.subcategory || "General"}
 Days Open: ${daysOpen} days
@@ -93,7 +93,7 @@ This is to bring to your urgent notice that the above-mentioned complaint has be
 
 CATEGORY OF COMPLAINT: ${row.category}
 SUB-CATEGORY: ${row.subcategory || "General"}
-AREA/LOCALITY: ${row.area}
+AREA/LOCALITY: ${row.sublocality}
 
 OFFICER RESPONSIBLE: ${row.officer}
 DEPARTMENT: ${row.department}
@@ -153,12 +153,12 @@ const EscalationPage = () => {
   const [triggerFilter, setTriggerFilter] = useState<string | undefined>(
     undefined,
   );
-  const [areaFilter, setAreaFilter] = useState("");
+  const [sublocalityFilter, setSublocalityFilter] = useState("");
   const [appliedFilter, setAppliedFilter] = useState<{
     status?: string;
     category?: string;
     trigger?: string;
-    area?: string;
+    sublocality?: string;
   }>({});
   const [noticeModalVisible, setNoticeModalVisible] = useState(false);
   const [selectedEscalation, setSelectedEscalation] =
@@ -186,7 +186,7 @@ const EscalationPage = () => {
       status: statusFilter,
       category: categoryFilter,
       trigger: triggerFilter,
-      area: areaFilter.trim() || undefined,
+      sublocality: sublocalityFilter.trim() || undefined,
     });
   }
 
@@ -202,10 +202,10 @@ const EscalationPage = () => {
         return false;
       }
       if (
-        appliedFilter.area &&
-        !(item.area ?? "")
+        appliedFilter.sublocality &&
+        !(item.sublocality ?? "")
           .toLowerCase()
-          .includes(appliedFilter.area.toLowerCase())
+          .includes(appliedFilter.sublocality.toLowerCase())
       ) {
         return false;
       }
@@ -245,7 +245,7 @@ const EscalationPage = () => {
       `Complaint ID: ${row.complaintId}`,
       `Category: ${row.category}`,
       `Subcategory: ${row.subcategory || "General"}`,
-      `Area: ${row.area}`,
+      `Area: ${row.sublocality}`,
       `Status: ${formatLabel(row.status)}`,
       `Escalation Trigger: ${formatLabel(row.trigger)}`,
       `Open Since: ${Math.floor(row.ageHours / 24)} days`,
@@ -359,9 +359,9 @@ const EscalationPage = () => {
       ),
     },
     {
-      title: t("admin.table.area"),
-      dataIndex: "area",
-      key: "area",
+      title: t("admin.table.sublocality"),
+      dataIndex: "sublocality",
+      key: "sublocality",
     },
     {
       title: t("admin.table.officer"),
@@ -609,9 +609,9 @@ const EscalationPage = () => {
                 Area/Locality
               </Text>
               <Input
-                value={areaFilter}
-                onChange={(e) => setAreaFilter(e.target.value)}
-                placeholder="Search by area"
+                value={sublocalityFilter}
+                onChange={(e) => setSublocalityFilter(e.target.value)}
+                placeholder="Search by sublocality"
                 style={{ marginTop: 4 }}
               />
             </div>
@@ -738,7 +738,7 @@ const EscalationPage = () => {
                 <div style={{ marginBottom: 8 }}>
                   <Text strong>Area:</Text>
                   <br />
-                  <Text>{selectedEscalation?.area}</Text>
+                  <Text>{selectedEscalation?.sublocality}</Text>
                 </div>
                 <div style={{ marginBottom: 8 }}>
                   <Text strong>Category:</Text>

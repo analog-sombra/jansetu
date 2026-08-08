@@ -239,7 +239,11 @@ export async function getAdminReportDashboardAction(
       select: {
         id: true,
         status: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+          },
+        },
         affectedCitizensCount: true,
         createdAt: true,
         updatedAt: true,
@@ -346,7 +350,7 @@ export async function getAdminReportDashboardAction(
     const midpoint = new Date((fromDate.getTime() + now.getTime()) / 2);
 
     complaints.forEach((item) => {
-      const areaKey = item.area?.trim() || "Unspecified Area";
+      const areaKey = item.sublocality?.name || "Unspecified Area";
       const current = areaMap.get(areaKey) ?? {
         complaints: 0,
         resolved: 0,
@@ -546,7 +550,7 @@ export async function getAdminReportDashboardAction(
               1,
               Math.ceil(daysBetween(assignment.dueDate, now)),
             ),
-            area: complaint.area?.trim() || "Unspecified Area",
+            area: complaint.sublocality?.name || "Unspecified Area",
           })),
       )
       .sort((left, right) => right.daysOverdue - left.daysOverdue)
@@ -561,7 +565,7 @@ export async function getAdminReportDashboardAction(
         return {
           complaintId: complaint.id,
           category: complaint.category.name,
-          area: complaint.area?.trim() || "Unspecified Area",
+          area: complaint.sublocality?.name || "Unspecified Area",
           resolvedAt: complaint.updatedAt.toISOString(),
           beforeLabel: hasMedia ? "Issue evidence submitted" : "Issue reported",
           afterLabel: hasMedia

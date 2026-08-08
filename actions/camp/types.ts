@@ -14,7 +14,7 @@ export type CampComplaintInput = {
   description: string;
   complaintAddress: string;
   affectedCitizensCount: string;
-  area?: string;
+  sublocalityId?: number;
   lat: string;
   lng: string;
 };
@@ -44,7 +44,8 @@ export type CampComplaintSummary = {
   subcategory: string | null;
   affectedCitizensCount: number;
   status: string;
-  area: string;
+  locality: string | null;
+  sublocality: string | null;
   createdAt: string;
 };
 
@@ -88,7 +89,8 @@ export type CampComplaintDetail = {
   plannedCompletionDate: string | null;
   lat: number;
   lng: number;
-  area: string | null;
+  locality: string | null;
+  sublocality: string | null;
   media: Array<{ id: number; fileUrl: string; type: string }>;
   assignments: CampComplaintAssignmentSummary[];
   createdAt: string;
@@ -157,7 +159,8 @@ export type CitizenComplaintListItem = {
   category: string;
   subcategory: string | null;
   status: string;
-  area: string;
+  locality: string | null;
+  sublocality: string | null;
   createdAt: string;
 };
 

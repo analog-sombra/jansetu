@@ -30,7 +30,6 @@ import {
 import {
   ArrowLeftOutlined,
   EditOutlined,
-  DeleteOutlined,
   CheckCircleOutlined,
   UploadOutlined,
   PlusOutlined,
@@ -152,7 +151,7 @@ export default function WorkDetailClient({
           } else {
             setError(result.error);
           }
-        } catch (err) {
+        } catch {
           setError("Failed to close work");
         } finally {
           setLoading(false);
@@ -190,7 +189,7 @@ export default function WorkDetailClient({
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to add task");
     } finally {
       setLoading(false);
@@ -218,7 +217,7 @@ export default function WorkDetailClient({
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to update progress");
     } finally {
       setLoading(false);
@@ -244,7 +243,7 @@ export default function WorkDetailClient({
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to approve budget");
     } finally {
       setLoading(false);
@@ -270,7 +269,7 @@ export default function WorkDetailClient({
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to utilize budget");
     } finally {
       setLoading(false);
@@ -296,7 +295,7 @@ export default function WorkDetailClient({
       } else {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to add activity");
     } finally {
       setLoading(false);
@@ -462,6 +461,13 @@ export default function WorkDetailClient({
       render: (text: string | null) => text || "-",
     },
     {
+      title: "Sublocality",
+      dataIndex: ["complaint", "sublocality"],
+      key: "sublocality",
+      width: "12%",
+      render: (text: string | null) => text || "-",
+    },
+    {
       title: "Status",
       dataIndex: ["complaint", "status"],
       key: "status",
@@ -487,7 +493,7 @@ export default function WorkDetailClient({
       title: "Citizen",
       key: "citizen",
       width: "20%",
-      render: (_: any, record: WorkMappedComplaint) => (
+      render: (record: WorkMappedComplaint) => (
         <div>
           <div className="font-medium">
             {record.complaint.user.name || "N/A"}

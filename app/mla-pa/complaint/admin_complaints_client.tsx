@@ -180,8 +180,13 @@ export default function AdminComplaintsClient({
         ),
         sortingFn: "alphanumeric",
       }),
-      complaintColumnHelper.accessor("area", {
-        header: t("admin.table.area"),
+      complaintColumnHelper.accessor("locality", {
+        header: "Locality",
+        cell: (info) => info.getValue() || "-",
+        sortingFn: "alphanumeric",
+      }),
+      complaintColumnHelper.accessor("sublocality", {
+        header: "Sublocality",
         cell: (info) => info.getValue() || "-",
         sortingFn: "alphanumeric",
       }),

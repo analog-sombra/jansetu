@@ -21,11 +21,11 @@ export default function PriorityCasesClient({
   const { t } = useLanguage();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
-  const [areaFilter, setAreaFilter] = useState("");
+  const [sublocalityFilter, setSublocalityFilter] = useState("");
   const [appliedFilter, setAppliedFilter] = useState<{
     status?: string;
     category?: string;
-    area?: string;
+    sublocality?: string;
   }>({});
 
   const statusOptions = useMemo(
@@ -42,7 +42,7 @@ export default function PriorityCasesClient({
     setAppliedFilter({
       status: statusFilter,
       category: categoryFilter,
-      area: areaFilter.trim() || undefined,
+      sublocality: sublocalityFilter.trim() || undefined,
     });
   }
 
@@ -55,8 +55,8 @@ export default function PriorityCasesClient({
         return false;
       }
       if (
-        appliedFilter.area &&
-        !(item.area ?? "").toLowerCase().includes(appliedFilter.area.toLowerCase())
+        appliedFilter.sublocality &&
+        !(item.sublocality ?? "").toLowerCase().includes(appliedFilter.sublocality.toLowerCase())
       ) {
         return false;
       }
@@ -88,9 +88,10 @@ export default function PriorityCasesClient({
     },
     {
       title: t("admin.table.area"),
-      dataIndex: "area",
-      key: "area",
-      sorter: (a, b) => a.area.localeCompare(b.area),
+      dataIndex: "sublocality",
+      key: "sublocality",
+      render: (sublocality: string | null) => sublocality || "-",
+      sorter: (a, b) => (a.sublocality ?? "").localeCompare(b.sublocality ?? ""),
     },
     {
       title: t("admin.table.status"),
@@ -198,8 +199,8 @@ export default function PriorityCasesClient({
                 Area/Locality
               </Text>
               <Input
-                value={areaFilter}
-                onChange={(e) => setAreaFilter(e.target.value)}
+                value={sublocalityFilter}
+                onChange={(e) => setSublocalityFilter(e.target.value)}
                 placeholder="Search by area"
                 style={{ marginTop: 4 }}
               />

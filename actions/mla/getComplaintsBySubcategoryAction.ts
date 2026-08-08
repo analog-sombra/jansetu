@@ -63,7 +63,11 @@ export async function getComplaintsBySubcategoryAction(): Promise<GetComplaintsB
         },
         description: true,
         status: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+          },
+        },
         affectedCitizensCount: true,
         createdAt: true,
         user: {
@@ -97,7 +101,7 @@ export async function getComplaintsBySubcategoryAction(): Promise<GetComplaintsB
         subcategory: complaint.subcategory?.name ?? null,
         description: complaint.description,
         status: complaint.status,
-        area: complaint.area,
+        area: complaint.sublocality?.name ?? null,
         affectedCitizensCount: complaint.affectedCitizensCount,
         createdAt: complaint.createdAt,
         citizenName: complaint.user.name ?? "N/A",

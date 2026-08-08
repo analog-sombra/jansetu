@@ -35,7 +35,11 @@ export async function getComplaintClusterPayload(complaintId: number) {
     where: { id: complaintId },
     select: {
       id: true,
-      area: true,
+      sublocality: {
+        select: {
+          name: true,
+        },
+      },
       lat: true,
       lng: true,
       category: {
@@ -67,7 +71,7 @@ export async function getComplaintClusterPayload(complaintId: number) {
     departmentName: complaint.category.department.name,
     category: complaint.category.name,
     subcategory: complaint.subcategory.name,
-    areaKey: normalizeClusterPart(complaint.area),
+    areaKey: normalizeClusterPart(complaint.sublocality?.name),
     latBucket,
     lngBucket,
   };

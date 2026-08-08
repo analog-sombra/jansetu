@@ -27,7 +27,16 @@ export async function getCampComplaintsDashboardAction(): Promise<CampComplaints
         },
         affectedCitizensCount: true,
         status: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+            locality: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         user: {
           select: {
@@ -48,7 +57,8 @@ export async function getCampComplaintsDashboardAction(): Promise<CampComplaints
         subcategory: complaint.subcategory.name,
         affectedCitizensCount: complaint.affectedCitizensCount,
         status: complaint.status,
-        area: complaint.area ?? "",
+        locality: complaint.sublocality?.locality?.name ?? null,
+        sublocality: complaint.sublocality?.name ?? null,
         createdAt: complaint.createdAt.toISOString(),
       })),
     };

@@ -43,7 +43,14 @@ export async function getCitizenComplaintsByMobileAction(
     select: {
       id: true,
       status: true,
-      area: true,
+      sublocality: {
+        select: {
+          name: true,
+          locality: {
+            select: { name: true },
+          },
+        },
+      },
       createdAt: true,
       category: {
         select: {
@@ -66,7 +73,8 @@ export async function getCitizenComplaintsByMobileAction(
       category: item.category.name,
       subcategory: item.subcategory?.name ?? null,
       status: item.status,
-      area: item.area ?? "",
+      locality: item.sublocality?.locality?.name ?? null,
+      sublocality: item.sublocality?.name ?? null,
       createdAt: item.createdAt.toISOString(),
     })),
   };

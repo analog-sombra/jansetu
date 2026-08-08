@@ -31,7 +31,16 @@ export async function getCampComplaintDetailAction(
         plannedCompletionDate: true,
         lat: true,
         lng: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+            locality: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         user: {
           select: {
@@ -143,7 +152,8 @@ export async function getCampComplaintDetailAction(
           : null,
         lat: complaint.lat,
         lng: complaint.lng,
-        area: complaint.area,
+        locality: complaint.sublocality?.locality?.name ?? null,
+        sublocality: complaint.sublocality?.name ?? null,
         media: complaint.media,
         assignments: complaint.assignments.map((assignment) => ({
           id: assignment.id,

@@ -39,7 +39,11 @@ export async function getAdminPriorityCasesAction(): Promise<AdminPriorityCasesR
       },
       select: {
         id: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+          },
+        },
         status: true,
         createdAt: true,
         priority: true,
@@ -62,7 +66,7 @@ export async function getAdminPriorityCasesAction(): Promise<AdminPriorityCasesR
       ok: true,
       cases: complaints.map((complaint) => ({
         id: complaint.id,
-        area: complaint.area?.trim() || "-",
+        sublocality: complaint.sublocality?.name ?? null,
         category: complaint.category.name,
         subcategory: complaint.subcategory?.name ?? null,
         status: complaint.status,

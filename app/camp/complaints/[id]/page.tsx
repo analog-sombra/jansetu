@@ -277,8 +277,12 @@ export default function CampComplaintDetailPage() {
                   </div>
                 </Col>
                 <Col xs={24} sm={12}>
-                  <Text type="secondary">Area</Text>
-                  <div>{complaint.area || "-"}</div>
+                  <Text type="secondary">Locality</Text>
+                  <div>{complaint.locality || "-"}</div>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Text type="secondary">Sublocality</Text>
+                  <div>{complaint.sublocality || "-"}</div>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Text type="secondary">Affected Citizens Count</Text>

@@ -2,23 +2,23 @@ export const AUTH_COOKIE = "sevamesirsa_session";
 
 
 
-export const RAJOURI_GARDEN_AREAS = [
-  "Rajouri Garden",
-  "Raghubir Nagar",
-  "Tagore Garden",
-  "Vishal Enclave",
-  "Subhash Nagar",
-  "Shivaji Enclave",
-  "Mansarovar Garden",
-  "Mayapuri",
-  "Madipur",
-  "Punjabi Bagh West",
-  "Karampura",
-  "Moti Nagar",
-  "Ramesh Nagar",
-  "Raja Garden",
-  "Other",
-] as const;
+// export const RAJOURI_GARDEN_AREAS = [
+//   "Rajouri Garden",
+//   "Raghubir Nagar",
+//   "Tagore Garden",
+//   "Vishal Enclave",
+//   "Subhash Nagar",
+//   "Shivaji Enclave",
+//   "Mansarovar Garden",
+//   "Mayapuri",
+//   "Madipur",
+//   "Punjabi Bagh West",
+//   "Karampura",
+//   "Moti Nagar",
+//   "Ramesh Nagar",
+//   "Raja Garden",
+//   "Other",
+// ] as const;
 
 export const CATEGORY_DEPARTMENT_MAP: Record<string, string[]> = {
   Road: ["Public Works"],

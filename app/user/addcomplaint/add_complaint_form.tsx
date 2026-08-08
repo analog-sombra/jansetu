@@ -8,7 +8,6 @@ import type { RcFile } from "antd/es/upload/interface";
 import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useLanguage } from "@/components/provider/language_provider";
-import { RAJOURI_GARDEN_AREAS } from "@/lib/constants";
 import {
   addComplaintAction,
   addComplaintMediaAction,
@@ -17,6 +16,14 @@ import {
   CategoryWithSubcategories,
   getCategoriesWithSubcategoriesAction,
 } from "@/actions/user/getCategoriesAction";
+import {
+  LocalityWithWard,
+  getLocalitiesAction,
+} from "@/actions/user/getLocalitiesAction";
+import {
+  SubLocalityWithLocality,
+  getSublocalitieslAction,
+} from "@/actions/user/getSublocalitieslAction";
 import {
   complaintValidationForm,
   complaintValidationSchema,
@@ -37,7 +44,13 @@ export default function AddComplaintForm() {
   const router = useRouter();
   const { t } = useLanguage();
   const [categories, setCategories] = useState<CategoryWithSubcategories[]>([]);
+  const [localities, setLocalities] = useState<LocalityWithWard[]>([]);
+  const [sublocalities, setSublocalities] = useState<SubLocalityWithLocality[]>(
+    [],
+  );
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingLocalities, setLoadingLocalities] = useState(true);
+  const [loadingSublocalities, setLoadingSublocalities] = useState(true);
   const [mediaFiles, setMediaFiles] = useState<UploadFile[]>([]);
 
   const methods = useForm<complaintValidationForm>({
@@ -46,7 +59,8 @@ export default function AddComplaintForm() {
       subcategoryId: "0",
       description: "",
       address: "",
-      area: "",
+      localityId: "0",
+      sublocalityId: "0",
       lat: "",
       lng: "",
     },
@@ -57,11 +71,22 @@ export default function AddComplaintForm() {
 
   const { handleSubmit, setValue, reset } = methods;
 
-  const selectedCategoryIdRaw = useWatch({ control: methods.control, name: "categoryId" });
-  const selectedSubcategoryIdRaw = useWatch({ control: methods.control, name: "subcategoryId" });
-  
+  const selectedCategoryIdRaw = useWatch({
+    control: methods.control,
+    name: "categoryId",
+  });
+  const selectedSubcategoryIdRaw = useWatch({
+    control: methods.control,
+    name: "subcategoryId",
+  });
+  const selectedLocalityIdRaw = useWatch({
+    control: methods.control,
+    name: "localityId",
+  });
+
   const selectedCategoryId: string = String(selectedCategoryIdRaw || "0");
   const selectedSubcategoryId: string = String(selectedSubcategoryIdRaw || "0");
+  const selectedLocalityId: string = String(selectedLocalityIdRaw || "0");
   const [submitting, setSubmitting] = useState(false);
   const [alert, setAlert] = useState<{
     type: "error" | "success";
@@ -119,44 +144,101 @@ export default function AddComplaintForm() {
     return addComplaintMediaAction(formData);
   }
 
-  // Load categories on mount
+  // Load categories and localities on mount
   useEffect(() => {
     let disposed = false;
 
-    async function loadCategories() {
+    async function loadData() {
       setLoadingCategories(true);
+      setLoadingLocalities(true);
       try {
-        const result = await getCategoriesWithSubcategoriesAction();
-        if (!disposed && result.ok) {
-          setCategories(result.categories);
+        const [categoriesResult, localitiesResult] = await Promise.all([
+          getCategoriesWithSubcategoriesAction(),
+          getLocalitiesAction(),
+        ]);
 
-          // Set default category and subcategory
-          if (result.categories.length > 0) {
-            const firstCategory = result.categories[0];
-            setValue("categoryId", String(firstCategory.id));
-            if (firstCategory.subcategories.length > 0) {
-              setValue("subcategoryId", String(firstCategory.subcategories[0].id));
+        if (!disposed) {
+          if (categoriesResult.ok) {
+            setCategories(categoriesResult.categories);
+
+            // Set default category and subcategory
+            if (categoriesResult.categories.length > 0) {
+              const firstCategory = categoriesResult.categories[0];
+              setValue("categoryId", String(firstCategory.id));
+              if (firstCategory.subcategories.length > 0) {
+                setValue(
+                  "subcategoryId",
+                  String(firstCategory.subcategories[0].id),
+                );
+              }
+            }
+          }
+
+          if (localitiesResult.ok) {
+            setLocalities(localitiesResult.localities);
+
+            // Set default locality
+            if (localitiesResult.localities.length > 0) {
+              setValue("localityId", String(localitiesResult.localities[0].id));
             }
           }
         }
       } finally {
         if (!disposed) {
           setLoadingCategories(false);
+          setLoadingLocalities(false);
         }
       }
     }
 
-    void loadCategories();
+    void loadData();
 
     return () => {
       disposed = true;
     };
   }, [setValue]);
 
+  // Load sublocalities when locality is selected
+  useEffect(() => {
+    let disposed = false;
+
+    async function loadSublocalities() {
+      const localityId = Number(selectedLocalityId);
+      if (localityId === 0) return;
+
+      setLoadingSublocalities(true);
+      try {
+        const result = await getSublocalitieslAction(localityId);
+
+        if (!disposed) {
+          if (result.ok) {
+            setSublocalities(result.sublocalities);
+
+            // Set default sublocality for the selected locality
+            if (result.sublocalities.length > 0) {
+              setValue("sublocalityId", String(result.sublocalities[0].id));
+            } else {
+              setValue("sublocalityId", "0");
+            }
+          }
+        }
+      } finally {
+        if (!disposed) {
+          setLoadingSublocalities(false);
+        }
+      }
+    }
+
+    void loadSublocalities();
+
+    return () => {
+      disposed = true;
+    };
+  }, [selectedLocalityId, setValue]);
+
   // Find the selected category object
-  const selectedCategoryObj: CategoryWithSubcategories | undefined = categories.find(
-    (cat) => cat.id === Number(selectedCategoryId),
-  );
+  const selectedCategoryObj: CategoryWithSubcategories | undefined =
+    categories.find((cat) => cat.id === Number(selectedCategoryId));
 
   const categoryOptions: OptionValue[] = categories.map((category) => ({
     value: String(category.id),
@@ -170,10 +252,17 @@ export default function AddComplaintForm() {
     label: subcategory.name,
   }));
 
-  const areaOptions: OptionValue[] = RAJOURI_GARDEN_AREAS.map((area) => ({
-    value: area,
-    label: area,
+  const localityOptions: OptionValue[] = localities.map((locality) => ({
+    value: String(locality.id),
+    label: locality.name,
   }));
+
+  const sublocalityOptions: OptionValue[] = sublocalities.map(
+    (sublocality) => ({
+      value: String(sublocality.id),
+      label: sublocality.name,
+    }),
+  );
 
   useEffect(() => {
     if (!selectedCategoryObj) return;
@@ -187,7 +276,12 @@ export default function AddComplaintForm() {
         shouldValidate: true,
       });
     }
-  }, [selectedCategoryId, selectedSubcategoryId, selectedCategoryObj, setValue]);
+  }, [
+    selectedCategoryId,
+    selectedSubcategoryId,
+    selectedCategoryObj,
+    setValue,
+  ]);
 
   function pickLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -220,12 +314,15 @@ export default function AddComplaintForm() {
   async function onSubmit(values: complaintValidationForm) {
     setSubmitting(true);
     setAlert(null);
-
     try {
       const result = await addComplaintAction({
-        ...values,
         categoryId: Number(values.categoryId),
         subcategoryId: Number(values.subcategoryId),
+        description: values.description,
+        address: values.address,
+        sublocalityId: Number(values.sublocalityId),
+        lat: values.lat,
+        lng: values.lng,
         affectedCitizensCount: 1,
       });
 
@@ -258,14 +355,16 @@ export default function AddComplaintForm() {
             : ""),
       });
 
-      // Reset form with first category and subcategory
+      // Reset form with first category, locality and subcategory
       const firstCategory = categories[0];
+      const firstLocality = localities[0];
       reset({
         categoryId: String(firstCategory?.id ?? 0),
         subcategoryId: String(firstCategory?.subcategories[0]?.id ?? 0),
         description: "",
         address: "",
-        area: "",
+        localityId: String(firstLocality?.id ?? 0),
+        sublocalityId: "0",
         lat: "",
         lng: "",
       });
@@ -311,7 +410,7 @@ export default function AddComplaintForm() {
           boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
         }}
       >
-        {loadingCategories ? (
+        {loadingCategories || loadingLocalities || loadingSublocalities ? (
           <div
             style={{
               display: "flex",
@@ -319,7 +418,7 @@ export default function AddComplaintForm() {
               padding: "40px 0",
             }}
           >
-            <Spin size="large" description="Loading categories..." />
+            <Spin size="large" description="Loading data..." />
           </div>
         ) : (
           <>
@@ -378,14 +477,26 @@ export default function AddComplaintForm() {
                   />
                 </div>
 
-                <div className="mb-3">
-                  <CustomMultiSelect<complaintValidationForm>
-                    name="area"
-                    title={t("newComplaint.area")}
-                    placeholder={t("newComplaint.areaPlaceholder")}
-                    required
-                    options={areaOptions}
-                  />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <CustomMultiSelect<complaintValidationForm>
+                      name="localityId"
+                      title="Locality"
+                      placeholder="Select a locality"
+                      required
+                      options={localityOptions}
+                    />
+                  </div>
+
+                  <div>
+                    <CustomMultiSelect<complaintValidationForm>
+                      name="sublocalityId"
+                      title="Sublocality"
+                      placeholder="Select a sublocality"
+                      required
+                      options={sublocalityOptions}
+                    />
+                  </div>
                 </div>
 
                 <Divider

@@ -38,7 +38,16 @@ export async function getAdminComplaintsDashboardAction(): Promise<AdminComplain
           },
         },
         status: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+            locality: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
         affectedCitizensCount: true,
         createdAt: true,
         user: {
@@ -88,7 +97,8 @@ export async function getAdminComplaintsDashboardAction(): Promise<AdminComplain
           category: complaint.category.name,
           subcategory: complaint.subcategory.name,
           status: complaint.status,
-          area: complaint.area ?? "",
+          locality: complaint.sublocality?.locality?.name ?? null,
+          sublocality: complaint.sublocality?.name ?? null,
           affectedCitizensCount: complaint.affectedCitizensCount,
           createdAt: complaint.createdAt.toISOString(),
         };

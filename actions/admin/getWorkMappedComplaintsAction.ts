@@ -12,7 +12,7 @@ export type WorkMappedComplaint = {
     subcategory: string | null;
     description: string;
     status: string;
-    area: string | null;
+    sublocality: string | null;
     affectedCitizensCount: number;
     priority: number;
     user: {
@@ -67,7 +67,11 @@ export async function getWorkMappedComplaintsAction(
             },
             description: true,
             status: true,
-            area: true,
+            sublocality: {
+              select: {
+                name: true,
+              },
+            },
             affectedCitizensCount: true,
             priority: true,
             user: {
@@ -94,7 +98,7 @@ export async function getWorkMappedComplaintsAction(
         subcategory: mapping.complaint.subcategory?.name || null,
         description: mapping.complaint.description,
         status: mapping.complaint.status,
-        area: mapping.complaint.area,
+        sublocality: mapping.complaint.sublocality?.name || null,
         affectedCitizensCount: mapping.complaint.affectedCitizensCount,
         priority: mapping.complaint.priority,
         user: {

@@ -62,12 +62,12 @@ export const campComplaintValidationSchema = object({
     trim(),
     regex(/^[1-9]\d*$/, "Affected citizens count must be a positive number"),
   ),
-  area: optional(
-    pipe(
-      string(),
-      trim(),
-      maxLength(100, "Area must be at most 100 characters"),
-    ),
+  sublocalityId: custom(
+    (v): boolean => {
+      const num = typeof v === "string" ? Number(v) : (v as number);
+      return !isNaN(num) && num > 0;
+    },
+    "Please select a sublocality",
   ),
   lat: pipe(
     string(),

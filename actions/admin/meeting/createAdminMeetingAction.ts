@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  MEETINGAPPROVALSTATUS,
-  MEETINGTYPE,
-  INVITATIONSUBTYPE,
-} from "@prisma/client";
+import { MEETINGAPPROVALSTATUS, MEETINGTYPE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminUser } from "../_shared";
 import { CreateAdminMeetingInput, CreateAdminMeetingResult } from "./types";

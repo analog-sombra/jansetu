@@ -34,7 +34,8 @@ function formatDate(value: string): string {
 }
 
 function complaintLabel(item: MlaPaComplaintClusterCandidate): string {
-  return `#${item.id} | ${item.category}${item.subcategory ? ` / ${item.subcategory}` : ""} | ${item.area ?? "-"} | ${item.status.replaceAll("_", " ")}`;
+  const location = item.sublocality ? `${item.locality ? `${item.locality} / ` : ""}${item.sublocality}` : "-";
+  return `#${item.id} | ${item.category}${item.subcategory ? ` / ${item.subcategory}` : ""} | ${location} | ${item.status.replaceAll("_", " ")}`;
 }
 
 export default function MlaPaClusterComplaintsClient({
@@ -255,9 +256,15 @@ export default function MlaPaClusterComplaintsClient({
         `${row.category}${row.subcategory ? ` / ${row.subcategory}` : ""}`,
     },
     {
-      title: t("mlaCluster.area"),
-      dataIndex: "area",
-      key: "area",
+      title: t("mlaCluster.locality"),
+      dataIndex: "locality",
+      key: "locality",
+      render: (value: string | null) => value || "-",
+    },
+    {
+      title: t("mlaCluster.sublocality"),
+      dataIndex: "sublocality",
+      key: "sublocality",
       render: (value: string | null) => value || "-",
     },
     {

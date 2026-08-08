@@ -2,7 +2,8 @@ export type MlaPaClusterComplaintItem = {
   complaintId: number;
   category: string;
   subcategory: string | null;
-  area: string | null;
+  locality: string | null;
+  sublocality: string | null;
   status: string;
   createdAt: string;
 };
@@ -22,7 +23,8 @@ export type MlaPaComplaintClusterCandidate = {
   id: number;
   category: string;
   subcategory: string | null;
-  area: string | null;
+  locality: string | null;
+  sublocality: string | null;
   status: string;
   createdAt: string;
   currentClusterId: string | null;

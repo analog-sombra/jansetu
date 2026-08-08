@@ -52,7 +52,11 @@ export async function getAdminEscalationQueueAction(): Promise<AdminEscalationQu
         complaint: {
           select: {
             id: true,
-            area: true,
+            sublocality: {
+              select: {
+                name: true,
+              },
+            },
             category: {
               select: {
                 name: true,
@@ -95,7 +99,7 @@ export async function getAdminEscalationQueueAction(): Promise<AdminEscalationQu
         return {
           id: assignment.id,
           complaintId: assignment.complaint.id,
-          area: assignment.complaint.area ?? "-",
+          sublocality: assignment.complaint.sublocality?.name ?? "-",
           category: assignment.complaint.category.name,
           subcategory: assignment.complaint.subcategory?.name ?? null,
           officer: assignment.officer.name,

@@ -7,7 +7,8 @@ export type AdminComplaintSummary = {
   category: string;
   subcategory: string | null;
   status: string;
-  area: string;
+  locality: string | null;
+  sublocality: string | null;
   affectedCitizensCount: number;
   createdAt: string;
 };
@@ -85,7 +86,8 @@ export type AdminComplaintDetail = {
   plannedCompletionDate: string | null;
   lat: number;
   lng: number;
-  area: string | null;
+  locality: string | null;
+  sublocality: string | null;
   media: Array<{
     id: number;
     fileUrl: string;
@@ -114,7 +116,8 @@ export type AdminComplaintDetail = {
       category: string;
       subcategory: string | null;
       status: string;
-      area: string | null;
+      locality: string | null;
+      sublocality: string | null;
       affectedCitizensCount: number;
       createdAt: string;
       isCurrentComplaint: boolean;
@@ -145,7 +148,7 @@ export type AdminEscalationTrigger = "REMINDER_48H" | "ESCALATION_7D";
 export type AdminEscalationRecord = {
   id: number;
   complaintId: number;
-  area: string;
+  sublocality: string;
   category: string;
   subcategory: string | null;
   officer: string;
@@ -182,7 +185,7 @@ export type AdminPriorityCaseGroup = {
 
 export type AdminPriorityCaseItem = {
   id: number;
-  area: string;
+  sublocality: string | null;
   category: string;
   subcategory: string | null;
   status: string;

@@ -32,18 +32,19 @@ const complaintValidationSchema = object({
     minLength(20, "Description must be at least 20 characters"),
     maxLength(1000, "Description must be at most 1000 characters"),
   ),
-  affectedCitizensCount: custom(
+  localityId: custom(
     (v): boolean => {
       const num = typeof v === "string" ? Number(v) : (v as number);
-      return Number.isInteger(num) && num > 0;
+      return !isNaN(num) && num > 0;
     },
-    "Affected citizens count must be a positive integer",
+    "Please select a locality",
   ),
-  area: pipe(
-    string(),
-    trim(),
-    minLength(1, "Area is required"),
-    maxLength(100, "Area must be at most 100 characters"),
+  sublocalityId: custom(
+    (v): boolean => {
+      const num = typeof v === "string" ? Number(v) : (v as number);
+      return !isNaN(num) && num > 0;
+    },
+    "Please select a sublocality",
   ),
   address: pipe(
     string(),

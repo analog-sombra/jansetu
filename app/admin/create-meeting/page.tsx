@@ -29,7 +29,6 @@ import {
   lookupAdminMeetingContactByMobileAction,
   type AdminMeetingAssignee,
 } from "@/actions/admin/meeting";
-import { RAJOURI_GARDEN_AREAS } from "@/lib/constants";
 
 const { Title, Text } = Typography;
 const DATE_TIME_FORMAT = "DD-MM-YYYY hh:mm A";
@@ -370,7 +369,9 @@ export default function CreateMeetingPage() {
   const [selectedType, setSelectedType] = useState<FormValues["type"]>(
     MEETINGTYPE.CONSTITUENCY_VISIT,
   );
-  const [selectedInvitationSubtype, setSelectedInvitationSubtype] = useState<INVITATIONSUBTYPE | undefined>(undefined);
+  const [selectedInvitationSubtype, setSelectedInvitationSubtype] = useState<
+    INVITATIONSUBTYPE | undefined
+  >(undefined);
   const [saving, setSaving] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingLookup, setLoadingLookup] = useState(false);
@@ -433,11 +434,6 @@ export default function CreateMeetingPage() {
     { value: INVITATIONSUBTYPE.FUNERAL, label: copy.invitationFuneral },
     { value: INVITATIONSUBTYPE.OTHER, label: copy.invitationOther },
   ];
-
-  const areaOptions = RAJOURI_GARDEN_AREAS.map((area) => ({
-    value: area,
-    label: area,
-  }));
 
   function normalizeMobile(value: string) {
     return value.replace(/\D/g, "").slice(0, 10);
@@ -557,26 +553,39 @@ export default function CreateMeetingPage() {
     if (values.type === MEETINGTYPE.INVITATION) {
       if (values.invitationSubtype === INVITATIONSUBTYPE.MARRIAGE) {
         if (!values.husbandName || !values.wifeName || !values.letterTo) {
-          setError("Please fill in all marriage invitation fields: Husband Name, Wife Name, and Letter To");
+          setError(
+            "Please fill in all marriage invitation fields: Husband Name, Wife Name, and Letter To",
+          );
           setSaving(false);
           return;
         }
       } else if (values.invitationSubtype === INVITATIONSUBTYPE.BIRTHDAY) {
         if (!values.personName || !values.letterTo) {
-          setError("Please fill in all birthday invitation fields: Person Name and Letter To");
+          setError(
+            "Please fill in all birthday invitation fields: Person Name and Letter To",
+          );
           setSaving(false);
           return;
         }
       } else if (values.invitationSubtype === INVITATIONSUBTYPE.FUNERAL) {
-        if (!values.deceasedName || !values.letterTo || !values.relationWithDeceased || !values.dateOfDeath) {
-          setError("Please fill in all funeral invitation fields: Deceased Name, Letter To, Relation with Deceased, and Date of Death");
+        if (
+          !values.deceasedName ||
+          !values.letterTo ||
+          !values.relationWithDeceased ||
+          !values.dateOfDeath
+        ) {
+          setError(
+            "Please fill in all funeral invitation fields: Deceased Name, Letter To, Relation with Deceased, and Date of Death",
+          );
           setSaving(false);
           return;
         }
       }
-      
+
       if (!values.selfDraftedLetter || values.selfDraftedLetter.length < 20) {
-        setError("Please generate or provide a self-drafted letter (minimum 20 characters)");
+        setError(
+          "Please generate or provide a self-drafted letter (minimum 20 characters)",
+        );
         setSaving(false);
         return;
       }
@@ -680,7 +689,9 @@ export default function CreateMeetingPage() {
       const letterTo = form.getFieldValue("letterTo");
 
       if (!husbandName || !wifeName || !letterTo) {
-        setError("Please fill in Husband Name, Wife Name, and Letter To fields");
+        setError(
+          "Please fill in Husband Name, Wife Name, and Letter To fields",
+        );
         return;
       }
 
@@ -782,11 +793,6 @@ Warm regards,
           </Title>
           <Text type="secondary">{copy.subtitle}</Text>
         </div>
-        {/* <Link href="/admin/meeting-section">
-          <Button style={{ borderColor: "#1a3c6e", color: "#1a3c6e" }}>
-            {copy.openMeetingSection}
-          </Button>
-        </Link> */}
       </div>
 
       {error && (
@@ -871,8 +877,16 @@ Warm regards,
                         name="husbandName"
                         rules={[
                           { required: true, message: copy.enterHusbandName },
-                          { min: 2, message: "Husband name must be at least 2 characters" },
-                          { max: 100, message: "Husband name must be at most 100 characters" },
+                          {
+                            min: 2,
+                            message:
+                              "Husband name must be at least 2 characters",
+                          },
+                          {
+                            max: 100,
+                            message:
+                              "Husband name must be at most 100 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterHusbandName} />
@@ -884,8 +898,14 @@ Warm regards,
                         name="wifeName"
                         rules={[
                           { required: true, message: copy.enterWifeName },
-                          { min: 2, message: "Wife name must be at least 2 characters" },
-                          { max: 100, message: "Wife name must be at most 100 characters" },
+                          {
+                            min: 2,
+                            message: "Wife name must be at least 2 characters",
+                          },
+                          {
+                            max: 100,
+                            message: "Wife name must be at most 100 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterWifeName} />
@@ -897,8 +917,16 @@ Warm regards,
                         name="letterTo"
                         rules={[
                           { required: true, message: copy.enterLetterTo },
-                          { min: 2, message: "Letter recipient must be at least 2 characters" },
-                          { max: 100, message: "Letter recipient must be at most 100 characters" },
+                          {
+                            min: 2,
+                            message:
+                              "Letter recipient must be at least 2 characters",
+                          },
+                          {
+                            max: 100,
+                            message:
+                              "Letter recipient must be at most 100 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterLetterTo} />
@@ -914,8 +942,16 @@ Warm regards,
                         name="deceasedName"
                         rules={[
                           { required: true, message: copy.enterDeceasedName },
-                          { min: 2, message: "Deceased name must be at least 2 characters" },
-                          { max: 100, message: "Deceased name must be at most 100 characters" },
+                          {
+                            min: 2,
+                            message:
+                              "Deceased name must be at least 2 characters",
+                          },
+                          {
+                            max: 100,
+                            message:
+                              "Deceased name must be at most 100 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterDeceasedName} />
@@ -927,8 +963,16 @@ Warm regards,
                         name="letterTo"
                         rules={[
                           { required: true, message: copy.enterLetterTo },
-                          { min: 2, message: "Letter recipient must be at least 2 characters" },
-                          { max: 100, message: "Letter recipient must be at most 100 characters" },
+                          {
+                            min: 2,
+                            message:
+                              "Letter recipient must be at least 2 characters",
+                          },
+                          {
+                            max: 100,
+                            message:
+                              "Letter recipient must be at most 100 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterLetterTo} />
@@ -939,9 +983,18 @@ Warm regards,
                         label={copy.relationWithDeceased}
                         name="relationWithDeceased"
                         rules={[
-                          { required: true, message: copy.enterRelationWithDeceased },
-                          { min: 1, message: "Relation must be at least 1 character" },
-                          { max: 100, message: "Relation must be at most 100 characters" },
+                          {
+                            required: true,
+                            message: copy.enterRelationWithDeceased,
+                          },
+                          {
+                            min: 1,
+                            message: "Relation must be at least 1 character",
+                          },
+                          {
+                            max: 100,
+                            message: "Relation must be at most 100 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterRelationWithDeceased} />
@@ -951,7 +1004,9 @@ Warm regards,
                       <Form.Item
                         label={copy.dateOfDeath}
                         name="dateOfDeath"
-                        rules={[{ required: true, message: copy.selectDateOfDeath }]}
+                        rules={[
+                          { required: true, message: copy.selectDateOfDeath },
+                        ]}
                       >
                         <DatePicker style={{ width: "100%" }} />
                       </Form.Item>
@@ -966,8 +1021,16 @@ Warm regards,
                         name="personName"
                         rules={[
                           { required: true, message: copy.enterPersonName },
-                          { min: 2, message: "Person name must be at least 2 characters" },
-                          { max: 100, message: "Person name must be at most 100 characters" },
+                          {
+                            min: 2,
+                            message:
+                              "Person name must be at least 2 characters",
+                          },
+                          {
+                            max: 100,
+                            message:
+                              "Person name must be at most 100 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterPersonName} />
@@ -979,8 +1042,16 @@ Warm regards,
                         name="letterTo"
                         rules={[
                           { required: true, message: copy.enterLetterTo },
-                          { min: 2, message: "Letter recipient must be at least 2 characters" },
-                          { max: 100, message: "Letter recipient must be at most 100 characters" },
+                          {
+                            min: 2,
+                            message:
+                              "Letter recipient must be at least 2 characters",
+                          },
+                          {
+                            max: 100,
+                            message:
+                              "Letter recipient must be at most 100 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterLetterTo} />
@@ -990,7 +1061,12 @@ Warm regards,
                       <Form.Item
                         label={copy.relationWith}
                         name="relationWith"
-                        rules={[{ max: 100, message: "Relation must be at most 100 characters" }]}
+                        rules={[
+                          {
+                            max: 100,
+                            message: "Relation must be at most 100 characters",
+                          },
+                        ]}
                       >
                         <Input placeholder={copy.enterRelationWith} />
                       </Form.Item>
@@ -1053,14 +1129,15 @@ Warm regards,
                   label={copy.citizenArea}
                   name="citizenArea"
                   rules={[
-                    { required: true, message: copy.selectCitizenArea },
+                    { required: true, message: copy.enterCitizenMobile },
+                    { min: 2, message: "Area must be at least 2 characters" },
+                    {
+                      max: 100,
+                      message: "Area must be at most 100 characters",
+                    },
                   ]}
                 >
-                  <Select
-                    showSearch
-                    options={areaOptions}
-                    placeholder={copy.selectCitizenArea}
-                  />
+                  <Input placeholder="Enter area name" />
                 </Form.Item>
               </Col>
             )}
@@ -1096,8 +1173,16 @@ Warm regards,
                       name="meetingPlace"
                       rules={[
                         { required: true, message: copy.enterMeetingPlace },
-                        { min: 3, message: "Meeting place must be at least 3 characters" },
-                        { max: 500, message: "Meeting place must be at most 500 characters" },
+                        {
+                          min: 3,
+                          message:
+                            "Meeting place must be at least 3 characters",
+                        },
+                        {
+                          max: 500,
+                          message:
+                            "Meeting place must be at most 500 characters",
+                        },
                       ]}
                     >
                       <Input placeholder={copy.enterMeetingPlace} />
@@ -1111,7 +1196,10 @@ Warm regards,
                         label={copy.meetingDateTime}
                         name="meetingDateTime"
                         rules={[
-                          { required: true, message: copy.selectMeetingDateTime },
+                          {
+                            required: true,
+                            message: copy.selectMeetingDateTime,
+                          },
                         ]}
                       >
                         <DatePicker
@@ -1126,8 +1214,16 @@ Warm regards,
                         name="meetingPlace"
                         rules={[
                           { required: true, message: copy.enterMeetingPlace },
-                          { min: 3, message: "Meeting place must be at least 3 characters" },
-                          { max: 500, message: "Meeting place must be at most 500 characters" },
+                          {
+                            min: 3,
+                            message:
+                              "Meeting place must be at least 3 characters",
+                          },
+                          {
+                            max: 500,
+                            message:
+                              "Meeting place must be at most 500 characters",
+                          },
                         ]}
                       >
                         <Input placeholder={copy.enterMeetingPlace} />
@@ -1143,8 +1239,16 @@ Warm regards,
                         name="giftToCarry"
                         rules={[
                           { required: true, message: copy.enterGiftToCarry },
-                          { min: 3, message: "Gift details must be at least 3 characters" },
-                          { max: 500, message: "Gift details must be at most 500 characters" },
+                          {
+                            min: 3,
+                            message:
+                              "Gift details must be at least 3 characters",
+                          },
+                          {
+                            max: 500,
+                            message:
+                              "Gift details must be at most 500 characters",
+                          },
                         ]}
                       >
                         <Input.TextArea
@@ -1269,13 +1373,16 @@ Warm regards,
                     label={copy.citizenArea}
                     name="citizenArea"
                     rules={[
-                      { required: true, message: copy.selectCitizenArea },
+                      { required: true, message: copy.enterCitizenMobile },
+                      { min: 2, message: "Area must be at least 2 characters" },
+                      {
+                        max: 100,
+                        message: "Area must be at most 100 characters",
+                      },
                     ]}
                   >
-                    <Select
-                      showSearch
-                      options={areaOptions}
-                      placeholder={copy.selectCitizenArea}
+                    <Input
+                      placeholder="Enter area name"
                       disabled={citizenDetailsLocked}
                     />
                   </Form.Item>

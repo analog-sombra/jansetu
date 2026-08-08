@@ -12,7 +12,8 @@ export type OfficerCompletedAssignmentSummary = {
   complaintId: number;
   category: string;
   subcategory: string | null;
-  area: string | null;
+  locality: string | null;
+  sublocality: string | null;
   address: string | null;
   status: string;
   completedAt: string;
@@ -58,7 +59,7 @@ export type OfficerComplaintDetail = {
   plannedCompletionDate: string | null;
   lat: number;
   lng: number;
-  area: string | null;
+  sublocality: string | null;
   media: Array<{ id: number; fileUrl: string; type: string }>;
   assignments: OfficerComplaintAssignmentSummary[];
   createdAt: string;
@@ -82,7 +83,8 @@ export type OfficerAssignmentDetail = {
     plannedCompletionDate: string | null;
     lat: number;
     lng: number;
-    area: string | null;
+    locality: string | null;
+    sublocality: string | null;
     user: {
       name: string | null;
       mobile: string;

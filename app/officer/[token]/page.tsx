@@ -207,8 +207,12 @@ export default function OfficerTokenPage() {
         header: t("officer.completedTableSubcategory"),
         cell: (info) => info.getValue() || "-",
       }),
-      completedAssignmentColumnHelper.accessor("area", {
-        header: t("officer.completedTableArea"),
+      completedAssignmentColumnHelper.accessor("locality", {
+        header: "Locality",
+        cell: (info) => info.getValue() || "-",
+      }),
+      completedAssignmentColumnHelper.accessor("sublocality", {
+        header: "Sublocality",
         cell: (info) => info.getValue() || "-",
       }),
       completedAssignmentColumnHelper.accessor("address", {
@@ -510,9 +514,15 @@ export default function OfficerTokenPage() {
                 </p>
               </div>
               <div className="bg-gray-100 rounded-md p-3 flex-1">
-                <h1 className="text-sm font-normal">Area</h1>
+                <h1 className="text-sm font-normal">Locality</h1>
                 <p className="text-xs font-semibold text-gray-500">
-                  {assignment.complaint.area || "-"}
+                  {assignment.complaint.locality || "-"}
+                </p>
+              </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">Sublocality</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {assignment.complaint.sublocality || "-"}
                 </p>
               </div>
             </div>

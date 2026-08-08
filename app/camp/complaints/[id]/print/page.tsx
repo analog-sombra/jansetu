@@ -2,30 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Button, Card, Skeleton, Typography, Tag, Row, Col, Alert } from "antd";
+import { Button, Card, Skeleton, Alert } from "antd";
 import { PrinterOutlined } from "@ant-design/icons";
 import {
   getCampComplaintDetailAction,
   type CampComplaintDetail,
 } from "@/actions/camp";
 
-const { Text } = Typography;
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "orange",
-  IN_PROGRESS: "blue",
-  WORK_IN_PROGRESS: "cyan",
-  QUERY_RAISED: "volcano",
-  RESOLVED: "green",
-  REJECTED: "red",
-  ESCALATED: "purple",
-  AUTO_CLOSED: "default",
-};
+// const STATUS_COLORS: Record<string, string> = {
+//   PENDING: "orange",
+//   IN_PROGRESS: "blue",
+//   WORK_IN_PROGRESS: "cyan",
+//   QUERY_RAISED: "volcano",
+//   RESOLVED: "green",
+//   REJECTED: "red",
+//   ESCALATED: "purple",
+//   AUTO_CLOSED: "default",
+// };
 
 function ComplaintInfoBlock({ complaint }: { complaint: CampComplaintDetail }) {
   const formatReceiptDate = (date: Date) => {
     const day = String(date.getDate()).padStart(2, "0");
-    const month = date.toLocaleString("en-US", { month: "short" }).toUpperCase();
+    const month = date
+      .toLocaleString("en-US", { month: "short" })
+      .toUpperCase();
     const year = date.getFullYear();
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
@@ -44,32 +44,73 @@ function ComplaintInfoBlock({ complaint }: { complaint: CampComplaintDetail }) {
       }}
     >
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 8, borderBottom: "1px solid #000", paddingBottom: 6 }}>
-        <div style={{ fontSize: 11, fontWeight: "bold" }}>COMPLAINT RECEIPT</div>
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: 8,
+          borderBottom: "1px solid #000",
+          paddingBottom: 6,
+        }}
+      >
+        <div style={{ fontSize: 11, fontWeight: "bold" }}>
+          COMPLAINT RECEIPT
+        </div>
         <div style={{ fontSize: 9, marginTop: 2 }}>Status Report</div>
       </div>
 
       {/* Complaint ID and Date */}
       <div style={{ marginBottom: 6 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 9,
+          }}
+        >
           <span>Receipt #:</span>
           <span style={{ fontWeight: "bold" }}>{complaint.id}</span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, marginTop: 2 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 9,
+            marginTop: 2,
+          }}
+        >
           <span>Date/Time:</span>
-          <span style={{ fontWeight: "bold" }}>{formatReceiptDate(new Date(complaint.createdAt))}</span>
+          <span style={{ fontWeight: "bold" }}>
+            {formatReceiptDate(new Date(complaint.createdAt))}
+          </span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, marginTop: 2 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 9,
+            marginTop: 2,
+          }}
+        >
           <span>Status:</span>
-          <span style={{ fontWeight: "bold" }}>{complaint.status.replaceAll("_", " ")}</span>
+          <span style={{ fontWeight: "bold" }}>
+            {complaint.status.replaceAll("_", " ")}
+          </span>
         </div>
       </div>
 
-      <div style={{ borderBottom: "1px dotted #000", marginBottom: 6, paddingBottom: 6 }} />
+      <div
+        style={{
+          borderBottom: "1px dotted #000",
+          marginBottom: 6,
+          paddingBottom: 6,
+        }}
+      />
 
       {/* Citizen Information */}
       <div style={{ marginBottom: 6 }}>
-        <div style={{ fontSize: 9, fontWeight: "bold", marginBottom: 3 }}>CITIZEN DETAILS</div>
+        <div style={{ fontSize: 9, fontWeight: "bold", marginBottom: 3 }}>
+          CITIZEN DETAILS
+        </div>
         <div style={{ fontSize: 9, lineHeight: 1.5 }}>
           <div>Name: {complaint.citizen.name}</div>
           <div>Mobile: {complaint.citizen.mobile}</div>
@@ -80,23 +121,40 @@ function ComplaintInfoBlock({ complaint }: { complaint: CampComplaintDetail }) {
         </div>
       </div>
 
-      <div style={{ borderBottom: "1px dotted #000", marginBottom: 6, paddingBottom: 6 }} />
+      <div
+        style={{
+          borderBottom: "1px dotted #000",
+          marginBottom: 6,
+          paddingBottom: 6,
+        }}
+      />
 
       {/* Complaint Category */}
       <div style={{ marginBottom: 6 }}>
-        <div style={{ fontSize: 9, fontWeight: "bold", marginBottom: 3 }}>COMPLAINT CATEGORY</div>
+        <div style={{ fontSize: 9, fontWeight: "bold", marginBottom: 3 }}>
+          COMPLAINT CATEGORY
+        </div>
         <div style={{ fontSize: 9, lineHeight: 1.5 }}>
           <div>Category: {complaint.category}</div>
           <div>Subcategory: {complaint.subcategory || "-"}</div>
-          <div>Area: {complaint.area || "-"}</div>
+          <div>Locality: {complaint.locality || "-"}</div>
+          <div>Sublocality: {complaint.sublocality || "-"}</div>
         </div>
       </div>
 
-      <div style={{ borderBottom: "1px dotted #000", marginBottom: 6, paddingBottom: 6 }} />
+      <div
+        style={{
+          borderBottom: "1px dotted #000",
+          marginBottom: 6,
+          paddingBottom: 6,
+        }}
+      />
 
       {/* Complaint Details */}
       <div style={{ marginBottom: 6 }}>
-        <div style={{ fontSize: 9, fontWeight: "bold", marginBottom: 3 }}>COMPLAINT DETAILS</div>
+        <div style={{ fontSize: 9, fontWeight: "bold", marginBottom: 3 }}>
+          COMPLAINT DETAILS
+        </div>
         <div style={{ fontSize: 9 }}>
           <div style={{ marginBottom: 3 }}>
             <span style={{ fontWeight: "bold" }}>Location:</span>
@@ -111,16 +169,27 @@ function ComplaintInfoBlock({ complaint }: { complaint: CampComplaintDetail }) {
             {complaint.lat}, {complaint.lng}
           </div>
           <div style={{ marginBottom: 3 }}>
-            <span style={{ fontWeight: "bold" }}>Affected Citizens:</span> {complaint.cluster ? complaint.cluster.totalAffectedCitizensCount : complaint.affectedCitizensCount}
+            <span style={{ fontWeight: "bold" }}>Affected Citizens:</span>{" "}
+            {complaint.cluster
+              ? complaint.cluster.totalAffectedCitizensCount
+              : complaint.affectedCitizensCount}
           </div>
         </div>
       </div>
 
-      <div style={{ borderBottom: "1px dotted #000", marginBottom: 6, paddingBottom: 6 }} />
+      <div
+        style={{
+          borderBottom: "1px dotted #000",
+          marginBottom: 6,
+          paddingBottom: 6,
+        }}
+      />
 
       {/* Description */}
       <div style={{ marginBottom: 6 }}>
-        <div style={{ fontSize: 9, fontWeight: "bold", marginBottom: 3 }}>DESCRIPTION</div>
+        <div style={{ fontSize: 9, fontWeight: "bold", marginBottom: 3 }}>
+          DESCRIPTION
+        </div>
         <div
           style={{
             fontSize: 8,
@@ -133,7 +202,13 @@ function ComplaintInfoBlock({ complaint }: { complaint: CampComplaintDetail }) {
         </div>
       </div>
 
-      <div style={{ borderBottom: "1px solid #000", marginBottom: 6, paddingBottom: 6 }} />
+      <div
+        style={{
+          borderBottom: "1px solid #000",
+          marginBottom: 6,
+          paddingBottom: 6,
+        }}
+      />
 
       {/* Footer */}
       <div style={{ textAlign: "center", fontSize: 8 }}>

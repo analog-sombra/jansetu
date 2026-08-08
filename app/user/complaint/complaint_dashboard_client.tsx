@@ -163,7 +163,7 @@ export default function ComplaintDashboardClient({
     }
 
     const receiverName = profile?.name?.trim() || "Citizen";
-    const location = complaint.area?.trim() || "Constituency Area";
+    const location = complaint.sublocality?.trim() || "Constituency Area";
     const issueType = complaint.category.replaceAll("_", " ").toLowerCase();
     const issueDate = new Date().toLocaleDateString("en-IN", {
       day: "2-digit",

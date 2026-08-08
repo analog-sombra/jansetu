@@ -29,7 +29,6 @@ import {
   convertComplaintToWorkAction,
   type AdminComplaintDetail,
   type AdminOfficerSummary,
-  type GetAvailableWorksResult,
 } from "@/actions/admin";
 import { useLanguage } from "@/components/provider/language_provider";
 import { CustomMultiSelect } from "@/components/inputfields/multiselect";
@@ -145,7 +144,6 @@ export default function AdminComplaintDetailPage() {
     setAlert(null);
 
     const result = await getAdminComplaintDetailAction(complaintId);
-
 
     if (!result.ok) {
       setComplaint(null);
@@ -444,7 +442,10 @@ export default function AdminComplaintDetailPage() {
     setConvertingToWork(true);
     setAlert(null);
 
-    const result = await convertComplaintToWorkAction(complaint.id, selectedWorkId);
+    const result = await convertComplaintToWorkAction(
+      complaint.id,
+      selectedWorkId,
+    );
 
     setConvertingToWork(false);
 
@@ -477,7 +478,8 @@ export default function AdminComplaintDetailPage() {
       `${t("adminDetail.whatsapp.complainantName")}: ${complaint.user.name?.trim() || t("adminDetail.notProvided")}`,
       `${t("adminDetail.whatsapp.complainantMobile")}: ${complaint.user.mobile}`,
       `${t("adminDetail.whatsapp.address")}: ${complaint.user.address?.trim() || t("adminDetail.notProvided")}`,
-      `${t("adminDetail.whatsapp.area")}: ${complaint.area ?? t("adminDetail.notSpecified")}`,
+      `Locality: ${complaint.locality ?? t("adminDetail.notSpecified")}`,
+      `Sublocality: ${complaint.sublocality ?? t("adminDetail.notSpecified")}`,
       `${t("adminDetail.whatsapp.targetDate")}: ${complaint.plannedCompletionDate ? new Date(complaint.plannedCompletionDate).toLocaleDateString("en-IN") : t("adminDetail.notSet")}`,
       "",
       `${t("adminDetail.whatsapp.link")}: ${window.location.origin}/officer/${assignedOfficerToken}`,
@@ -630,9 +632,15 @@ export default function AdminComplaintDetailPage() {
 
             <div className="flex gap-4">
               <div className="bg-gray-100 rounded-md p-3 flex-1">
-                <h1 className="text-sm font-normal">{t("adminDetail.area")}</h1>
+                <h1 className="text-sm font-normal">Locality</h1>
                 <p className="text-xs font-semibold text-gray-500">
-                  {complaint.area ?? t("adminDetail.notSpecified")}
+                  {complaint.locality ?? t("adminDetail.notSpecified")}
+                </p>
+              </div>
+              <div className="bg-gray-100 rounded-md p-3 flex-1">
+                <h1 className="text-sm font-normal">Sublocality</h1>
+                <p className="text-xs font-semibold text-gray-500">
+                  {complaint.sublocality ?? t("adminDetail.notSpecified")}
                 </p>
               </div>
               <div className="bg-gray-100 rounded-md p-3 flex-1">
@@ -799,7 +807,12 @@ export default function AdminComplaintDetailPage() {
                               }}
                             >
                               Status: {formatLabel(item.status)}
-                              {item.area ? ` | Area: ${item.area}` : ""}
+                              {item.locality
+                                ? ` | Locality: ${item.locality}`
+                                : ""}
+                              {item.sublocality
+                                ? ` | Sublocality: ${item.sublocality}`
+                                : ""}
                             </div>
                             <div
                               style={{
@@ -1314,7 +1327,8 @@ export default function AdminComplaintDetailPage() {
               size="small"
             >
               <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>
-                Convert this complaint to a work and map it with an existing or new work.
+                Convert this complaint to a work and map it with an existing or
+                new work.
               </div>
               <Button
                 block

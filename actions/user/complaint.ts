@@ -15,7 +15,7 @@ type AddComplaintActionInput = {
   description: string;
   address: string;
   affectedCitizensCount: number;
-  area?: string;
+  sublocalityId?: number;
   lat: string;
   lng: string;
 };
@@ -90,7 +90,8 @@ export type ComplaintDashboardItem = {
   plannedCompletionDate: string | null;
   createdAt: string;
   assignments: ComplaintDashboardAssignment[];
-  area: string;
+  locality: string | null;
+  sublocality: string | null;
 };
 
 export type UserComplaintDetailResponse = {
@@ -138,7 +139,8 @@ export type UserComplaintDetailItem = {
   status: string;
   plannedCompletionDate: string | null;
   createdAt: string;
-  area: string | null;
+  locality: string | null;
+  sublocality: string | null;
   lat: number;
   lng: number;
   media: Array<{ id: number; fileUrl: string; type: string }>;
@@ -205,7 +207,7 @@ export async function addComplaintAction(
   const description = payload.description.trim();
   const address = payload.address.trim() || null;
   const affectedCitizensCount = Number(payload.affectedCitizensCount);
-  const area = payload.area?.trim() || null;
+  const sublocalityId = payload.sublocalityId ? Number(payload.sublocalityId) : null;
   const lat = Number(payload.lat);
   const lng = Number(payload.lng);
 
@@ -253,6 +255,19 @@ export async function addComplaintAction(
     return { ok: false, error: "Please provide a valid longitude." };
   }
 
+  // Validate sublocality exists if provided
+  let sublocalityRecord: { id: number; name: string } | null = null;
+  if (sublocalityId) {
+    sublocalityRecord = await prisma.sublocality.findUnique({
+      where: { id: sublocalityId },
+      select: { id: true, name: true },
+    });
+
+    if (!sublocalityRecord) {
+      return { ok: false, error: "Please select a valid sublocality." };
+    }
+  }
+
   try {
     const complaint = await prisma.$transaction(async (tx) => {
       const createdComplaint = await tx.complaint.create({
@@ -265,7 +280,7 @@ export async function addComplaintAction(
           address,
           affectedCitizensCount,
           priority,
-          area,
+          sublocalityId,
           lat,
           lng,
         },
@@ -280,7 +295,7 @@ export async function addComplaintAction(
         categoryName: categoryRecord.name,
         subcategoryId,
         subcategoryName: subcategoryRecord.name,
-        area,
+        area: sublocalityRecord?.name || null,
         lat,
         lng,
         status: "PENDING",
@@ -428,7 +443,16 @@ export async function getMyComplaintsAction(): Promise<GetMyComplaintsActionResu
         status: true,
         plannedCompletionDate: true,
         createdAt: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+            locality: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
         assignments: {
           select: {
             id: true,
@@ -482,7 +506,8 @@ export async function getMyComplaintsAction(): Promise<GetMyComplaintsActionResu
             createdAt: response.createdAt.toISOString(),
           })),
         })),
-        area: complaint.area ?? "",
+        locality: complaint.sublocality?.locality?.name ?? null,
+        sublocality: complaint.sublocality?.name ?? null,
       })),
       profile: {
         name: user.name ?? null,
@@ -541,7 +566,16 @@ export async function getMyComplaintDetailAction(
         status: true,
         plannedCompletionDate: true,
         createdAt: true,
-        area: true,
+        sublocality: {
+          select: {
+            name: true,
+            locality: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
         lat: true,
         lng: true,
         media: {
@@ -648,7 +682,8 @@ export async function getMyComplaintDetailAction(
           ? complaint.plannedCompletionDate.toISOString()
           : null,
         createdAt: complaint.createdAt.toISOString(),
-        area: complaint.area,
+        locality: complaint.sublocality?.locality?.name ?? null,
+        sublocality: complaint.sublocality?.name ?? null,
         lat: complaint.lat,
         lng: complaint.lng,
         media: complaint.media,

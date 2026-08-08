@@ -253,7 +253,7 @@ export default function ReportDashboardPage() {
           type="error"
           showIcon
           style={{ marginBottom: 20, borderRadius: 8 }}
-          message={errorMessage}
+          title={errorMessage}
         />
       )}
 

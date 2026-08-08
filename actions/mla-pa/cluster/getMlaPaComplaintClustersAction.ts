@@ -30,7 +30,14 @@ export async function getMlaPaComplaintClustersAction(): Promise<GetMlaPaComplai
             select: {
               id: true,
               status: true,
-              area: true,
+              sublocality: {
+                select: {
+                  name: true,
+                  locality: {
+                    select: { name: true },
+                  },
+                },
+              },
               createdAt: true,
               category: {
                 select: { name: true },
@@ -48,7 +55,14 @@ export async function getMlaPaComplaintClustersAction(): Promise<GetMlaPaComplai
         select: {
           id: true,
           status: true,
-          area: true,
+          sublocality: {
+            select: {
+              name: true,
+              locality: {
+                select: { name: true },
+              },
+            },
+          },
           createdAt: true,
           category: {
             select: {
@@ -102,7 +116,8 @@ export async function getMlaPaComplaintClustersAction(): Promise<GetMlaPaComplai
           complaintId: row.complaint.id,
           category: row.complaint.category.name,
           subcategory: row.complaint.subcategory?.name ?? null,
-          area: row.complaint.area,
+          locality: row.complaint.sublocality?.locality?.name ?? null,
+          sublocality: row.complaint.sublocality?.name ?? null,
           status: row.complaint.status,
           createdAt: row.complaint.createdAt.toISOString(),
         });
@@ -140,7 +155,8 @@ export async function getMlaPaComplaintClustersAction(): Promise<GetMlaPaComplai
         id: complaint.id,
         category: complaint.category.name,
         subcategory: complaint.subcategory?.name ?? null,
-        area: complaint.area,
+        locality: complaint.sublocality?.locality?.name ?? null,
+        sublocality: complaint.sublocality?.name ?? null,
         status: complaint.status,
         createdAt: complaint.createdAt.toISOString(),
         currentClusterId: complaint.complaintClusters[0]?.clusterId ?? null,

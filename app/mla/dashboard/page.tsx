@@ -865,12 +865,19 @@ export default function ReportDashboardPage() {
               <Card
                 size="small"
                 title={`#${item.complaintId} - ${item.category}`}
-                bordered
+                variant="outlined"
                 style={{ height: "100%" }}
               >
                 <Row gutter={10}>
                   <Col span={12}>
-                    <Text strong style={{ display: "block", marginBottom: 8, fontSize: 12 }}>
+                    <Text
+                      strong
+                      style={{
+                        display: "block",
+                        marginBottom: 8,
+                        fontSize: 12,
+                      }}
+                    >
                       {t("report.before")}
                     </Text>
                     <div
@@ -917,7 +924,14 @@ export default function ReportDashboardPage() {
                     </div>
                   </Col>
                   <Col span={12}>
-                    <Text strong style={{ display: "block", marginBottom: 8, fontSize: 12 }}>
+                    <Text
+                      strong
+                      style={{
+                        display: "block",
+                        marginBottom: 8,
+                        fontSize: 12,
+                      }}
+                    >
                       {t("report.after")}
                     </Text>
                     <div
@@ -958,7 +972,9 @@ export default function ReportDashboardPage() {
                           </Text>
                           <Text style={{ color: "rgba(255,255,255,0.8)" }}>
                             {t("report.resolvedOn")}{" "}
-                            {new Date(item.resolvedAt).toLocaleDateString("en-IN")}
+                            {new Date(item.resolvedAt).toLocaleDateString(
+                              "en-IN",
+                            )}
                           </Text>
                         </div>
                       )}

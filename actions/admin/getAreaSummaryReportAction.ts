@@ -65,10 +65,12 @@ export async function getAreaSummaryReportAction(
       };
     }
 
-    // Fetch all complaints for the specific area
+    // Fetch all complaints for the specific area/sublocality
     const complaints = await prisma.complaint.findMany({
       where: {
-        area: area,
+        sublocality: {
+          name: area,
+        },
       },
       include: {
         category: {
