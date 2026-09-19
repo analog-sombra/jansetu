@@ -4,6 +4,7 @@ import { randomInt, createHash } from "crypto";
 import { ROLE } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { clearAuthSession, setAuthSession } from "@/lib/auth/session";
+import { sendSmsOtp } from "@/lib/sms";
 
 type SendOtpActionResult = {
   ok: boolean;
@@ -45,26 +46,74 @@ export async function sendOtpAction(
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
   try {
-    await prisma.$transaction([
-      prisma.otp_code.updateMany({
-        where: { mobile, isUsed: false },
-        data: { isUsed: true },
-      }),
-      prisma.otp_code.create({
-        data: {
-          mobile,
-          otpHash,
-          expiresAt,
-        },
-      }),
-    ]);
+    // Step 1: Mark all existing unused OTPs as used
+    await prisma.otp_code.updateMany({
+      where: { 
+        mobile, 
+        isUsed: false 
+      },
+      data: { isUsed: true },
+    });
+
+    // Step 2: Create new OTP
+    const otpRecord = await prisma.otp_code.create({
+      data: {
+        mobile,
+        otpHash,
+        expiresAt,
+      },
+    });
+
+    // Step 3: Send SMS with OTP
+    const smsResult = await sendSmsOtp(mobile, otp);
+
+    // Step 4: Log SMS send attempt
+    await prisma.sms_log.create({
+      data: {
+        mobile,
+        message: `Your One-Time Password (OTP) for login is: ${otp}. This OTP is valid for 5 minutes. Do not share it with anyone.`,
+        messageId: smsResult.messageId,
+        status: smsResult.ok ? "SENT" : "FAILED",
+        errorMsg: smsResult.error || null,
+        type: "OTP",
+        metadata: JSON.stringify({
+          otpCodeId: otpRecord.id,
+          timestamp: new Date().toISOString(),
+        }),
+      },
+    });
+
+    if (!smsResult.ok) {
+      return {
+        ok: false,
+        error: `Failed to send OTP via SMS: ${smsResult.error}`,
+      };
+    }
 
     return {
       ok: true,
-      otp: otp,
+      otp: process.env.NODE_ENV === "development" ? otp : undefined, // Only return OTP in development for testing
     };
   } catch (e) {
-    return { ok: false, error: `Failed to send OTP. Please try again. ${e}` };
+    const errorMsg = e instanceof Error ? e.message : String(e);
+
+    // Log the error
+    await prisma.sms_log.create({
+      data: {
+        mobile,
+        message: `OTP generation attempt for mobile: ${mobile}`,
+        status: "FAILED",
+        errorMsg: errorMsg,
+        type: "OTP",
+      },
+    }).catch(() => {
+      // Silently fail if logging fails
+    });
+
+    return {
+      ok: false,
+      error: `Failed to send OTP. Please try again.`,
+    };
   }
 }
 

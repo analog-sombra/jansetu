@@ -19,9 +19,10 @@ const hindi = Noto_Sans_Devanagari({
 });
 
 export const metadata: Metadata = {
-  title: "Seva me Sirsa | Constituency Grievance Redressal Portal",
+  // title: "Seva me Sirsa | Constituency Grievance Redressal Portal",
+  title: "Seva me Sirsa | Citizen Helpdesk & Welfare Initiative",
   description:
-    "Digital platform for citizens to file and track complaints with their MLA constituency. A Government of India initiative for transparent grievance redressal.",
+    "Digital platform for citizens to file and track complaints with their MLA constituency.",
 };
 
 export default async function RootLayout({

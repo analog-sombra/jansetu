@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Typography, Steps, Alert } from "antd";
+import { Card, Typography, Steps, Alert, Button } from "antd";
 import { useLanguage } from "@/components/provider/language_provider";
 import { FormProvider, Resolver, useForm } from "react-hook-form";
 import {
@@ -27,6 +27,15 @@ export default function LoginForm() {
     text: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [currentMobile, setCurrentMobile] = useState("");
+
+  // Resend timer effect
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendTimer]);
 
   const methods = useForm<loginValidationForm>({
     defaultValues: { mobile: "", otp: "" },
@@ -54,6 +63,7 @@ export default function LoginForm() {
     setAlert(null);
     const result = await sendOtpAction(mobile);
     setLoading(false);
+
     if (!result.ok) {
       setAlert({
         type: "error",
@@ -61,8 +71,11 @@ export default function LoginForm() {
       });
       return;
     }
+
+    setCurrentMobile(mobile);
     setOtpSent(true);
     setSentOtp(result.otp ?? "");
+    setResendTimer(30); // 30 seconds resend timer
     setAlert({ type: "success", text: t("login.success.otpSent") });
   }
 
@@ -71,6 +84,7 @@ export default function LoginForm() {
     setAlert(null);
     const result = await verifyOtpAction(data.mobile, data.otp);
     setLoading(false);
+
     if (!result.ok) {
       setAlert({
         type: "error",
@@ -99,17 +113,22 @@ export default function LoginForm() {
       return;
     }
 
-    // if (result.role === "CAMP_HEAD") {
-    //   router.push("/mla-pa");
-    //   return;
-    // }
-
     if (!result.firstLoginComplete) {
       router.push("/user/register");
       return;
     }
     router.push("/user");
   }
+
+  const handleChangeMobile = () => {
+    setOtpSent(false);
+    setAlert(null);
+    setSentOtp("");
+    setResendTimer(0);
+    setValue("otp", "");
+  };
+
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   return (
     <div className="flex min-h-[76vh] items-center justify-center p-4">
@@ -171,7 +190,7 @@ export default function LoginForm() {
             />
           )}
 
-          {sentOtp && (
+          {sentOtp && isDevelopment && (
             <Alert
               type="info"
               title={
@@ -217,25 +236,39 @@ export default function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded bg-[#1a3c6e] px-3 py-3 text-white transition hover:bg-[#16335d] disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded bg-[#1a3c6e] px-3 py-3 text-white transition hover:bg-[#16335d] disabled:cursor-not-allowed disabled:opacity-70 w-full"
               >
                 {otpSent ? t("login.verifyButton") : t("login.sendButton")}
               </button>
 
               {otpSent && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setAlert(null);
-                    setSentOtp("");
-                    setValue("otp", "");
-                    setValue("mobile", getValues("mobile"));
-                  }}
-                  className="mt-2 cursor-pointer border-none bg-transparent text-[#1a3c6e]"
-                >
-                  {t("login.changeMobile")}
-                </button>
+                <div className="mt-4 space-y-2">
+                  <div className="text-center text-sm">
+                    {resendTimer > 0 ? (
+                      <p className="text-gray-500">
+                        Resend OTP in <strong>{resendTimer}s</strong>
+                      </p>
+                    ) : (
+                      <Button
+                        type="text"
+                        className="text-[#1a3c6e]"
+                        onClick={() => sendOtp(currentMobile)}
+                        loading={loading}
+                      >
+                        Resend OTP
+                      </Button>
+                    )}
+                  </div>
+
+                  <Button
+                    type="dashed"
+                    block
+                    onClick={handleChangeMobile}
+                    disabled={loading}
+                  >
+                    {t("login.changeMobile")}
+                  </Button>
+                </div>
               )}
             </form>
           </FormProvider>

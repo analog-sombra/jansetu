@@ -184,6 +184,22 @@ model otp_code {
   @@index([mobile, createdAt])
 }
 
+model sms_log {
+  id        Int      @id @default(autoincrement())
+  mobile    String
+  message   String   @db.LongText
+  messageId String?
+  status    String   @default("PENDING") // PENDING, SENT, FAILED
+  errorMsg  String?
+  type      String   @default("OTP") // OTP, NOTIFICATION, ALERT
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([mobile, createdAt])
+  @@index([status, createdAt])
+}
+
 model complaint {
   id                    Int                            @id @default(autoincrement())
   userId                String
